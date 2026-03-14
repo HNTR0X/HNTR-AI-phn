@@ -1462,29 +1462,6 @@ function getSavedSession() {
 
 // ═══════════════════════════ LOGIN ════════════════════════════
 async function doLogin(name, matric) {
-  // Redirect lecturers to lecturer page
-  if (CURRENT_ROLE === 'lecturer') {
-    const lname = document.getElementById('ln').value.trim();
-    const lpass = document.getElementById('lm').value.trim();
-    if (!lname || !lpass) { toast('Enter your name and password'); return; }
-    const btn = $('login-btn');
-    btn.disabled = true; btn.textContent = 'Checking...';
-    try {
-      await fetch('/api/lecturer/login', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ name: lname, password: lpass })
-      }).then(r => { if (!r.ok) throw new Error('Wrong password'); return r.json(); });
-      localStorage.setItem('sivarr_lecturer_token', 'pending');
-      localStorage.setItem('sivarr_lecturer_name', lname);
-      window.location.href = '/lecturer';
-    } catch(e) {
-      toast('Incorrect password — try again');
-      btn.disabled = false; btn.textContent = 'Access Lecturer Dashboard';
-    }
-    return;
-  }
-
   // Allow calling with args (auto-login) or from form
   if (!name || !matric) {
     name   = $('ln').value.trim();
@@ -1548,9 +1525,12 @@ function logout() {
 
 // Auto-login on page load if session exists
 window.addEventListener('DOMContentLoaded', () => {
+  // Clear any stale lecturer tokens — lecturer login is on /lecturer page
+  localStorage.removeItem('sivarr_lecturer_token');
+  localStorage.removeItem('sivarr_lecturer_name');
+
   const saved = getSavedSession();
   if (saved) {
-    // Show brief loading state on login screen
     const btn = $('login-btn');
     if (btn) { btn.textContent = 'Resuming session...'; btn.disabled = true; }
     doLogin(saved.name, saved.matric);
@@ -2030,3 +2010,4 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
+
