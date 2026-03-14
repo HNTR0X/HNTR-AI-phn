@@ -27,7 +27,8 @@
   --font-body: 'DM Sans', sans-serif;
 }
 
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.6; overflow: hidden; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.6; overflow: hidden; margin: 0; }
+
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
@@ -179,7 +180,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #dashboard {
   display: none;
   height: 100vh;
+  width: 100%;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Topbar */
@@ -288,6 +291,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   grid-template-columns: 200px 1fr 268px;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 /* Sidebar */
@@ -363,8 +367,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .stat-row .sv { font-family: var(--font); font-weight: 700; }
 
 /* Main */
-.main { display: flex; flex-direction: column; overflow: hidden; }
-.panel { display: none; flex-direction: column; height: 100%; }
+.main { display: flex; flex-direction: column; overflow: hidden; min-height: 0; height: 100%; }
+.panel { display: none; flex-direction: column; height: 100%; min-height: 0; }
 .panel.active { display: flex; }
 
 /* Chat */
@@ -375,6 +379,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   display: flex;
   flex-direction: column;
   gap: .875rem;
+  min-height: 0;
 }
 
 .msg { display: flex; gap: 8px; max-width: 80%; animation: msgIn .2s ease; }
@@ -861,11 +866,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <p>Sign in to continue your learning journey on Sivarr.</p>
     <div class="field">
       <label>Full Name</label>
-      <input id="ln" type="text" placeholder="e.g. Name here" autocomplete="off">
+      <input id="ln" type="text" placeholder="e.g. Name Here" autocomplete="off">
     </div>
     <div class="field">
       <label>Matric Number</label>
-      <input id="lm" type="text" placeholder="e.g. 20061175" autocomplete="off">
+      <input id="lm" type="text" placeholder="e.g. LCU2005282" autocomplete="off">
     </div>
     <button class="btn-login" id="login-btn" onclick="doLogin()">Continue to Sivarr AI</button>
     <p class="login-note">Sivarr platform · v1.0</p>
