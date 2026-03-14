@@ -1052,12 +1052,25 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
     <div class="login-tag">✦ Learning Companion</div>
     <h2>Welcome back</h2>
     <p>Sign in to continue your learning journey on Sivarr.</p>
+
+    <!-- Role selector -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem">
+      <button id="role-student" onclick="setRole('student')"
+        style="padding:10px;border-radius:10px;border:2px solid var(--accent);background:#4f6ef715;color:var(--accent);font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
+        🎓 I'm a Student
+      </button>
+      <button id="role-lecturer" onclick="setRole('lecturer')"
+        style="padding:10px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
+        👨‍🏫 I'm a Lecturer
+      </button>
+    </div>
+
     <div class="field">
       <label>Full Name</label>
       <input id="ln" type="text" placeholder="Your name" autocomplete="off">
     </div>
     <div class="field">
-      <label>Matric Number</label>
+      <label id="lm-label">Matric Number</label>
       <input id="lm" type="text" placeholder="20051947" autocomplete="off">
     </div>
     <button class="btn-login" id="login-btn" onclick="doLogin()">Continue to Sivarr AI</button>
@@ -1274,6 +1287,152 @@ const API = async (url, body) => {
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const $ = id => document.getElementById(id);
 
+// ═══════════════════════════ ROLE TOGGLE ════════════════════════
+let CURRENT_ROLE = 'student';
+
+function setRole(role) {
+  CURRENT_ROLE = role;
+  const sBtn     = $('role-student');
+  const lBtn     = $('role-lecturer');
+  const lmLabel  = $('lm-label');
+  const lmInput  = $('lm');
+  const loginBtn = $('login-btn');
+
+  if (role === 'lecturer') {
+    // Redirect straight to lecturer portal
+    window.location.href = '/lecturer';
+    return;
+  }
+
+  // Student styling
+  sBtn.style.border     = '2px solid var(--accent)';
+  sBtn.style.background = '#4f6ef715';
+  sBtn.style.color      = 'var(--accent)';
+  lBtn.style.border     = '1px solid var(--border)';
+  lBtn.style.background = 'none';
+  lBtn.style.color      = 'var(--muted)';
+  lmLabel.textContent   = 'Matric Number';
+  lmInput.placeholder   = '20051947';
+  lmInput.type          = 'text';
+  loginBtn.textContent  = 'Continue to Sivarr AI';
+}
+
+// ═══════════════════════════ ANNOUNCEMENTS ══════════════════════
+async function loadAnnouncements() {
+  try {
+    const r = await fetch('/api/announcements/active');
+    const d = await r.json();
+    const anns = d.announcements || [];
+    if (!anns.length) return;
+
+    // Don't show announcements the student has already dismissed
+    const dismissed = JSON.parse(localStorage.getItem('sivarr_dismissed_anns') || '[]');
+    const unseen = anns.filter(a => !dismissed.includes(a.date + a.text.slice(0,20)));
+    if (!unseen.length) return;
+
+    const TYPE_COLORS = {
+      info:     { bg: '#4f6ef715', border: '#4f6ef740', color: '#4f6ef7',  icon: '📘' },
+      warning:  { bg: '#f59e0b15', border: '#f59e0b40', color: '#f59e0b',  icon: '⚠️' },
+      deadline: { bg: '#ef444415', border: '#ef444440', color: '#ef4444',  icon: '⏰' },
+      exam:     { bg: '#7c3aed15', border: '#7c3aed40', color: '#7c3aed',  icon: '📝' },
+    };
+
+    // Remove existing popup if any
+    const existing = document.getElementById('ann-popup');
+    if (existing) existing.remove();
+
+    const latest = unseen[unseen.length - 1];
+    const style  = TYPE_COLORS[latest.type] || TYPE_COLORS.info;
+    const key    = latest.date + latest.text.slice(0,20);
+
+    // Create popup
+    const popup = document.createElement('div');
+    popup.id = 'ann-popup';
+    popup.innerHTML = `
+      <div id="ann-popup-inner">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:1.3rem;flex-shrink:0">${style.icon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.72rem;font-weight:700;color:${style.color};text-transform:uppercase;
+              letter-spacing:.05em;margin-bottom:3px">
+              From your lecturer
+              ${unseen.length > 1 ? `<span style="background:${style.color};color:#fff;border-radius:20px;
+                padding:1px 7px;font-size:.65rem;margin-left:6px">${unseen.length} new</span>` : ''}
+            </div>
+            <div style="font-size:.88rem;line-height:1.5;color:var(--text)">${esc(latest.text)}</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:4px">${latest.date}</div>
+          </div>
+          <button onclick="dismissAnnouncement('${key}')"
+            style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;
+              flex-shrink:0;padding:2px 4px;line-height:1;transition:color .15s"
+            onmouseover="this.style.color='var(--text)'"
+            onmouseout="this.style.color='var(--muted)'">✕</button>
+        </div>
+        ${unseen.length > 1 ? `
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid ${style.border}">
+          <button onclick="showAllAnnouncements()" style="background:none;border:none;
+            color:${style.color};font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--font)">
+            View all ${unseen.length} announcements →
+          </button>
+        </div>` : ''}
+      </div>`;
+
+    // Styles for the popup
+    popup.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100%);
+      width: min(460px, calc(100vw - 2rem));
+      background: var(--card);
+      border: 1px solid ${style.border};
+      border-top: none;
+      border-radius: 0 0 16px 16px;
+      padding: 1rem 1.1rem;
+      z-index: 300;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      transition: transform .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    `;
+
+    document.body.appendChild(popup);
+
+    // Animate drop down
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        popup.style.transform = 'translateX(-50%) translateY(0)';
+      });
+    });
+
+    // Auto dismiss after 8 seconds
+    setTimeout(() => dismissAnnouncement(key), 8000);
+
+  } catch {}
+}
+
+function dismissAnnouncement(key) {
+  const popup = document.getElementById('ann-popup');
+  if (!popup) return;
+  popup.style.transform = 'translateX(-50%) translateY(-110%)';
+  setTimeout(() => popup.remove(), 400);
+  // Remember dismissed
+  const dismissed = JSON.parse(localStorage.getItem('sivarr_dismissed_anns') || '[]');
+  if (!dismissed.includes(key)) dismissed.push(key);
+  // Keep only last 50
+  localStorage.setItem('sivarr_dismissed_anns', JSON.stringify(dismissed.slice(-50)));
+}
+
+function showAllAnnouncements() {
+  dismissAnnouncement('');
+  fetch('/api/announcements/active')
+    .then(r => r.json())
+    .then(d => {
+      const anns = d.announcements || [];
+      const TYPE_ICONS = {info:'📘', warning:'⚠️', deadline:'⏰', exam:'📝'};
+      addMsg('sivarr', '📢 Announcements from your lecturer:\n\n' +
+        anns.map((a,i) => `${TYPE_ICONS[a.type]||'📘'} ${a.text}\n— ${a.date}`).join('\n\n'));
+    }).catch(() => {});
+}
+
 // ═══════════════════════════ SESSION PERSISTENCE ══════════════
 // Save login to localStorage so user stays logged in on return
 
@@ -1303,6 +1462,29 @@ function getSavedSession() {
 
 // ═══════════════════════════ LOGIN ════════════════════════════
 async function doLogin(name, matric) {
+  // Redirect lecturers to lecturer page
+  if (CURRENT_ROLE === 'lecturer') {
+    const lname = document.getElementById('ln').value.trim();
+    const lpass = document.getElementById('lm').value.trim();
+    if (!lname || !lpass) { toast('Enter your name and password'); return; }
+    const btn = $('login-btn');
+    btn.disabled = true; btn.textContent = 'Checking...';
+    try {
+      await fetch('/api/lecturer/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name: lname, password: lpass })
+      }).then(r => { if (!r.ok) throw new Error('Wrong password'); return r.json(); });
+      localStorage.setItem('sivarr_lecturer_token', 'pending');
+      localStorage.setItem('sivarr_lecturer_name', lname);
+      window.location.href = '/lecturer';
+    } catch(e) {
+      toast('Incorrect password — try again');
+      btn.disabled = false; btn.textContent = 'Access Lecturer Dashboard';
+    }
+    return;
+  }
+
   // Allow calling with args (auto-login) or from form
   if (!name || !matric) {
     name   = $('ln').value.trim();
@@ -1340,6 +1522,17 @@ async function doLogin(name, matric) {
       ? `Welcome back, ${r.name}! 👋 You've had ${r.sessions} sessions. Ready to keep growing?`
       : `Hey ${r.name}! 👋 Welcome to Sivarr AI — your personal learning companion. Ask me anything to get started! 🚀`
     );
+    loadAnnouncements();
+
+    // Check for lecturer announcements
+    try {
+      const ann = await fetch('/api/lecturer/announcements');
+      const ad  = await ann.json();
+      if (ad.announcements && ad.announcements.length) {
+        const latest = ad.announcements[0];
+        addMsg('sivarr', `📢 Announcement from your lecturer:\n\n"${latest.message}"\n\n— ${latest.author}, ${latest.date}`);
+      }
+    } catch(e) {}
   } catch(e) {
     toast('Login failed — check your connection');
     if (btn) { btn.disabled = false; btn.textContent = 'Continue to Sivarr AI'; }
@@ -1837,4 +2030,3 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
-
