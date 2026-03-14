@@ -1146,7 +1146,17 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
           <div class="quiz-start-card">
             <div style="font-size:2.5rem">📝</div>
             <h2>Test your knowledge</h2>
-            <p>5 questions from your studied topics.<br>Difficulty: <strong id="qd-label" style="color:var(--accent)">Medium</strong></p>
+            <p style="margin-bottom:1rem">Difficulty: <strong id="qd-label" style="color:var(--accent)">Medium</strong></p>
+            <div style="margin-bottom:1rem;text-align:left">
+              <label style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Topic (optional)</label>
+              <input id="quiz-topic-input" type="text"
+                placeholder="e.g. Photosynthesis, Newton's laws..."
+                style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:var(--font-body);font-size:.88rem;outline:none;transition:border-color .2s"
+                onfocus="this.style.borderColor='var(--accent)'"
+                onblur="this.style.borderColor='var(--border)'"
+                onkeydown="if(event.key==='Enter') startQuiz()">
+              <p style="font-size:.72rem;color:var(--muted);margin-top:5px">Leave blank to quiz from your studied topics</p>
+            </div>
             <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
           </div>
         </div>
@@ -1419,15 +1429,33 @@ function ckd(e) {
 
 // ═══════════════════════════ QUIZ ═════════════════════════════
 function startQuiz() {
-  if (!S.topics.length) { toast('Ask some questions first, then come back for a quiz!'); return; }
-  S.quizActive = true; S.quizQ = 0; S.quizScore = 0;
+  const typed = $('quiz-topic-input') ? $('quiz-topic-input').value.trim() : '';
+
+  // If no studied topics AND no typed topic, show helpful message
+  if (!S.topics.length && !typed) {
+    toast('Type a topic above or ask me questions in Chat first!');
+    return;
+  }
+
+  // Store custom topic for this quiz session
+  S.quizCustomTopic = typed || '';
+  S.quizActive = true;
+  S.quizQ      = 0;
+  S.quizScore  = 0;
   loadQ();
 }
 
 async function loadQ() {
   const qw = $('qw');
   qw.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--muted)">Generating question ${S.quizQ+1}/5...</div>`;
-  const topic = S.topics[Math.floor(Math.random()*S.topics.length)];
+
+  // Use typed topic, or random from studied topics
+  let topic = S.quizCustomTopic || '';
+  if (!topic && S.topics.length) {
+    topic = S.topics[Math.floor(Math.random() * S.topics.length)];
+  }
+  if (!topic) topic = 'general knowledge';
+
   const r = await fetch(`/api/quiz/question?sid=${S.sid}&topic=${encodeURIComponent(topic)}&difficulty=${S.diff}`);
   const q = await r.json();
   if (q.error) { toast(q.error); resetQuiz(); return; }
@@ -1496,11 +1524,20 @@ async function showResult() {
 
 function resetQuiz() {
   S.quizActive = false;
+  S.quizCustomTopic = '';
   $('qw').innerHTML = `
     <div class="quiz-start-card">
       <div style="font-size:2.5rem">📝</div>
       <h2>Test your knowledge</h2>
-      <p>5 questions from your studied topics.<br>Difficulty: <strong id="qd-label" style="color:var(--accent)">${S.diff.charAt(0).toUpperCase()+S.diff.slice(1)}</strong></p>
+      <p style="margin-bottom:1rem">Difficulty: <strong style="color:var(--accent)">${S.diff.charAt(0).toUpperCase()+S.diff.slice(1)}</strong></p>
+      <div style="margin-bottom:1rem;text-align:left">
+        <label style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Topic (optional)</label>
+        <input id="quiz-topic-input" type="text"
+          placeholder="e.g. Photosynthesis, Newton's laws..."
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:var(--font-body);font-size:.88rem;outline:none"
+          onkeydown="if(event.key==='Enter') startQuiz()">
+        <p style="font-size:.72rem;color:var(--muted);margin-top:5px">Leave blank to quiz from your studied topics</p>
+      </div>
       <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
     </div>`;
 }
