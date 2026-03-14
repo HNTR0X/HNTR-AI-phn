@@ -1,24 +1,29 @@
 """
-Sivarr AI Web App — FastAPI Backend v4.1
-New: File upload, Admin dashboard, Share results
+Sivarr AI Web App — FastAPI Backend v4.2
+Added: Rate limiting, Input validation, Error logging
 """
 
 import ast
+import collections
 import datetime
 import json
+import logging
 import os
 import random
 import re
 import shutil
+import time
+import traceback
 import uuid
 import warnings
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, validator
 
 try:
     import google.generativeai as genai
@@ -27,10 +32,27 @@ except ImportError:
     GEMINI_AVAILABLE = False
 
 # ═══════════════════════════════════════════════════════════════
+#  LOGGING SETUP
+# ═══════════════════════════════════════════════════════════════
+
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_DIR / "sivarr.log"),
+        logging.StreamHandler(),
+    ]
+)
+log = logging.getLogger("sivarr")
+
+# ═══════════════════════════════════════════════════════════════
 #  CONFIGURATION
 # ═══════════════════════════════════════════════════════════════
 
-VERSION       = "4.1"
+VERSION       = "4.2"
 CACHE_EXPIRY  = 30
 HISTORY_LIMIT = 40
 BANK_LIMIT    = 20
@@ -38,10 +60,23 @@ DATA_DIR      = Path("data")
 UPLOADS_DIR   = Path("uploads")
 SHARES_DIR    = Path("shares")
 
-for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR]:
+for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR, LOG_DIR]:
     d.mkdir(exist_ok=True)
 
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "sivarr_admin_2024")
+
+# ── Rate limiting config ──────────────────────────────────────
+RATE_LIMIT_CHAT     = int(os.environ.get("RATE_LIMIT_CHAT", 30))      # max chat msgs per window
+RATE_LIMIT_QUIZ     = int(os.environ.get("RATE_LIMIT_QUIZ", 20))      # max quiz questions per window
+RATE_LIMIT_UPLOAD   = int(os.environ.get("RATE_LIMIT_UPLOAD", 5))     # max uploads per window
+RATE_LIMIT_WINDOW   = int(os.environ.get("RATE_LIMIT_WINDOW", 60))    # window in seconds
+RATE_LIMIT_LOGIN    = int(os.environ.get("RATE_LIMIT_LOGIN", 10))     # max login attempts per window
+
+# ── Input validation config ───────────────────────────────────
+MAX_MESSAGE_LEN  = 2000    # max characters in a chat message
+MAX_NAME_LEN     = 80      # max student name length
+MAX_MATRIC_LEN   = 30      # max matric number length
+MAX_FILE_SIZE    = 5 * 1024 * 1024  # 5MB max file size
 
 GEMINI_MODELS = [
     "gemini-1.5-flash", "gemini-1.5-pro",
@@ -71,9 +106,9 @@ SYSTEM_PROMPT = f"""You are the Sivarr AI — a casual, fun, and brilliant learn
 built into the Sivarr platform for university students.
 
 About Sivarr:
-• Founded by a Lead City University student.
-• Mission: student to skilled professional to employed talent to career growth.
-• Version: {VERSION}
+- Founded by a Lead City University student.
+- Mission: student to skilled professional to employed talent to career growth.
+- Version: {VERSION}
 
 Rules:
 1. Be casual and encouraging — like a smart friend, not a textbook.
@@ -132,6 +167,116 @@ Reply ONLY with valid JSON:
 }}"""
 
 # ═══════════════════════════════════════════════════════════════
+#  RATE LIMITER
+# ═══════════════════════════════════════════════════════════════
+
+class RateLimiter:
+    """
+    Simple in-memory rate limiter using a sliding window.
+    Tracks request counts per key (IP or student ID) per endpoint.
+    """
+    def __init__(self):
+        self._counts = collections.defaultdict(list)
+
+    def is_allowed(self, key: str, limit: int, window: int = RATE_LIMIT_WINDOW) -> bool:
+        """Return True if request is allowed, False if rate limit exceeded."""
+        now   = time.time()
+        calls = self._counts[key]
+
+        # Remove calls outside the window
+        self._counts[key] = [t for t in calls if now - t < window]
+
+        if len(self._counts[key]) >= limit:
+            return False
+
+        self._counts[key].append(now)
+        return True
+
+    def remaining(self, key: str, limit: int, window: int = RATE_LIMIT_WINDOW) -> int:
+        """Return how many requests are remaining in current window."""
+        now = time.time()
+        self._counts[key] = [t for t in self._counts[key] if now - t < window]
+        return max(0, limit - len(self._counts[key]))
+
+
+limiter = RateLimiter()
+
+
+def get_client_key(request: Request, sid: str = "") -> str:
+    """Get a unique key for rate limiting — prefer student ID, fall back to IP."""
+    if sid:
+        return f"student_{sid}"
+    forwarded = request.headers.get("x-forwarded-for")
+    ip = forwarded.split(",")[0].strip() if forwarded else request.client.host
+    return f"ip_{ip}"
+
+
+def check_rate_limit(key: str, limit: int, endpoint: str) -> None:
+    """Raise 429 if rate limit exceeded, and log the event."""
+    full_key = f"{endpoint}_{key}"
+    if not limiter.is_allowed(full_key, limit):
+        log.warning(f"Rate limit exceeded | key={key} | endpoint={endpoint}")
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many requests. Please wait {RATE_LIMIT_WINDOW} seconds before trying again."
+        )
+
+# ═══════════════════════════════════════════════════════════════
+#  INPUT VALIDATION
+# ═══════════════════════════════════════════════════════════════
+
+def sanitize_text(text: str, max_len: int = MAX_MESSAGE_LEN) -> str:
+    """
+    Clean and validate text input.
+    - Strips whitespace
+    - Removes null bytes and control characters
+    - Enforces max length
+    """
+    if not text:
+        return ""
+    # Remove null bytes and non-printable control chars (keep newlines/tabs)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+    text = text.strip()
+    if len(text) > max_len:
+        text = text[:max_len]
+        log.info(f"Input truncated to {max_len} chars")
+    return text
+
+
+def validate_name(name: str) -> str:
+    """Validate and clean student name."""
+    name = sanitize_text(name, MAX_NAME_LEN)
+    if not name:
+        raise HTTPException(400, "Name cannot be empty.")
+    if len(name) < 2:
+        raise HTTPException(400, "Name must be at least 2 characters.")
+    # Allow letters, spaces, hyphens, apostrophes
+    if not re.match(r"^[a-zA-Z\s\-'.]+$", name):
+        raise HTTPException(400, "Name contains invalid characters.")
+    return name
+
+
+def validate_matric(matric: str) -> str:
+    """Validate matric number format."""
+    matric = sanitize_text(matric, MAX_MATRIC_LEN)
+    if not matric:
+        raise HTTPException(400, "Matric number cannot be empty.")
+    if len(matric) < 3:
+        raise HTTPException(400, "Matric number too short.")
+    # Allow alphanumeric, slashes, hyphens
+    if not re.match(r"^[a-zA-Z0-9\-/]+$", matric):
+        raise HTTPException(400, "Matric number contains invalid characters.")
+    return matric
+
+
+def validate_message(msg: str) -> str:
+    """Validate chat message."""
+    msg = sanitize_text(msg, MAX_MESSAGE_LEN)
+    if not msg:
+        raise HTTPException(400, "Message cannot be empty.")
+    return msg
+
+# ═══════════════════════════════════════════════════════════════
 #  ENV
 # ═══════════════════════════════════════════════════════════════
 
@@ -171,9 +316,11 @@ def get_model():
         for m in GEMINI_MODELS:
             if m in available:
                 _model_name = m
+                log.info(f"Gemini model selected: {m}")
                 return m
         _model_name = available[0] if available else GEMINI_MODELS[0]
-    except Exception:
+    except Exception as e:
+        log.error(f"Gemini model selection failed: {e}")
         _model_name = GEMINI_MODELS[0]
     return _model_name
 
@@ -190,6 +337,7 @@ def get_sessions(sid, memory=""):
             )
             return m.start_chat(history=[])
         _chat_sessions[sid] = {"chat": mk(system), "math": mk(MATH_PROMPT)}
+        log.info(f"New chat session created for: {sid}")
     return _chat_sessions[sid]
 
 
@@ -197,6 +345,7 @@ def gemini_ask(session, question):
     try:
         return session.send_message(question).text.strip()
     except Exception as e:
+        log.error(f"Gemini ask error: {e}")
         return f"[error: {e}]"
 
 
@@ -207,7 +356,8 @@ def gemini_once(prompt, temp=0.8, tokens=600):
             generation_config=genai.GenerationConfig(temperature=temp, max_output_tokens=tokens),
         )
         return model.generate_content(prompt).text.strip()
-    except Exception:
+    except Exception as e:
+        log.error(f"Gemini once error: {e}")
         return None
 
 # ═══════════════════════════════════════════════════════════════
@@ -348,7 +498,8 @@ def get_all_students():
                 "difficulty":  data.get("difficulty", "medium"),
                 "last_seen":   data.get("chat_history", [{}])[-1].get("time", "Never") if data.get("chat_history") else "Never",
             })
-        except Exception:
+        except Exception as e:
+            log.error(f"Error reading student file {f}: {e}")
             continue
     return sorted(students, key=lambda s: s["sessions"], reverse=True)
 
@@ -358,13 +509,68 @@ def get_all_students():
 
 app = FastAPI(title="Sivarr AI", version=VERSION)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Global error handler ──────────────────────────────────────
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch all unhandled exceptions, log them, return clean error."""
+    error_id = str(uuid.uuid4())[:8]
+    log.error(f"Unhandled error [{error_id}] {request.url.path}: {exc}\n{traceback.format_exc()}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Something went wrong. Error ID: {error_id}"}
+    )
+
+# ── Request models with validation ────────────────────────────
+
 class LoginRequest(BaseModel):
     name: str
     matric: str
 
+    @validator("name")
+    def name_valid(cls, v):
+        v = sanitize_text(v, MAX_NAME_LEN)
+        if not v or len(v) < 2:
+            raise ValueError("Name must be at least 2 characters.")
+        if not re.match(r"^[a-zA-Z\s\-'.]+$", v):
+            raise ValueError("Name contains invalid characters.")
+        return v
+
+    @validator("matric")
+    def matric_valid(cls, v):
+        v = sanitize_text(v, MAX_MATRIC_LEN)
+        if not v or len(v) < 3:
+            raise ValueError("Matric number is too short.")
+        if not re.match(r"^[a-zA-Z0-9\-/]+$", v):
+            raise ValueError("Matric number contains invalid characters.")
+        return v
+
+
 class ChatRequest(BaseModel):
     sid: str
     message: str
+
+    @validator("message")
+    def msg_valid(cls, v):
+        v = sanitize_text(v, MAX_MESSAGE_LEN)
+        if not v:
+            raise ValueError("Message cannot be empty.")
+        return v
+
+    @validator("sid")
+    def sid_valid(cls, v):
+        v = sanitize_text(v, 100)
+        if not v:
+            raise ValueError("Session ID required.")
+        return v
+
 
 class QuizRequest(BaseModel):
     sid: str
@@ -375,9 +581,30 @@ class QuizRequest(BaseModel):
     correct: str
     explanation: str
 
+    @validator("difficulty")
+    def diff_valid(cls, v):
+        if v not in ["easy", "medium", "hard"]:
+            raise ValueError("Invalid difficulty.")
+        return v
+
+    @validator("answer", "correct")
+    def answer_valid(cls, v):
+        v = v.strip().upper()
+        if v not in ["A", "B", "C", "D"]:
+            raise ValueError("Answer must be A, B, C, or D.")
+        return v
+
+
 class DifficultyRequest(BaseModel):
     sid: str
     level: str
+
+    @validator("level")
+    def level_valid(cls, v):
+        if v not in ["easy", "medium", "hard"]:
+            raise ValueError("Level must be easy, medium, or hard.")
+        return v
+
 
 class AdminLoginRequest(BaseModel):
     password: str
@@ -392,18 +619,26 @@ async def index():
 async def admin_page():
     return Path("templates/admin.html").read_text()
 
+
 @app.post("/api/login")
-async def login(req: LoginRequest):
-    if not req.name.strip() or not req.matric.strip():
-        raise HTTPException(400, "Name and matric are required")
+async def login(req: LoginRequest, request: Request):
+    key = get_client_key(request)
+    check_rate_limit(key, RATE_LIMIT_LOGIN, "login")
+
     sid = f"{req.name.lower().strip()}_{req.matric.lower().strip()}"
-    p   = load_progress(sid)
+    sid = re.sub(r"[^a-z0-9_]", "_", sid)  # Sanitize sid
+
+    p = load_progress(sid)
     p["sessions"] += 1
     p["name"]   = req.name.title()
     p["matric"] = req.matric.upper()
     save_progress(sid, p)
+
     memory = build_memory(p)
     get_sessions(sid, memory)
+
+    log.info(f"Login: {p['name']} ({p['matric']}) | Sessions: {p['sessions']}")
+
     return {
         "sid": sid, "name": p["name"], "matric": p["matric"],
         "sessions": p["sessions"], "difficulty": p.get("difficulty","medium"),
@@ -413,11 +648,18 @@ async def login(req: LoginRequest):
         "uploaded_files": p.get("uploaded_files", []),
     }
 
+
 @app.post("/api/chat")
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, request: Request):
+    key = get_client_key(request, req.sid)
+    check_rate_limit(key, RATE_LIMIT_CHAT, "chat")
+
     p   = load_progress(req.sid)
-    msg = req.message.strip()
+    msg = req.message
     cmd = msg.lower()
+
+    log.info(f"Chat: {req.sid[:20]} | {msg[:60]}")
+
     local = solve_local(msg)
     if local:
         add_history(p, req.sid, "user", msg)
@@ -426,7 +668,9 @@ async def chat(req: ChatRequest):
         p["topics"]["math"] = p["topics"].get("math", 0) + 1
         save_progress(req.sid, p)
         return {"reply": local, "uncertain": False}
+
     sessions = get_sessions(req.sid)
+
     if is_math(cmd):
         ans = gemini_ask(sessions["math"], msg)
         uncertain = is_uncertain(ans)
@@ -436,6 +680,7 @@ async def chat(req: ChatRequest):
         add_history(p, req.sid, "sivarr", ans)
         save_progress(req.sid, p)
         return {"reply": ans, "uncertain": uncertain}
+
     lib    = load_json(lpath())
     topic  = strip_topic(cmd)
     cached = get_cached(lib, topic)
@@ -444,11 +689,14 @@ async def chat(req: ChatRequest):
         p["topics"][topic] = p["topics"].get(topic, 0) + 1
         save_progress(req.sid, p)
         return {"reply": cached, "uncertain": False}
+
     ans       = gemini_ask(sessions["chat"], msg)
     uncertain = is_uncertain(ans)
+
     if topic and any(kw in cmd for kw in ["what is","define","explain"]) and not uncertain:
         set_cached(lib, topic, ans)
         save_json(lpath(), lib)
+
     p["questions"] += 1
     p["topics"][topic or "general"] = p["topics"].get(topic or "general", 0) + 1
     add_history(p, req.sid, "user", msg)
@@ -456,10 +704,20 @@ async def chat(req: ChatRequest):
     save_progress(req.sid, p)
     return {"reply": ans, "uncertain": uncertain}
 
+
 @app.get("/api/quiz/question")
-async def quiz_question(sid: str, topic: str = "", difficulty: str = "medium", file_id: str = ""):
+async def quiz_question(request: Request, sid: str, topic: str = "", difficulty: str = "medium", file_id: str = ""):
+    sid = sanitize_text(sid, 100)
+    key = get_client_key(request, sid)
+    check_rate_limit(key, RATE_LIMIT_QUIZ, "quiz")
+
+    if difficulty not in ["easy","medium","hard"]:
+        difficulty = "medium"
+
     p = load_progress(sid)
+
     if file_id:
+        file_id = sanitize_text(file_id, 20)
         fpath = UPLOADS_DIR / f"{sid}_{file_id}.txt"
         if fpath.exists():
             content = fpath.read_text()[:3000]
@@ -470,20 +728,24 @@ async def quiz_question(sid: str, topic: str = "", difficulty: str = "medium", f
                     q   = json.loads(raw)
                     q["topic"] = "uploaded document"
                     return q
-                except Exception:
-                    pass
+                except Exception as e:
+                    log.error(f"File quiz parse error: {e}")
         return {"error": "Could not generate question from file."}
+
     topics = list(p["topics"].keys())
     if not topics:
         return {"error": "Study some topics first before taking a quiz!"}
+
     t    = topic if topic in topics else random.choice(topics)
     bank = load_json(bpath())
-    key  = f"{t}_{difficulty}"
-    stored = bank.get(key, [])
+    key2 = f"{t}_{difficulty}"
+
+    stored = bank.get(key2, [])
     if stored:
         q = random.choice(stored)
         q["topic"] = t
         return q
+
     raw = gemini_once(QUIZ_PROMPT.format(topic=t, difficulty=difficulty), temp=0.9, tokens=300)
     if not raw:
         return {"error": "Could not generate question. Try again."}
@@ -491,13 +753,15 @@ async def quiz_question(sid: str, topic: str = "", difficulty: str = "medium", f
         raw = re.sub(r"```(?:json)?","",raw).strip().rstrip("`")
         q   = json.loads(raw)
         q["topic"] = t
-        bank.setdefault(key, [])
-        if q["question"] not in [x["question"] for x in bank[key]]:
-            bank[key] = (bank[key] + [q])[-BANK_LIMIT:]
+        bank.setdefault(key2, [])
+        if q["question"] not in [x["question"] for x in bank[key2]]:
+            bank[key2] = (bank[key2] + [q])[-BANK_LIMIT:]
         save_json(bpath(), bank)
         return q
-    except Exception:
+    except Exception as e:
+        log.error(f"Quiz parse error: {e}")
         return {"error": "Question parse failed. Try again."}
+
 
 @app.post("/api/quiz/submit")
 async def quiz_submit(req: QuizRequest):
@@ -505,27 +769,39 @@ async def quiz_submit(req: QuizRequest):
     correct = req.answer.upper() == req.correct.upper()
     if not correct:
         p.setdefault("wrong_answers", []).append({
-            "topic": req.topic, "question": req.question,
-            "your_answer": req.answer, "correct": req.correct,
-            "explanation": req.explanation, "difficulty": req.difficulty,
+            "topic": sanitize_text(req.topic, 100),
+            "question": sanitize_text(req.question, 500),
+            "your_answer": req.answer,
+            "correct": req.correct,
+            "explanation": sanitize_text(req.explanation, 500),
+            "difficulty": req.difficulty,
             "date": datetime.date.today().isoformat(),
         })
     save_progress(req.sid, p)
     return {"correct": correct, "correct_answer": req.correct}
 
+
 @app.post("/api/quiz/complete")
 async def quiz_complete(data: dict):
-    sid = data["sid"]
-    p   = load_progress(sid)
+    sid   = sanitize_text(str(data.get("sid","")), 100)
+    score = min(max(int(data.get("score",0)), 0), 5)
+    topic = sanitize_text(str(data.get("topic","general")), 100)
+    diff  = data.get("difficulty","medium")
+    if diff not in ["easy","medium","hard"]:
+        diff = "medium"
+    p = load_progress(sid)
     p.setdefault("quizzes", []).append({
-        "topic": data["topic"], "score": data["score"] / 5,
-        "pct": int(data["score"] / 5 * 100), "difficulty": data["difficulty"],
+        "topic": topic, "score": score / 5,
+        "pct": int(score / 5 * 100), "difficulty": diff,
     })
     save_progress(sid, p)
+    log.info(f"Quiz complete: {sid[:20]} | {score}/5 | {topic} | {diff}")
     return {"ok": True}
+
 
 @app.get("/api/progress")
 async def progress(sid: str):
+    sid     = sanitize_text(sid, 100)
     p       = load_progress(sid)
     quizzes = p.get("quizzes", [])
     avg     = (sum(q["score"] for q in quizzes) / len(quizzes) * 100) if quizzes else 0
@@ -540,8 +816,13 @@ async def progress(sid: str):
         "uploaded_files": p.get("uploaded_files",[]),
     }
 
+
 @app.get("/api/suggest")
-async def suggest(sid: str):
+async def suggest(request: Request, sid: str):
+    sid = sanitize_text(sid, 100)
+    key = get_client_key(request, sid)
+    check_rate_limit(key, 5, "suggest")
+
     p      = load_progress(sid)
     topics = list(p["topics"].keys())
     if not topics:
@@ -556,24 +837,26 @@ async def suggest(sid: str):
     ), temp=0.6, tokens=250)
     return {"suggestion": result or "Could not generate suggestions right now."}
 
+
 @app.post("/api/difficulty")
 async def set_difficulty(req: DifficultyRequest):
-    if req.level not in ["easy","medium","hard"]:
-        raise HTTPException(400, "Invalid level")
     p = load_progress(req.sid)
     p["difficulty"] = req.level
     save_progress(req.sid, p)
     return {"ok": True, "level": req.level}
 
+
 @app.get("/api/wrong")
 async def get_wrong(sid: str):
-    p = load_progress(sid)
+    sid = sanitize_text(sid, 100)
+    p   = load_progress(sid)
     return {"wrong": p.get("wrong_answers",[])}
+
 
 @app.post("/api/wrong/clear")
 async def clear_wrong(data: dict):
-    sid   = data["sid"]
-    idx   = data["index"]
+    sid   = sanitize_text(str(data.get("sid","")), 100)
+    idx   = int(data.get("index", -1))
     p     = load_progress(sid)
     wrong = p.get("wrong_answers",[])
     if 0 <= idx < len(wrong):
@@ -582,15 +865,25 @@ async def clear_wrong(data: dict):
     save_progress(sid, p)
     return {"ok": True, "remaining": len(wrong)}
 
+
 # ── File Upload ───────────────────────────────────────────────
 
 @app.post("/api/upload")
-async def upload_file(sid: str = Form(...), file: UploadFile = File(...)):
+async def upload_file(request: Request, sid: str = Form(...), file: UploadFile = File(...)):
+    sid = sanitize_text(sid, 100)
+    key = get_client_key(request, sid)
+    check_rate_limit(key, RATE_LIMIT_UPLOAD, "upload")
+
     allowed = [".txt", ".pdf", ".md"]
     ext     = Path(file.filename).suffix.lower()
     if ext not in allowed:
-        raise HTTPException(400, f"Use .txt, .pdf, or .md files only")
+        raise HTTPException(400, "Use .txt, .pdf, or .md files only.")
+
     content = await file.read()
+
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(400, f"File too large. Maximum size is 5MB.")
+
     if ext == ".pdf":
         try:
             import io
@@ -600,48 +893,67 @@ async def upload_file(sid: str = Form(...), file: UploadFile = File(...)):
                 text   = "\n".join(page.extract_text() or "" for page in reader.pages)
             except ImportError:
                 text = content.decode("utf-8", errors="ignore")
-        except Exception:
+        except Exception as e:
+            log.error(f"PDF parse error: {e}")
             text = content.decode("utf-8", errors="ignore")
     else:
         text = content.decode("utf-8", errors="ignore")
+
+    text = sanitize_text(text, 10000)
     if not text.strip():
         raise HTTPException(400, "Could not extract text from file.")
+
     file_id = str(uuid.uuid4())[:8]
     fpath   = UPLOADS_DIR / f"{sid}_{file_id}.txt"
-    fpath.write_text(text[:10000])
+    fpath.write_text(text)
+
     p = load_progress(sid)
     p.setdefault("uploaded_files", []).append({
-        "id": file_id, "name": file.filename,
+        "id": file_id,
+        "name": sanitize_text(file.filename, 200),
         "date": datetime.date.today().isoformat(),
     })
     save_progress(sid, p)
+
+    log.info(f"File uploaded: {file.filename} by {sid[:20]}")
     summary = gemini_once(FILE_SUMMARY_PROMPT.format(text=text[:3000]), temp=0.5, tokens=600)
     return {
-        "file_id": file_id, "filename": file.filename,
+        "file_id": file_id,
+        "filename": file.filename,
         "summary": summary or "File uploaded! You can now quiz yourself on it.",
     }
+
 
 # ── Share Results ─────────────────────────────────────────────
 
 @app.post("/api/share")
-async def create_share(data: dict):
+async def create_share(request: Request, data: dict):
+    key = get_client_key(request)
+    check_rate_limit(key, 10, "share")
+
     share_id   = str(uuid.uuid4())[:10]
     share_data = {
-        "id": share_id, "type": data.get("type","quiz"),
-        "name": data.get("name","Student"), "score": data.get("score"),
-        "topic": data.get("topic"), "diff": data.get("difficulty","medium"),
+        "id":      share_id,
+        "type":    sanitize_text(str(data.get("type","quiz")), 20),
+        "name":    sanitize_text(str(data.get("name","Student")), MAX_NAME_LEN),
+        "score":   min(max(int(data.get("score",0)), 0), 5),
+        "topic":   sanitize_text(str(data.get("topic","General")), 100),
+        "diff":    data.get("difficulty","medium") if data.get("difficulty") in ["easy","medium","hard"] else "medium",
         "created": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
     (SHARES_DIR / f"{share_id}.json").write_text(json.dumps(share_data, indent=2))
+    log.info(f"Share created: {share_id} by {share_data['name']}")
     return {"share_id": share_id, "url": f"/share/{share_id}"}
+
 
 @app.get("/share/{share_id}", response_class=HTMLResponse)
 async def view_share(share_id: str):
+    share_id   = re.sub(r"[^a-zA-Z0-9\-]", "", share_id)[:20]
     share_path = SHARES_DIR / f"{share_id}.json"
     if not share_path.exists():
         return HTMLResponse("<h2>Share link not found.</h2>", status_code=404)
     d   = json.loads(share_path.read_text())
-    pct = int((d.get("score",0) / 5) * 100) if d.get("score") is not None else 0
+    pct = int((d.get("score",0) / 5) * 100)
     emoji = "🏆" if pct==100 else "🌟" if pct>=80 else "📝"
     return HTMLResponse(f"""<!DOCTYPE html>
 <html><head>
@@ -664,19 +976,25 @@ body{{background:#08090d;color:#f0f1f5;font-family:'Outfit',sans-serif;min-heigh
 <div style="font-size:2.5rem">{emoji}</div>
 <div class="score">{d.get('score',0)}/5</div>
 <div style="font-weight:700;font-size:1.1rem;margin:.3rem 0">{d['name']}</div>
-<div class="meta">scored {pct}% · {d.get('topic','General').title()}</div>
+<div class="meta">scored {pct}% on {d.get('topic','General').title()}</div>
 <span class="pill">{d.get('diff','medium').title()}</span>
 <span class="pill">{d.get('created','')}</span><br><br>
 <a href="/" class="cta">Try Sivarr AI →</a>
 </div></body></html>""")
 
+
 # ── Admin ─────────────────────────────────────────────────────
 
 @app.post("/api/admin/login")
-async def admin_login(req: AdminLoginRequest):
+async def admin_login(req: AdminLoginRequest, request: Request):
+    key = get_client_key(request)
+    check_rate_limit(key, 5, "admin_login")  # Extra strict for admin
     if req.password != ADMIN_PASSWORD:
+        log.warning(f"Failed admin login attempt from {key}")
         raise HTTPException(401, "Invalid password")
+    log.info(f"Admin login successful from {key}")
     return {"ok": True, "token": "admin_" + ADMIN_PASSWORD[:6]}
+
 
 @app.get("/api/admin/students")
 async def admin_students(token: str):
@@ -690,5 +1008,19 @@ async def admin_students(token: str):
         "students": students, "total": len(students),
         "total_questions": total_q, "total_quizzes": total_qz,
         "avg_score": round(avg_all, 1),
+    }
+
+
+# ── Health check ──────────────────────────────────────────────
+
+@app.get("/health")
+async def health():
+    """Simple health check endpoint for Railway."""
+    return {
+        "status":  "ok",
+        "version": VERSION,
+        "time":    datetime.datetime.now().isoformat(),
+        "gemini":  GEMINI_AVAILABLE,
+        "model":   _model_name or "not initialized",
     }
 
