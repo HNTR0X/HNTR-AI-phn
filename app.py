@@ -341,12 +341,26 @@ def get_sessions(sid, memory=""):
     return _chat_sessions[sid]
 
 
+def friendly_gemini_error(e):
+    """Convert raw Gemini exceptions into short readable messages."""
+    msg = str(e).lower()
+    if "quota" in msg or "429" in msg or "resource_exhausted" in msg:
+        return "Sivarr is taking a short break — free tier quota reached. Please wait a minute and try again! ⏳"
+    if "api key" in msg or "invalid" in msg or "401" in msg or "403" in msg:
+        return "API key issue — please contact support."
+    if "network" in msg or "connection" in msg or "timeout" in msg or "unavailable" in msg:
+        return "Connection issue — check your internet and try again."
+    if "404" in msg or "not found" in msg:
+        return "AI model unavailable — try again in a moment."
+    return "Something went wrong — please try again shortly."
+
+
 def gemini_ask(session, question):
     try:
         return session.send_message(question).text.strip()
     except Exception as e:
         log.error(f"Gemini ask error: {e}")
-        return f"[error: {e}]"
+        return friendly_gemini_error(e)
 
 
 def gemini_once(prompt, temp=0.8, tokens=600):
