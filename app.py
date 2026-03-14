@@ -518,6 +518,58 @@ def get_all_students():
     return sorted(students, key=lambda s: s["sessions"], reverse=True)
 
 # ═══════════════════════════════════════════════════════════════
+#  QUIZ JSON PARSER
+# ═══════════════════════════════════════════════════════════════
+
+def parse_quiz_json(raw: str, topic: str) -> dict:
+    """
+    Robustly parse a quiz question from Gemini output.
+    Handles markdown fences, extra text, partial JSON, and
+    common formatting issues Gemini produces.
+    """
+    if not raw:
+        return None
+    try:
+        # Step 1 — strip markdown code fences
+        raw = re.sub(r"```(?:json)?", "", raw).strip().rstrip("`").strip()
+
+        # Step 2 — extract just the JSON object if there's extra text around it
+        match = re.search(r'\{[\s\S]*\}', raw)
+        if match:
+            raw = match.group(0)
+
+        # Step 3 — parse
+        q = json.loads(raw)
+
+        # Step 4 — validate required fields
+        required = ["question", "options", "answer", "explanation"]
+        if not all(k in q for k in required):
+            log.warning(f"Quiz JSON missing fields: {list(q.keys())}")
+            return None
+
+        # Step 5 — validate options has A B C D
+        opts = q.get("options", {})
+        if not all(k in opts for k in ["A", "B", "C", "D"]):
+            log.warning(f"Quiz options incomplete: {list(opts.keys())}")
+            return None
+
+        # Step 6 — normalize answer to uppercase single letter
+        q["answer"] = str(q["answer"]).strip().upper()[:1]
+        if q["answer"] not in ["A", "B", "C", "D"]:
+            q["answer"] = "A"
+
+        q["topic"] = topic
+        return q
+
+    except json.JSONDecodeError as e:
+        log.error(f"Quiz JSON parse error: {e} | raw: {raw[:200]}")
+        return None
+    except Exception as e:
+        log.error(f"Quiz parse unexpected error: {e}")
+        return None
+
+
+# ═══════════════════════════════════════════════════════════════
 #  FASTAPI APP
 # ═══════════════════════════════════════════════════════════════
 
@@ -747,10 +799,12 @@ async def quiz_question(request: Request, sid: str, topic: str = "", difficulty:
         return {"error": "Could not generate question from file."}
 
     topics = list(p["topics"].keys())
-    if not topics:
-        return {"error": "Study some topics first before taking a quiz!"}
 
-    t    = topic if topic in topics else random.choice(topics)
+    # Allow quiz even with no studied topics if a topic was provided
+    if not topics and not topic:
+        topic = "general knowledge"
+
+    t = topic if topic else (random.choice(topics) if topics else "general knowledge")
     bank = load_json(bpath())
     key2 = f"{t}_{difficulty}"
 
@@ -763,18 +817,18 @@ async def quiz_question(request: Request, sid: str, topic: str = "", difficulty:
     raw = gemini_once(QUIZ_PROMPT.format(topic=t, difficulty=difficulty), temp=0.9, tokens=300)
     if not raw:
         return {"error": "Could not generate question. Try again."}
-    try:
-        raw = re.sub(r"```(?:json)?","",raw).strip().rstrip("`")
-        q   = json.loads(raw)
-        q["topic"] = t
-        bank.setdefault(key2, [])
-        if q["question"] not in [x["question"] for x in bank[key2]]:
-            bank[key2] = (bank[key2] + [q])[-BANK_LIMIT:]
-        save_json(bpath(), bank)
-        return q
-    except Exception as e:
-        log.error(f"Quiz parse error: {e}")
-        return {"error": "Question parse failed. Try again."}
+    q = parse_quiz_json(raw, t)
+    if not q:
+        # Retry once with lower temperature
+        raw2 = gemini_once(QUIZ_PROMPT.format(topic=t, difficulty=difficulty), temp=0.5, tokens=300)
+        q = parse_quiz_json(raw2 or "", t)
+    if not q:
+        return {"error": "Could not generate question. Try again."}
+    bank.setdefault(key2, [])
+    if q["question"] not in [x["question"] for x in bank[key2]]:
+        bank[key2] = (bank[key2] + [q])[-BANK_LIMIT:]
+    save_json(bpath(), bank)
+    return q
 
 
 @app.post("/api/quiz/submit")
@@ -1037,4 +1091,3 @@ async def health():
         "gemini":  GEMINI_AVAILABLE,
         "model":   _model_name or "not initialized",
     }
-
