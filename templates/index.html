@@ -819,15 +819,69 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Mobile */
 @media (max-width: 720px) {
-  .body { grid-template-columns: 1fr; }
-  .sidebar, .right { display: none; }
-  #dashboard { display: none; flex-direction: column; }
 
+  /* Hide desktop-only panels */
+  .sidebar { display: none !important; }
+  .right   { display: none !important; }
+
+  /* Topbar — hide matric and name text, keep avatar + buttons */
+  .user-name, .user-matric { display: none; }
+  .topbar { padding: 0 .875rem; }
+
+  /* Body takes full width, single column */
+  .body {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: unset;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Main fills all available space */
+  .main {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* All panels fill full screen */
+  .panel {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+  }
+
+  .panel.active { display: flex; }
+
+  /* Chat panel */
+  .chat-msgs { flex: 1; min-height: 0; padding: 1rem; }
+  .chat-bar  { padding: .75rem 1rem; }
+  .chat-input { font-size: .92rem; padding: 10px 12px; }
+  .send-btn   { width: 44px; height: 44px; font-size: 1rem; }
+
+  /* Quiz panel */
+  .quiz-wrap  { flex: 1; overflow-y: auto; padding: 1rem; }
+
+  /* Stats panel */
+  .stats-wrap { flex: 1; overflow-y: auto; padding: 1rem; }
+
+  /* More panel */
+  #panel-more { overflow-y: auto; }
+
+  /* Mobile nav */
   .mobile-nav {
     display: flex !important;
     background: var(--surface);
     border-top: 1px solid var(--border);
-    padding: 4px 0;
+    padding: 2px 0 6px;
+    flex-shrink: 0;
   }
 
   .mn-btn {
@@ -839,17 +893,99 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     background: none;
     border: none;
     color: var(--muted);
-    font-size: .62rem;
+    font-size: .6rem;
     font-family: var(--font-body);
     cursor: pointer;
-    padding: 6px 4px;
+    padding: 7px 4px 4px;
+    transition: color .15s;
   }
 
-  .mn-btn .mi { font-size: 1.1rem; }
+  .mn-btn .mi { font-size: 1.25rem; display: block; }
   .mn-btn.active { color: var(--accent); }
+
+  /* Login page adjustments */
+  .login-box { padding: 2rem 1.5rem; border-radius: 16px; }
 }
 
 .mobile-nav { display: none; }
+
+/* ── Light Mode ───────────────────────────────────────────── */
+body.light {
+  --bg:      #f4f5f7;
+  --surface: #ffffff;
+  --card:    #ffffff;
+  --border:  #e2e4eb;
+  --border2: #d0d3df;
+  --text:    #111218;
+  --muted:   #8890aa;
+  --muted2:  #b0b5c8;
+}
+
+body.light .msg.sivarr .msg-bub { background: #f0f1f5; border-color: #e2e4eb; color: #111218; }
+body.light .opt-btn { background: #f4f5f7; border-color: #e2e4eb; color: #111218; }
+body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111218; }
+
+/* ── File Upload ──────────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  margin-bottom: 1rem;
+}
+
+.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: #4f6ef708; }
+.upload-zone .uz-icon { font-size: 2rem; margin-bottom: .5rem; }
+.upload-zone .uz-text { font-size: .85rem; color: var(--muted); }
+.upload-zone .uz-sub  { font-size: .75rem; color: var(--muted2); margin-top: 3px; }
+
+.file-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 13px;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .82rem;
+}
+
+.file-item .fi-name { font-weight: 500; }
+.file-item .fi-date { color: var(--muted); font-size: .72rem; }
+
+.btn-file-quiz {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: .72rem;
+  font-family: var(--font);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── Download / Share buttons ─────────────────────────────── */
+.action-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  color: var(--muted);
+  font-size: .72rem;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--body);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
 </style>
 </head>
 <body>
@@ -866,14 +1002,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <p>Sign in to continue your learning journey on Sivarr.</p>
     <div class="field">
       <label>Full Name</label>
-      <input id="ln" type="text" placeholder="e.g. Your Name" autocomplete="off">
+      <input id="ln" type="text" placeholder="Your name" autocomplete="off">
     </div>
     <div class="field">
       <label>Matric Number</label>
-      <input id="lm" type="text" placeholder="e.g. 22671042" autocomplete="off">
+      <input id="lm" type="text" placeholder="20051947" autocomplete="off">
     </div>
     <button class="btn-login" id="login-btn" onclick="doLogin()">Continue to Sivarr AI</button>
-    <p class="login-note">Sivarr platform · v1.0</p>
+    <p class="login-note">Sivarr platform</p>
   </div>
 </div>
 
@@ -898,6 +1034,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div class="user-avatar" id="tb-av"></div>
       </div>
       <button class="diff-pill diff-medium" id="diff-btn" onclick="openDiff()">Medium</button>
+      <button onclick="toggleTheme()" id="theme-btn" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:.85rem;cursor:pointer;">🌙</button>
+      <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:var(--font-body);">Sign out</button>
     </div>
   </header>
 
@@ -956,6 +1094,20 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <!-- Right Panel -->
     <aside class="right">
       <div class="r-card">
+        <div class="r-title">📎 Upload Document</div>
+        <div class="upload-zone" id="upload-zone" onclick="$('file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleDrop(event)">
+          <div class="uz-icon">📄</div>
+          <div class="uz-text">Drop a file or tap to upload</div>
+          <div class="uz-sub">.txt · .pdf · .md supported</div>
+        </div>
+        <input type="file" id="file-input" style="display:none" accept=".txt,.pdf,.md" onchange="uploadFile(this)">
+        <div id="file-list"></div>
+      </div>
+
+      <div class="r-card">
         <div class="r-title">📚 Topics Studied</div>
         <div id="topics-list"><span style="color:var(--muted);font-size:.78rem">Start chatting to build your topic list</span></div>
       </div>
@@ -972,11 +1124,31 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
   </div>
 
+      <!-- More Panel (mobile only) -->
+      <div class="panel" id="panel-more">
+        <div style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem">
+          <div class="r-card">
+            <div class="r-title">📚 Topics Studied</div>
+            <div id="topics-list-m"><span style="color:var(--muted);font-size:.78rem">Start chatting to build your topic list</span></div>
+          </div>
+          <div class="r-card">
+            <div class="r-title">💡 Study Suggestions</div>
+            <div class="suggest-txt" id="sug-txt-m">Click below for personalised recommendations.</div>
+            <button class="btn-suggest" onclick="getSuggestionsMobile()">Get Suggestions</button>
+          </div>
+          <div class="r-card">
+            <div class="r-title">📖 Revision (<span id="wc-m">0</span>)</div>
+            <div id="wrong-list-m"><span style="color:var(--muted);font-size:.78rem">No wrong answers yet — keep quizzing!</span></div>
+          </div>
+        </div>
+      </div>
+
   <!-- Mobile Nav -->
   <nav class="mobile-nav">
     <button class="mn-btn active" onclick="nav('chat',this)" id="mn-chat"><span class="mi">💬</span>Chat</button>
     <button class="mn-btn" onclick="nav('quiz',this)" id="mn-quiz"><span class="mi">📝</span>Quiz</button>
-    <button class="mn-btn" onclick="nav('stats',this)" id="mn-stats"><span class="mi">📊</span>Stats</button>
+    <button class="mn-btn" onclick="nav('stats',this)" id="mn-stats"><span class="mi">📊</span>Progress</button>
+    <button class="mn-btn" onclick="nav('more',this)" id="mn-more"><span class="mi">💡</span>More</button>
   </nav>
 
 </div>
@@ -1024,36 +1196,94 @@ const API = async (url, body) => {
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const $ = id => document.getElementById(id);
 
+// ═══════════════════════════ SESSION PERSISTENCE ══════════════
+// Save login to localStorage so user stays logged in on return
+
+function saveSession(name, matric) {
+  localStorage.setItem('sivarr_name',   name);
+  localStorage.setItem('sivarr_matric', matric);
+  localStorage.setItem('sivarr_ts',     Date.now());
+}
+
+function clearSession() {
+  localStorage.removeItem('sivarr_name');
+  localStorage.removeItem('sivarr_matric');
+  localStorage.removeItem('sivarr_ts');
+}
+
+function getSavedSession() {
+  const name   = localStorage.getItem('sivarr_name');
+  const matric = localStorage.getItem('sivarr_matric');
+  const ts     = localStorage.getItem('sivarr_ts');
+  // Session expires after 30 days
+  if (!name || !matric || !ts) return null;
+  if (Date.now() - parseInt(ts) > 30 * 24 * 60 * 60 * 1000) {
+    clearSession(); return null;
+  }
+  return { name, matric };
+}
+
 // ═══════════════════════════ LOGIN ════════════════════════════
-async function doLogin() {
-  const name = $('ln').value.trim(), matric = $('lm').value.trim();
+async function doLogin(name, matric) {
+  // Allow calling with args (auto-login) or from form
+  if (!name || !matric) {
+    name   = $('ln').value.trim();
+    matric = $('lm').value.trim();
+  }
   if (!name || !matric) { toast('Enter your name and matric number'); return; }
+
   const btn = $('login-btn');
-  btn.disabled = true; btn.textContent = 'Connecting...';
+  if (btn) { btn.disabled = true; btn.textContent = 'Connecting...'; }
+
   try {
     const r = await API('/api/login', { name, matric });
     S.sid = r.sid; S.name = r.name; S.matric = r.matric;
     S.diff = r.difficulty; S.topics = r.topics; S.weak = r.weak;
     S.stats = { questions: r.questions, quizzes: r.quizzes, sessions: r.sessions, wrong: r.wrong_count };
-    $('tb-name').textContent = r.name;
+    S.uploadedFiles = r.uploaded_files || [];
+
+    // Save to localStorage for auto-login next visit
+    saveSession(name, matric);
+
+    $('tb-name').textContent   = r.name;
     $('tb-matric').textContent = r.matric;
-    $('tb-av').textContent = r.name[0].toUpperCase();
+    $('tb-av').textContent     = r.name[0].toUpperCase();
     updateDiff(r.difficulty);
     updateSBStats();
     renderTopics(r.topics, r.weak);
+    renderFileList();
     loadWrong();
+
     $('login-screen').style.display = 'none';
-    const d = $('dashboard');
-    d.style.display = 'flex';
+    $('dashboard').style.display    = 'flex';
+
     addMsg('sivarr', r.returning
       ? `Welcome back, ${r.name}! 👋 You've had ${r.sessions} sessions. Ready to keep growing?`
       : `Hey ${r.name}! 👋 Welcome to Sivarr AI — your personal learning companion. Ask me anything to get started! 🚀`
     );
   } catch(e) {
     toast('Login failed — check your connection');
-    btn.disabled = false; btn.textContent = 'Continue to Sivarr AI';
+    if (btn) { btn.disabled = false; btn.textContent = 'Continue to Sivarr AI'; }
+    clearSession();
   }
 }
+
+// Add logout button handler
+function logout() {
+  clearSession();
+  location.reload();
+}
+
+// Auto-login on page load if session exists
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = getSavedSession();
+  if (saved) {
+    // Show brief loading state on login screen
+    const btn = $('login-btn');
+    if (btn) { btn.textContent = 'Resuming session...'; btn.disabled = true; }
+    doLogin(saved.name, saved.matric);
+  }
+});
 
 ['ln','lm'].forEach((id,i) => {
   $(id).addEventListener('keydown', e => {
@@ -1093,6 +1323,7 @@ function addMsg(role, text, uncertain = false) {
     <div>
       <div class="msg-bub">${esc(text)}</div>
       ${uncertain ? `<div class="uncertain">⚠️ Verify this with your lecturer</div>` : ''}
+      ${role === 'sivarr' ? `<button class="action-btn" style="margin-top:5px;font-size:.68rem" onclick="downloadText('${esc(text).replace(/'/g,"\\'")}')">⬇ Download</button>` : ''}
     </div>`;
   w.appendChild(d);
   scrollMsgs();
@@ -1186,6 +1417,9 @@ async function showResult() {
       <div class="score-num">${S.quizScore}/5</div>
       <div style="color:var(--muted);margin:.4rem 0">${pct}% · ${S.diff.toUpperCase()}</div>
       <div style="font-weight:500;margin-bottom:1.5rem">${msg}</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:1rem">
+        <button class="action-btn" onclick="shareResult(${S.quizScore},'${S.topics[0]||'general'}')">🔗 Share Result</button>
+      </div>
       <button class="btn-start" onclick="startQuiz()">Take Another Quiz</button>
     </div>`;
   S.stats.quizzes++; updateSBStats(); loadWrong(); S.quizActive = false;
@@ -1293,13 +1527,35 @@ function updateDiff(level) {
 function nav(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn, .mn-btn').forEach(b => b.classList.remove('active'));
-  $(`panel-${name}`).classList.add('active');
+  const p = document.getElementById(`panel-${name}`);
+  if (p) p.classList.add('active');
   if (btn) btn.classList.add('active');
-  const mob = $(`mn-${name}`); if (mob) mob.classList.add('active');
+  const mob = document.getElementById(`mn-${name}`); if (mob) mob.classList.add('active');
   if (name === 'stats') loadStats();
+  if (name === 'more') syncMore();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
+}
+
+async function getSuggestionsMobile() {
+  $('sug-txt-m').textContent = 'Thinking...';
+  try {
+    const r = await fetch(`/api/suggest?sid=${S.sid}`);
+    const d = await r.json();
+    $('sug-txt-m').textContent = d.suggestion;
+  } catch { $('sug-txt-m').textContent = 'Couldn\'t load — try again.'; }
+}
+
+function syncMore() {
+  // Sync topics
+  const tl = $('topics-list-m');
+  if (tl) tl.innerHTML = $('topics-list').innerHTML;
+  // Sync wrong answers
+  const wl = $('wrong-list-m');
+  if (wl) wl.innerHTML = $('wrong-list').innerHTML;
+  const wc = $('wc-m');
+  if (wc) wc.textContent = $('wc').textContent;
 }
 
 // ═══════════════════════════ HELPERS ════════════════════════════
@@ -1328,6 +1584,124 @@ function toast(msg, ms=2500) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), ms);
 }
+// ═══════════════════════════ THEME TOGGLE ═══════════════════════
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  $('theme-btn').textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('sivarr_theme', isLight ? 'light' : 'dark');
+}
+
+// Apply saved theme on load
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('sivarr_theme') === 'light') {
+    document.body.classList.add('light');
+    const btn = $('theme-btn'); if (btn) btn.textContent = '☀️';
+  }
+});
+
+// ═══════════════════════════ FILE UPLOAD ════════════════════════
+async function uploadFile(input) {
+  const file = input.files[0];
+  if (!file || !S.sid) return;
+  const zone = $('upload-zone');
+  zone.innerHTML = `<div class="uz-icon">⏳</div><div class="uz-text">Uploading ${file.name}...</div>`;
+
+  const formData = new FormData();
+  formData.append('sid', S.sid);
+  formData.append('file', file);
+
+  try {
+    const r = await fetch('/api/upload', { method: 'POST', body: formData });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Upload failed'); }
+    const d = await r.json();
+
+    // Reset zone
+    zone.innerHTML = `<div class="uz-icon">📄</div><div class="uz-text">Drop a file or tap to upload</div><div class="uz-sub">.txt · .pdf · .md supported</div>`;
+
+    // Show summary in chat
+    addMsg('sivarr', `📎 File uploaded: ${d.filename}\n\n${d.summary}`);
+
+    // Update file list
+    S.uploadedFiles = S.uploadedFiles || [];
+    S.uploadedFiles.push({ id: d.file_id, name: d.filename });
+    renderFileList();
+
+    toast(`${file.name} uploaded ✓`);
+  } catch(e) {
+    zone.innerHTML = `<div class="uz-icon">📄</div><div class="uz-text">Drop a file or tap to upload</div><div class="uz-sub">.txt · .pdf · .md supported</div>`;
+    toast('Upload failed: ' + e.message);
+  }
+  input.value = '';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  $('upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  $('file-input').files = dt.files;
+  uploadFile($('file-input'));
+}
+
+function renderFileList() {
+  const list = $('file-list');
+  if (!list || !S.uploadedFiles || !S.uploadedFiles.length) return;
+  list.innerHTML = S.uploadedFiles.map(f => `
+    <div class="file-item">
+      <div>
+        <div class="fi-name">📄 ${esc(f.name)}</div>
+      </div>
+      <button class="btn-file-quiz" onclick="quizFromFile('${f.id}')">Quiz me</button>
+    </div>`).join('');
+}
+
+function quizFromFile(fileId) {
+  S.quizFileId = fileId;
+  nav('quiz', $('mn-quiz') || document.querySelector('.nav-btn[onclick*="quiz"]'));
+  startQuizFromFile(fileId);
+}
+
+async function startQuizFromFile(fileId) {
+  S.quizActive = true; S.quizQ = 0; S.quizScore = 0; S.quizFileId = fileId;
+  const qw = $('qw');
+  qw.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--muted)">Generating question 1/5 from your document...</div>`;
+  const r = await fetch(`/api/quiz/question?sid=${S.sid}&difficulty=${S.diff}&file_id=${fileId}`);
+  const q = await r.json();
+  if (q.error) { toast(q.error); resetQuiz(); return; }
+  S.curQ = q;
+  renderQ(q);
+}
+
+// ═══════════════════════════ DOWNLOAD ═══════════════════════════
+function downloadText(text) {
+  const clean = text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+  const blob = new Blob([`Sivarr AI Response\n${'─'.repeat(40)}\n\n${clean}\n\nDownloaded from Sivarr AI`], {type:'text/plain'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `sivarr_answer_${Date.now()}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════ SHARE ══════════════════════════════
+async function shareResult(score, topic) {
+  try {
+    const r = await API('/api/share', {
+      name: S.name, score: score, topic: topic,
+      difficulty: S.diff, type: 'quiz',
+    });
+    const url = window.location.origin + r.url;
+    // Copy to clipboard
+    await navigator.clipboard.writeText(url);
+    toast('Share link copied to clipboard! 🔗');
+  } catch(e) {
+    toast('Could not create share link — try again.');
+  }
+}
+
 </script>
 </body>
 </html>
+
