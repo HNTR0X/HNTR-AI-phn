@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sivarr AI — Your Growth Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0a0f;
+    --surface:   #111118;
+    --card:      #16161f;
+    --border:    #1e1e2e;
+    --accent:    #7c6af7;
+    --accent2:   #f7a26a;
+    --green:     #4ade80;
+    --red:       #f87171;
+    --yellow:    #fbbf24;
+    --text:      #e8e8f0;
+    --muted:     #6b6b8a;
+    --radius:    14px;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Scrollbar ────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── Login Screen ─────────────────────────────────────────── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: radial-gradient(ellipse at 60% 20%, #1a1040 0%, var(--bg) 60%);
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    animation: slideUp .4s ease;
+  }
+
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 2rem;
+  }
+
+  .login-logo .icon {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+  }
+
+  .login-logo h1 {
+    font-family: var(--font-head);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+  }
+
+  .login-logo p {
+    font-size: .75rem;
+    color: var(--muted);
+    margin-top: -2px;
+  }
+
+  .login-box h2 {
+    font-family: var(--font-head);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+
+  .field { margin-bottom: 1rem; }
+
+  .field label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: .4rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: .95rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: .85rem;
+    font-family: var(--font-head);
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: .5rem;
+    transition: opacity .2s, transform .1s;
+  }
+
+  .btn-primary:hover { opacity: .9; }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+  .login-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  /* ── Dashboard ────────────────────────────────────────────── */
+  #dashboard {
+    display: none;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    grid-template-rows: 60px 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+
+  /* ── Top Bar ──────────────────────────────────────────────── */
+  .topbar {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    gap: 1rem;
+  }
+
+  .topbar-logo {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -.02em;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .topbar-logo span { color: var(--accent); }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: .85rem;
+  }
+
+  .avatar {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: .85rem;
+  }
+
+  .topbar-name { font-weight: 500; }
+  .topbar-matric { color: var(--muted); font-size: .8rem; }
+
+  .difficulty-badge {
+    padding: .3rem .75rem;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+    font-family: var(--font-head);
+    cursor: pointer;
+    border: none;
+    transition: opacity .2s;
+  }
+
+  .difficulty-badge:hover { opacity: .8; }
+  .diff-easy   { background: #14532d; color: var(--green); }
+  .diff-medium { background: #713f12; color: var(--yellow); }
+  .diff-hard   { background: #7f1d1d; color: var(--red); }
+
+  /* ── Sidebar ──────────────────────────────────────────────── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.25rem 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .nav-section h3 {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .6rem;
+    padding: 0 .5rem;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    background: none;
+    border: none;
+    border-radius: 10px;
+    padding: .65rem .75rem;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: .9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all .15s;
+    margin-bottom: 2px;
+  }
+
+  .nav-btn:hover { background: var(--card); color: var(--text); }
+  .nav-btn.active { background: var(--accent); color: #fff; }
+  .nav-btn .nav-icon { font-size: 1.1rem; width: 20px; text-align: center; }
+
+  .stats-mini {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .stats-mini h3 {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .75rem;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .3rem 0;
+    font-size: .85rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-row:last-child { border: none; }
+  .stat-row .label { color: var(--muted); }
+  .stat-row .val { font-weight: 600; font-family: var(--font-head); }
+
+  /* ── Main Panel ───────────────────────────────────────────── */
+  .main-panel {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  .panel { display: none; height: 100%; flex-direction: column; }
+  .panel.active { display: flex; }
+
+  /* ── Chat Panel ───────────────────────────────────────────── */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .msg {
+    display: flex;
+    gap: .75rem;
+    animation: msgIn .25s ease;
+    max-width: 85%;
+  }
+
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+  .msg.sivarr { align-self: flex-start; }
+
+  .msg-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem;
+    font-weight: 700;
+  }
+
+  .msg.sivarr .msg-avatar { background: var(--accent); }
+  .msg.user .msg-avatar { background: var(--accent2); }
+
+  .msg-bubble {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: .75rem 1rem;
+    font-size: .9rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .msg.user .msg-bubble {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .uncertain-flag {
+    font-size: .75rem;
+    color: var(--yellow);
+    margin-top: .4rem;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+  }
+
+  .typing {
+    display: flex;
+    gap: 4px;
+    padding: .75rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: fit-content;
+  }
+
+  .typing span {
+    width: 7px; height: 7px;
+    background: var(--muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+
+  .chat-input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: .75rem;
+    background: var(--surface);
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: .9rem;
+    outline: none;
+    resize: none;
+    min-height: 46px;
+    max-height: 120px;
+    transition: border-color .2s;
+  }
+
+  .chat-input:focus { border-color: var(--accent); }
+
+  .send-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    width: 46px;
+    height: 46px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #fff;
+    transition: opacity .2s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { opacity: .85; }
+  .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Quiz Panel ───────────────────────────────────────────── */
+  .quiz-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+  }
+
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .quiz-header h2 {
+    font-family: var(--font-head);
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 20px;
+    height: 6px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 20px;
+    transition: width .4s ease;
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .question-card h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .options { display: flex; flex-direction: column; gap: .6rem; }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-body);
+    font-size: .9rem;
+    color: var(--text);
+    transition: all .15s;
+  }
+
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--card); }
+  .option-btn.correct { border-color: var(--green); background: #14532d33; color: var(--green); }
+  .option-btn.wrong   { border-color: var(--red);   background: #7f1d1d33;  color: var(--red); }
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: .8rem;
+    flex-shrink: 0;
+  }
+
+  .explanation {
+    margin-top: 1rem;
+    padding: .75rem 1rem;
+    background: var(--surface);
+    border-radius: 10px;
+    font-size: .85rem;
+    color: var(--muted);
+    display: none;
+  }
+
+  .quiz-score-card {
+    text-align: center;
+    padding: 2rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .score-emoji { font-size: 3rem; margin-bottom: .5rem; }
+
+  .score-number {
+    font-family: var(--font-head);
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .quiz-start {
+    text-align: center;
+    padding: 3rem 2rem;
+  }
+
+  .quiz-start h2 {
+    font-family: var(--font-head);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: .75rem;
+  }
+
+  .quiz-start p { color: var(--muted); margin-bottom: 1.5rem; }
+
+  .btn-start {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: .85rem 2rem;
+    font-family: var(--font-head);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+
+  .btn-start:hover { opacity: .85; }
+
+  /* ── Right Panel ──────────────────────────────────────────── */
+  .right-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .panel-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .panel-card h3 {
+    font-family: var(--font-head);
+    font-size: .85rem;
+    font-weight: 700;
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .topic-pill {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: .25rem .65rem;
+    font-size: .75rem;
+    margin: 2px;
+    color: var(--muted);
+  }
+
+  .topic-pill.weak { border-color: var(--accent2); color: var(--accent2); }
+
+  .suggestion-text {
+    font-size: .85rem;
+    color: var(--muted);
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .btn-suggest {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: .6rem;
+    color: var(--accent);
+    font-family: var(--font-head);
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: .75rem;
+    transition: all .15s;
+  }
+
+  .btn-suggest:hover { background: var(--accent); color: #fff; }
+
+  .wrong-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .75rem;
+    margin-bottom: .5rem;
+    font-size: .8rem;
+  }
+
+  .wrong-item .q-text { color: var(--text); margin-bottom: .3rem; font-weight: 500; }
+  .wrong-item .answer-line { color: var(--muted); font-size: .75rem; }
+  .wrong-item .answer-line span { color: var(--green); font-weight: 600; }
+
+  .btn-clear {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .25rem .6rem;
+    color: var(--muted);
+    font-size: .7rem;
+    cursor: pointer;
+    margin-top: .4rem;
+    transition: all .15s;
+  }
+
+  .btn-clear:hover { border-color: var(--green); color: var(--green); }
+
+  /* ── Stats Panel ──────────────────────────────────────────── */
+  .stats-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+
+  .stat-card .stat-label {
+    font-size: .75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: .3rem;
+  }
+
+  .stat-card .stat-value {
+    font-family: var(--font-head);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  /* ── Difficulty Modal ─────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 320px;
+    animation: slideUp .25s ease;
+  }
+
+  .modal h3 {
+    font-family: var(--font-head);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+  }
+
+  .diff-option {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    margin-bottom: .5rem;
+    transition: all .15s;
+    background: var(--surface);
+  }
+
+  .diff-option:hover { border-color: var(--accent); }
+  .diff-option.selected { border-color: var(--accent); background: #7c6af715; }
+  .diff-option .diff-icon { font-size: 1.3rem; }
+  .diff-option .diff-label { font-weight: 600; font-size: .9rem; }
+  .diff-option .diff-desc  { font-size: .75rem; color: var(--muted); }
+
+  /* ── Toast ────────────────────────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem; right: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .75rem 1.25rem;
+    font-size: .85rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .25s;
+    z-index: 200;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Loader ───────────────────────────────────────────────── */
+  .loader {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+
+  /* ── Animations ───────────────────────────────────────────── */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounce {
+    0%,80%,100% { transform: translateY(0); }
+    40%         { transform: translateY(-6px); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Mobile ───────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .layout {
+      grid-template-columns: 1fr;
+      grid-template-rows: 60px 1fr 56px;
+    }
+
+    .sidebar { display: none; }
+    .right-panel { display: none; }
+
+    .mobile-nav {
+      grid-column: 1;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex !important;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 1rem;
+    }
+
+    .mobile-nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: .65rem;
+      font-family: var(--font-body);
+      cursor: pointer;
+      padding: .4rem .6rem;
+      border-radius: 8px;
+    }
+
+    .mobile-nav-btn .icon { font-size: 1.2rem; }
+    .mobile-nav-btn.active { color: var(--accent); }
+  }
+
+  .mobile-nav { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">🚀</div>
+      <div>
+        <h1>Sivarr AI</h1>
+        <p>Your Growth. Your Journey. Your Future.</p>
+      </div>
+    </div>
+    <h2>Sign in to continue</h2>
+    <div class="field">
+      <label>Full Name</label>
+      <input id="login-name" type="text" placeholder="e.g. Nelson Adeyemi" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Matric Number</label>
+      <input id="login-matric" type="text" placeholder="e.g. 22CS1042" autocomplete="off">
+    </div>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">
+      Enter Sivarr
+    </button>
+    <p class="login-footer">Lead City University · v3.1 · Powered by Gemini</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════════════════════════ -->
+<div id="dashboard">
+  <div class="layout">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-logo">🚀 <span>Sivarr</span> AI</div>
+      <div class="topbar-user">
+        <div style="text-align:right">
+          <div class="topbar-name" id="tb-name"></div>
+          <div class="topbar-matric" id="tb-matric"></div>
+        </div>
+        <div class="avatar" id="tb-avatar"></div>
+        <button class="difficulty-badge diff-medium" id="diff-btn" onclick="openDiffModal()">
+          Medium
+        </button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="nav-section">
+        <h3>Navigate</h3>
+        <button class="nav-btn active" onclick="switchPanel('chat', this)">
+          <span class="nav-icon">💬</span> Chat with Sivarr
+        </button>
+        <button class="nav-btn" onclick="switchPanel('quiz', this)">
+          <span class="nav-icon">📝</span> Take a Quiz
+        </button>
+        <button class="nav-btn" onclick="switchPanel('stats', this)">
+          <span class="nav-icon">📊</span> My Progress
+        </button>
+      </div>
+
+      <div class="stats-mini" id="sidebar-stats">
+        <h3>Quick Stats</h3>
+        <div class="stat-row">
+          <span class="label">Questions</span>
+          <span class="val" id="sq-questions">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">Quizzes</span>
+          <span class="val" id="sq-quizzes">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">Sessions</span>
+          <span class="val" id="sq-sessions">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="label">To Revise</span>
+          <span class="val" id="sq-wrong">—</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Panel -->
+    <main class="main-panel">
+
+      <!-- Chat Panel -->
+      <div class="panel active" id="panel-chat">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input"
+            placeholder="Ask anything — maths, science, history, coding..."
+            rows="1" onkeydown="chatKeyDown(event)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+
+      <!-- Quiz Panel -->
+      <div class="panel" id="panel-quiz">
+        <div class="quiz-content" id="quiz-content">
+          <div class="quiz-start" id="quiz-start">
+            <div style="font-size:3rem;margin-bottom:1rem">📝</div>
+            <h2>Ready to be tested?</h2>
+            <p>5 questions based on topics you've studied.<br>Difficulty: <strong id="qs-diff">Medium</strong></p>
+            <button class="btn-start" onclick="startQuiz()">Start Quiz</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Panel -->
+      <div class="panel" id="panel-stats">
+        <div class="stats-panel" id="stats-panel-content"></div>
+      </div>
+
+    </main>
+
+    <!-- Right Panel -->
+    <aside class="right-panel">
+
+      <!-- Topics -->
+      <div class="panel-card">
+        <h3>📚 Topics Studied</h3>
+        <div id="topics-list" style="margin-top:.5rem"></div>
+      </div>
+
+      <!-- Suggestions -->
+      <div class="panel-card">
+        <h3>💡 Study Suggestions</h3>
+        <div class="suggestion-text" id="suggestion-text">Click below to get personalised recommendations.</div>
+        <button class="btn-suggest" onclick="getSuggestions()">Get Suggestions</button>
+      </div>
+
+      <!-- Wrong Answers -->
+      <div class="panel-card" id="wrong-panel">
+        <h3>📖 Revision (<span id="wrong-count">0</span>)</h3>
+        <div id="wrong-list"></div>
+      </div>
+
+    </aside>
+
+    <!-- Mobile Nav -->
+    <nav class="mobile-nav">
+      <button class="mobile-nav-btn active" onclick="switchPanel('chat', this)" id="mn-chat">
+        <span class="icon">💬</span> Chat
+      </button>
+      <button class="mobile-nav-btn" onclick="switchPanel('quiz', this)" id="mn-quiz">
+        <span class="icon">📝</span> Quiz
+      </button>
+      <button class="mobile-nav-btn" onclick="switchPanel('stats', this)" id="mn-stats">
+        <span class="icon">📊</span> Stats
+      </button>
+    </nav>
+
+  </div>
+</div>
+
+<!-- Difficulty Modal -->
+<div class="modal-overlay" id="diff-modal" onclick="closeDiffModal(event)">
+  <div class="modal">
+    <h3>🎯 Set Difficulty</h3>
+    <div class="diff-option" onclick="setDifficulty('easy')">
+      <span class="diff-icon">🌱</span>
+      <div>
+        <div class="diff-label">Easy</div>
+        <div class="diff-desc">Basic recall & definitions</div>
+      </div>
+    </div>
+    <div class="diff-option selected" onclick="setDifficulty('medium')">
+      <span class="diff-icon">🔥</span>
+      <div>
+        <div class="diff-label">Medium</div>
+        <div class="diff-desc">Apply concepts & reasoning</div>
+      </div>
+    </div>
+    <div class="diff-option" onclick="setDifficulty('hard')">
+      <span class="diff-icon">⚡</span>
+      <div>
+        <div class="diff-label">Hard</div>
+        <div class="diff-desc">Analysis & complex problems</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let STATE = {
+  sid: null, name: "", matric: "",
+  difficulty: "medium", topics: [], weak: [],
+  quizActive: false, quizQ: 0, quizScore: 0,
+  currentQ: null,
+};
+
+// ═══════════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════════
+async function doLogin() {
+  const name   = document.getElementById("login-name").value.trim();
+  const matric = document.getElementById("login-matric").value.trim();
+  if (!name || !matric) { toast("Enter your name and matric number"); return; }
+
+  const btn = document.getElementById("login-btn");
+  btn.disabled = true;
+  btn.textContent = "Connecting...";
+
+  try {
+    const res  = await api("/api/login", { name, matric });
+    STATE.sid        = res.sid;
+    STATE.name       = res.name;
+    STATE.matric     = res.matric;
+    STATE.difficulty = res.difficulty;
+    STATE.topics     = res.topics;
+    STATE.weak       = res.weak;
+
+    // Update UI
+    document.getElementById("tb-name").textContent   = res.name;
+    document.getElementById("tb-matric").textContent = res.matric;
+    document.getElementById("tb-avatar").textContent = res.name[0].toUpperCase();
+    updateDiffBadge(res.difficulty);
+    updateSidebarStats(res);
+    renderTopics(res.topics, res.weak);
+    loadWrong();
+
+    // Show dashboard
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display    = "block";
+
+    // Welcome message
+    const welcome = res.returning
+      ? `Welcome back, ${res.name}! 👋 You've had ${res.sessions} sessions. Ready to keep growing?`
+      : `Hey ${res.name}! 👋 Welcome to Sivarr — your AI-powered study companion. Ask me anything to get started!`;
+    appendMsg("sivarr", welcome);
+
+  } catch(e) {
+    toast("Login failed — check your connection");
+    btn.disabled = false;
+    btn.textContent = "Enter Sivarr";
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && document.getElementById("login-screen").style.display !== "none") {
+    doLogin();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  CHAT
+// ═══════════════════════════════════════════════════════════
+async function sendMessage() {
+  const input = document.getElementById("chat-input");
+  const msg   = input.value.trim();
+  if (!msg || !STATE.sid) return;
+
+  appendMsg("user", msg);
+  input.value = "";
+  input.style.height = "auto";
+
+  const typing = appendTyping();
+  const btn    = document.getElementById("send-btn");
+  btn.disabled = true;
+
+  try {
+    const res = await api("/api/chat", { sid: STATE.sid, message: msg });
+    typing.remove();
+    appendMsg("sivarr", res.reply, res.uncertain);
+    refreshStats();
+    refreshTopics();
+  } catch(e) {
+    typing.remove();
+    appendMsg("sivarr", "Connection issue — check your internet and try again.");
+  }
+
+  btn.disabled = false;
+  scrollChat();
+}
+
+function appendMsg(role, text, uncertain = false) {
+  const wrap = document.getElementById("chat-messages");
+  const div  = document.createElement("div");
+  div.className = `msg ${role}`;
+
+  const avatar = role === "sivarr" ? "🤖" : STATE.name[0]?.toUpperCase() || "U";
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div>
+      <div class="msg-bubble">${escHtml(text)}</div>
+      ${uncertain ? `<div class="uncertain-flag">⚠️ Verify this with your lecturer</div>` : ""}
+    </div>`;
+  wrap.appendChild(div);
+  scrollChat();
+  return div;
+}
+
+function appendTyping() {
+  const wrap = document.getElementById("chat-messages");
+  const div  = document.createElement("div");
+  div.className = "msg sivarr";
+  div.innerHTML = `<div class="msg-avatar">🤖</div>
+    <div class="typing"><span></span><span></span><span></span></div>`;
+  wrap.appendChild(div);
+  scrollChat();
+  return div;
+}
+
+function scrollChat() {
+  const c = document.getElementById("chat-messages");
+  c.scrollTop = c.scrollHeight;
+}
+
+function chatKeyDown(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+  // Auto-resize
+  e.target.style.height = "auto";
+  e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+}
+
+// ═══════════════════════════════════════════════════════════
+//  QUIZ
+// ═══════════════════════════════════════════════════════════
+function startQuiz() {
+  if (!STATE.topics.length) {
+    toast("Study some topics first before taking a quiz!");
+    return;
+  }
+  STATE.quizActive = true;
+  STATE.quizQ      = 0;
+  STATE.quizScore  = 0;
+  loadNextQuestion();
+}
+
+async function loadNextQuestion() {
+  const content = document.getElementById("quiz-content");
+  content.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--muted)">
+    Generating question ${STATE.quizQ + 1}/5...</div>`;
+
+  const topic = STATE.topics[Math.floor(Math.random() * STATE.topics.length)];
+  const res   = await fetch(`/api/quiz/question?sid=${STATE.sid}&topic=${encodeURIComponent(topic)}&difficulty=${STATE.difficulty}`);
+  const q     = await res.json();
+
+  if (q.error) { toast(q.error); resetQuiz(); return; }
+  STATE.currentQ = q;
+  renderQuestion(q);
+}
+
+function renderQuestion(q) {
+  const content  = document.getElementById("quiz-content");
+  const pct      = (STATE.quizQ / 5) * 100;
+  const letters  = ["A","B","C","D"];
+
+  content.innerHTML = `
+    <div class="quiz-header">
+      <h2>Question ${STATE.quizQ + 1} of 5</h2>
+      <span style="color:var(--muted);font-size:.85rem">[${STATE.difficulty.toUpperCase()}]</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" style="width:${pct}%"></div>
+    </div>
+    <div class="question-card">
+      <h3>${escHtml(q.question)}</h3>
+      <div class="options" id="options">
+        ${letters.map(l => `
+          <button class="option-btn" onclick="submitAnswer('${l}')" data-letter="${l}">
+            <span class="option-letter">${l}</span>
+            ${escHtml(q.options[l])}
+          </button>`).join("")}
+      </div>
+      <div class="explanation" id="explanation"></div>
+    </div>`;
+}
+
+async function submitAnswer(letter) {
+  const q       = STATE.currentQ;
+  const correct = letter === q.answer;
+
+  // Visual feedback
+  document.querySelectorAll(".option-btn").forEach(b => {
+    b.disabled = true;
+    if (b.dataset.letter === q.answer) b.classList.add("correct");
+    if (b.dataset.letter === letter && !correct) b.classList.add("wrong");
+  });
+
+  const exp = document.getElementById("explanation");
+  exp.textContent = (correct ? "✅ " : "❌ ") + q.explanation;
+  exp.style.display = "block";
+
+  if (correct) STATE.quizScore++;
+
+  // Save result
+  await api("/api/quiz/submit", {
+    sid: STATE.sid, topic: q.topic || STATE.topics[0],
+    difficulty: STATE.difficulty, answer: letter,
+    question: q.question, correct: q.answer,
+    explanation: q.explanation,
+  });
+
+  STATE.quizQ++;
+  setTimeout(() => {
+    if (STATE.quizQ >= 5) showQuizResult();
+    else loadNextQuestion();
+  }, 1800);
+}
+
+async function showQuizResult() {
+  const pct = Math.round(STATE.quizScore / 5 * 100);
+  let emoji = pct === 100 ? "🏆" : pct >= 80 ? "🌟" : pct >= 60 ? "👍" : "💪";
+  let msg   = pct === 100 ? "Perfect score! Outstanding!" :
+              pct >= 80   ? "Great job! Almost there!" :
+              pct >= 60   ? "Good effort — keep going!" :
+              "Keep practising — you'll get there!";
+
+  const topic = STATE.topics[0] || "general";
+  await api("/api/quiz/complete", {
+    sid: STATE.sid, score: STATE.quizScore,
+    topic, difficulty: STATE.difficulty,
+  });
+
+  document.getElementById("quiz-content").innerHTML = `
+    <div class="quiz-score-card">
+      <div class="score-emoji">${emoji}</div>
+      <div class="score-number">${STATE.quizScore}/5</div>
+      <div style="color:var(--muted);margin:.5rem 0">${pct}% · ${STATE.difficulty.toUpperCase()}</div>
+      <div style="font-weight:500;margin-bottom:1.5rem">${msg}</div>
+      <button class="btn-start" onclick="startQuiz()">Take Another Quiz</button>
+    </div>`;
+
+  loadWrong();
+  refreshStats();
+  STATE.quizActive = false;
+}
+
+function resetQuiz() {
+  STATE.quizActive = false;
+  document.getElementById("quiz-content").innerHTML =
+    document.getElementById("quiz-start")?.outerHTML || "";
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SUGGESTIONS
+// ═══════════════════════════════════════════════════════════
+async function getSuggestions() {
+  document.getElementById("suggestion-text").textContent = "Thinking...";
+  try {
+    const res = await fetch(`/api/suggest?sid=${STATE.sid}`);
+    const data = await res.json();
+    document.getElementById("suggestion-text").textContent = data.suggestion;
+  } catch {
+    document.getElementById("suggestion-text").textContent = "Couldn't load suggestions — try again.";
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  WRONG ANSWERS
+// ═══════════════════════════════════════════════════════════
+async function loadWrong() {
+  const res  = await fetch(`/api/wrong?sid=${STATE.sid}`);
+  const data = await res.json();
+  const list = document.getElementById("wrong-list");
+  document.getElementById("wrong-count").textContent = data.wrong.length;
+  document.getElementById("sq-wrong").textContent    = data.wrong.length;
+
+  if (!data.wrong.length) {
+    list.innerHTML = `<p style="color:var(--muted);font-size:.8rem">No wrong answers saved yet — keep quizzing!</p>`;
+    return;
+  }
+
+  list.innerHTML = data.wrong.map((w, i) => `
+    <div class="wrong-item" id="wrong-${i}">
+      <div class="q-text">${escHtml(w.question)}</div>
+      <div class="answer-line">You: ${w.your_answer} · Correct: <span>${w.correct}</span></div>
+      <div style="color:var(--muted);font-size:.75rem;margin-top:.2rem">${w.explanation}</div>
+      <button class="btn-clear" onclick="clearWrong(${i})">✓ Got it</button>
+    </div>`).join("");
+}
+
+async function clearWrong(idx) {
+  await api("/api/wrong/clear", { sid: STATE.sid, index: idx });
+  loadWrong();
+  toast("Removed from revision list ✓");
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATS PANEL
+// ═══════════════════════════════════════════════════════════
+async function loadStats() {
+  const res = await fetch(`/api/progress?sid=${STATE.sid}`);
+  const d   = await res.json();
+
+  const html = `
+    <h2 style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin-bottom:1.25rem">
+      📊 Your Progress
+    </h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Questions Asked</div>
+        <div class="stat-value">${d.questions}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Quizzes Taken</div>
+        <div class="stat-value">${d.quizzes_taken}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Quiz Score</div>
+        <div class="stat-value">${d.avg_score}%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sessions</div>
+        <div class="stat-value">${d.sessions}</div>
+      </div>
+    </div>
+    <div class="panel-card" style="margin-bottom:1rem">
+      <h3 style="font-family:var(--font-head);font-size:.9rem;font-weight:700;margin-bottom:.75rem">Topics Studied</h3>
+      <div>${Object.keys(d.topics).length
+        ? Object.entries(d.topics).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`
+            <div class="stat-row">
+              <span class="label">${t}</span>
+              <span class="val">${c}x</span>
+            </div>`).join("")
+        : '<p style="color:var(--muted);font-size:.85rem">No topics yet — start asking questions!</p>'
+      }</div>
+    </div>
+    ${d.last_quiz ? `
+    <div class="panel-card">
+      <h3 style="font-family:var(--font-head);font-size:.9rem;font-weight:700;margin-bottom:.75rem">Last Quiz</h3>
+      <div class="stat-row"><span class="label">Topic</span><span class="val">${d.last_quiz.topic}</span></div>
+      <div class="stat-row"><span class="label">Score</span><span class="val">${d.last_quiz.pct}%</span></div>
+      <div class="stat-row"><span class="label">Difficulty</span><span class="val">${(d.last_quiz.difficulty||'medium').toUpperCase()}</span></div>
+    </div>` : ""}`;
+
+  document.getElementById("stats-panel-content").innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DIFFICULTY
+// ═══════════════════════════════════════════════════════════
+function openDiffModal() {
+  document.querySelectorAll(".diff-option").forEach(el => el.classList.remove("selected"));
+  document.querySelectorAll(".diff-option").forEach(el => {
+    if (el.querySelector(".diff-label").textContent.toLowerCase() === STATE.difficulty)
+      el.classList.add("selected");
+  });
+  document.getElementById("diff-modal").classList.add("open");
+}
+
+function closeDiffModal(e) {
+  if (e.target === document.getElementById("diff-modal"))
+    document.getElementById("diff-modal").classList.remove("open");
+}
+
+async function setDifficulty(level) {
+  await api("/api/difficulty", { sid: STATE.sid, level });
+  STATE.difficulty = level;
+  updateDiffBadge(level);
+  document.getElementById("diff-modal").classList.remove("open");
+  document.getElementById("qs-diff").textContent = level.charAt(0).toUpperCase() + level.slice(1);
+  toast(`Difficulty set to ${level.charAt(0).toUpperCase() + level.slice(1)} 🎯`);
+}
+
+function updateDiffBadge(level) {
+  const btn = document.getElementById("diff-btn");
+  btn.className = `difficulty-badge diff-${level}`;
+  btn.textContent = level.charAt(0).toUpperCase() + level.slice(1);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function switchPanel(name, btn) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn, .mobile-nav-btn").forEach(b => b.classList.remove("active"));
+
+  document.getElementById(`panel-${name}`).classList.add("active");
+  if (btn) btn.classList.add("active");
+
+  // Sync mobile nav
+  const mobileBtn = document.getElementById(`mn-${name}`);
+  if (mobileBtn) mobileBtn.classList.add("active");
+
+  if (name === "stats") loadStats();
+  if (name === "quiz" && !STATE.quizActive) {
+    document.getElementById("qs-diff").textContent =
+      STATE.difficulty.charAt(0).toUpperCase() + STATE.difficulty.slice(1);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function renderTopics(topics, weak) {
+  const el = document.getElementById("topics-list");
+  if (!topics.length) {
+    el.innerHTML = `<p style="color:var(--muted);font-size:.8rem">No topics yet — start asking questions!</p>`;
+    return;
+  }
+  el.innerHTML = topics.map(t =>
+    `<span class="topic-pill ${weak.includes(t) ? 'weak' : ''}">${t}</span>`
+  ).join("");
+}
+
+async function refreshTopics() {
+  const res = await fetch(`/api/progress?sid=${STATE.sid}`);
+  const d   = await res.json();
+  STATE.topics = Object.keys(d.topics);
+  STATE.weak   = d.weak;
+  renderTopics(STATE.topics, STATE.weak);
+}
+
+async function refreshStats() {
+  const res = await fetch(`/api/progress?sid=${STATE.sid}`);
+  const d   = await res.json();
+  updateSidebarStats(d);
+}
+
+function updateSidebarStats(d) {
+  document.getElementById("sq-questions").textContent = d.questions || 0;
+  document.getElementById("sq-quizzes").textContent   = d.quizzes_taken ?? d.quizzes ?? 0;
+  document.getElementById("sq-sessions").textContent  = d.sessions || 0;
+}
+
+function toast(msg, duration = 2500) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), duration);
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+async function api(url, body) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// Enter key on login inputs
+document.getElementById("login-name").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("login-matric").focus();
+});
+document.getElementById("login-matric").addEventListener("keydown", e => {
+  if (e.key === "Enter") doLogin();
+});
+</script>
+</body>
+</html>
