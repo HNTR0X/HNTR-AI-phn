@@ -1,1 +1,310 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sivarr AI — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090d;--surface:#0f1117;--card:#13151c;--border:#1c1f2a;
+  --accent:#4f6ef7;--accent2:#7c3aed;--green:#22c55e;--red:#ef4444;
+  --yellow:#f59e0b;--text:#f0f1f5;--muted:#5a5f7a;
+  --font:'Outfit',sans-serif;--body:'DM Sans',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#1c1f2a;border-radius:3px}
+
+/* LOGIN */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at 50% 0%,#1a1f3a,var(--bg) 65%)}
+.lbox{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:380px;animation:fadeUp .4s ease}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:1.75rem}
+.mono{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--font);font-weight:800;font-size:13px}
+.lbox h2{font-family:var(--font);font-size:1.3rem;font-weight:700;margin-bottom:.3rem}
+.lbox p{color:var(--muted);font-size:.83rem;margin-bottom:1.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.field input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 13px;color:var(--text);font-family:var(--body);font-size:.88rem;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--accent)}
+.btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:12px;font-family:var(--font);font-size:.93rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err{color:var(--red);font-size:.8rem;margin-top:.75rem;text-align:center}
+
+/* DASHBOARD */
+#dash{display:none;flex-direction:column;min-height:100vh}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;flex-shrink:0}
+.topbar-l{display:flex;align-items:center;gap:10px}
+.tb-name{font-family:var(--font);font-weight:700;font-size:.95rem}
+.chip{background:#4f6ef715;border:1px solid #4f6ef730;color:var(--accent);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase}
+.signout{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:var(--body)}
+
+.content{padding:1.5rem;flex:1;overflow-y:auto;max-width:1200px;margin:0 auto;width:100%}
+
+/* Summary cards */
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.sc-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.sc-val{font-family:var(--font);font-size:2rem;font-weight:800;color:var(--accent)}
+
+/* Table */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.table-head{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-head h3{font-family:var(--font);font-weight:700;font-size:.95rem}
+.search-input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:var(--body);font-size:.82rem;outline:none;width:220px;transition:border-color .2s}
+.search-input:focus{border-color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;text-align:left;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);background:var(--surface)}
+td{padding:11px 14px;font-size:.83rem;border-bottom:1px solid var(--border)}
+tr:last-child td{border:none}
+tr:hover td{background:#ffffff05}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700}
+.b-easy{background:#14532d;color:#22c55e}
+.b-medium{background:#78350f;color:#f59e0b}
+.b-hard{background:#7f1d1d;color:#ef4444}
+.score-bar{background:var(--border);border-radius:20px;height:5px;width:80px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
+.score-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:20px}
+.tag{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 7px;font-size:.68rem;color:var(--muted);margin:1px}
+.tag.weak{border-color:#f59e0b50;color:var(--yellow)}
+.empty{padding:3rem;text-align:center;color:var(--muted)}
+
+/* Student detail modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.75rem;width:90%;max-width:500px;max-height:80vh;overflow-y:auto;animation:fadeUp .25s ease}
+.modal h3{font-family:var(--font);font-weight:700;font-size:1.1rem;margin-bottom:1.25rem}
+.modal-close{float:right;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;margin-top:-4px}
+.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem}
+.detail-row:last-child{border:none}
+.detail-row .dl{color:var(--muted)}
+.detail-row .dv{font-weight:600}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:768px){
+  .summary{grid-template-columns:repeat(2,1fr)}
+  .search-input{width:150px}
+  th:nth-child(4),td:nth-child(4),th:nth-child(6),td:nth-child(6){display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lbox">
+    <div class="logo">
+      <div class="mono">Sr</div>
+      <div>
+        <div style="font-family:var(--font);font-weight:700;font-size:1.1rem">Sivarr AI</div>
+        <div style="font-size:.75rem;color:var(--muted)">Admin Dashboard</div>
+      </div>
+    </div>
+    <h2>Lecturer Access</h2>
+    <p>Enter your admin password to view student data.</p>
+    <div class="field">
+      <label>Admin Password</label>
+      <input id="pw" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    </div>
+    <button class="btn" id="login-btn" onclick="doAdminLogin()">Access Dashboard</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash">
+  <header class="topbar">
+    <div class="topbar-l">
+      <div class="mono" style="width:30px;height:30px;font-size:11px;border-radius:8px">Sr</div>
+      <span class="tb-name">Sivarr AI</span>
+      <span class="chip">Admin</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="color:var(--muted);font-size:.78rem" id="last-updated"></span>
+      <button class="btn" style="width:auto;padding:6px 16px;font-size:.78rem" onclick="loadStudents()">↻ Refresh</button>
+      <button class="signout" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+
+  <div class="content">
+    <div style="margin-bottom:1.25rem">
+      <h2 style="font-family:var(--font);font-size:1.3rem;font-weight:800;letter-spacing:-.02em">Student Overview</h2>
+      <p style="color:var(--muted);font-size:.83rem;margin-top:3px">All registered students and their learning progress</p>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+      <div class="sc"><div class="sc-label">Total Students</div><div class="sc-val" id="s-total">—</div></div>
+      <div class="sc"><div class="sc-label">Questions Asked</div><div class="sc-val" id="s-questions">—</div></div>
+      <div class="sc"><div class="sc-label">Quizzes Taken</div><div class="sc-val" id="s-quizzes">—</div></div>
+      <div class="sc"><div class="sc-label">Avg Quiz Score</div><div class="sc-val" id="s-avg">—</div></div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-head">
+        <h3>Students</h3>
+        <input class="search-input" id="search" placeholder="Search name or matric..." oninput="filterTable()">
+      </div>
+      <div style="overflow-x:auto">
+        <table id="students-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Matric</th>
+              <th>Sessions</th>
+              <th>Questions</th>
+              <th>Quiz Avg</th>
+              <th>Difficulty</th>
+              <th>Last Seen</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="8" class="empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Detail Modal -->
+<div class="overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modal-title">Student Details</h3>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+let TOKEN = '';
+let ALL_STUDENTS = [];
+
+async function doAdminLogin() {
+  const pw  = document.getElementById('pw').value.trim();
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('err');
+  if (!pw) { err.textContent = 'Enter the admin password.'; return; }
+  btn.disabled = true; btn.textContent = 'Checking...';
+  try {
+    const r = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({password: pw})
+    });
+    if (!r.ok) throw new Error('Wrong password');
+    const d = await r.json();
+    TOKEN = d.token;
+    localStorage.setItem('sivarr_admin_token', TOKEN);
+    showDash();
+  } catch(e) {
+    err.textContent = 'Incorrect password. Try again.';
+    btn.disabled = false; btn.textContent = 'Access Dashboard';
+  }
+}
+
+function showDash() {
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('dash').style.display  = 'flex';
+  loadStudents();
+}
+
+async function loadStudents() {
+  document.getElementById('last-updated').textContent = 'Loading...';
+  try {
+    const r = await fetch(`/api/admin/students?token=${TOKEN}`);
+    if (!r.ok) { signOut(); return; }
+    const d = await r.json();
+    ALL_STUDENTS = d.students;
+    document.getElementById('s-total').textContent     = d.total;
+    document.getElementById('s-questions').textContent = d.total_questions;
+    document.getElementById('s-quizzes').textContent   = d.total_quizzes;
+    document.getElementById('s-avg').textContent       = d.avg_score + '%';
+    document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    renderTable(ALL_STUDENTS);
+  } catch(e) {
+    document.getElementById('last-updated').textContent = 'Error loading data';
+  }
+}
+
+function renderTable(students) {
+  const tbody = document.getElementById('tbody');
+  if (!students.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No students registered yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = students.map((s, i) => `
+    <tr>
+      <td style="font-weight:600">${esc(s.name)}</td>
+      <td style="color:var(--muted)">${esc(s.matric)}</td>
+      <td>${s.sessions}</td>
+      <td>${s.questions}</td>
+      <td>
+        ${s.quizzes > 0 ? `<span style="font-weight:600">${s.avg_score}%</span>
+        <div class="score-bar"><div class="score-fill" style="width:${s.avg_score}%"></div></div>` : '<span style="color:var(--muted)">No quizzes</span>'}
+      </td>
+      <td><span class="badge b-${s.difficulty}">${s.difficulty.charAt(0).toUpperCase()+s.difficulty.slice(1)}</span></td>
+      <td style="color:var(--muted);font-size:.78rem">${s.last_seen}</td>
+      <td><button onclick="viewStudent(${i})" style="background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--accent);font-size:.72rem;cursor:pointer">View</button></td>
+    </tr>`).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = ALL_STUDENTS.filter(s =>
+    s.name.toLowerCase().includes(q) || s.matric.toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+function viewStudent(idx) {
+  const s = ALL_STUDENTS[idx];
+  document.getElementById('modal-title').textContent = s.name + ' — ' + s.matric;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row"><span class="dl">Sessions</span><span class="dv">${s.sessions}</span></div>
+    <div class="detail-row"><span class="dl">Questions asked</span><span class="dv">${s.questions}</span></div>
+    <div class="detail-row"><span class="dl">Quizzes taken</span><span class="dv">${s.quizzes}</span></div>
+    <div class="detail-row"><span class="dl">Average score</span><span class="dv">${s.avg_score}%</span></div>
+    <div class="detail-row"><span class="dl">Difficulty</span><span class="dv">${s.difficulty.charAt(0).toUpperCase()+s.difficulty.slice(1)}</span></div>
+    <div class="detail-row"><span class="dl">Wrong answers saved</span><span class="dv">${s.wrong_count}</span></div>
+    <div class="detail-row"><span class="dl">Last seen</span><span class="dv">${s.last_seen}</span></div>
+    <div class="detail-row" style="flex-direction:column;gap:6px">
+      <span class="dl">Topics studied</span>
+      <div>${s.topics.length ? s.topics.map(t => `<span class="tag">${esc(t)}</span>`).join('') : '<span style="color:var(--muted)">None yet</span>'}</div>
+    </div>
+    <div class="detail-row" style="flex-direction:column;gap:6px">
+      <span class="dl">Weak areas</span>
+      <div>${s.weak.length ? s.weak.map(t => `<span class="tag weak">${esc(t)}</span>`).join('') : '<span style="color:var(--muted)">None identified</span>'}</div>
+    </div>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+function signOut() {
+  TOKEN = '';
+  localStorage.removeItem('sivarr_admin_token');
+  location.reload();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Auto-login if token saved
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('sivarr_admin_token');
+  if (saved) { TOKEN = saved; showDash(); }
+});
+</script>
+</body>
+</html>
