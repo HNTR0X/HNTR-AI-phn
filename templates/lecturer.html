@@ -486,8 +486,18 @@ function switchTab(name, btn) {
 async function refreshAll() {
   $('last-refresh').textContent = 'Loading...';
   try {
-    const r = await fetch(`/api/admin/students?token=${TOKEN}`);
-    if (!r.ok) { lecSignOut(); return; }
+    // Use admin endpoint — lecturer token is validated server side
+    const r = await fetch(`/api/lecturer/students?token=${TOKEN}`);
+    if (r.status === 401) {
+      // Only sign out on actual auth failure, not network errors
+      toast('Session expired — please log in again.');
+      setTimeout(() => lecSignOut(), 2000);
+      return;
+    }
+    if (!r.ok) {
+      $('last-refresh').textContent = 'Error loading — try refreshing';
+      return;
+    }
     const d = await r.json();
     ALL_STUDENTS = d.students;
 
@@ -505,7 +515,7 @@ async function refreshAll() {
     loadExams();
     $('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
   } catch(e) {
-    $('last-refresh').textContent = 'Error loading data';
+    $('last-refresh').textContent = 'Connection error — try refreshing';
   }
 }
 
@@ -865,3 +875,4 @@ function toast(msg, ms=2500) {
 </script>
 </body>
 </html>
+
