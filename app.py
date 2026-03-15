@@ -1393,6 +1393,22 @@ async def save_class_topics(req: TopicsRequest):
     return {"ok": True}
 
 
+@app.get("/api/lecturer/students")
+async def lecturer_students(token: str):
+    """Lecturer version of student list — accepts lecturer_ token."""
+    if not token.startswith("lecturer_") and not token.startswith("admin_"):
+        raise HTTPException(401, "Unauthorized")
+    students = get_all_students()
+    total_q  = sum(s["questions"] for s in students)
+    total_qz = sum(s["quizzes"] for s in students)
+    avg_all  = (sum(s["avg_score"] for s in students) / len(students)) if students else 0
+    return {
+        "students": students, "total": len(students),
+        "total_questions": total_q, "total_quizzes": total_qz,
+        "avg_score": round(avg_all, 1),
+    }
+
+
 @app.get("/api/lecturer/topics")
 async def get_class_topics():
     """Public — students can see suggested topics."""
