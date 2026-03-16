@@ -219,6 +219,7 @@ textarea.form-input{min-height:100px;resize:vertical}
   <nav class="tab-nav">
     <button class="tnav-btn active" onclick="switchTab('overview',this)">📊 Overview</button>
     <button class="tnav-btn" onclick="switchTab('students',this)">👥 Students</button>
+    <button class="tnav-btn" onclick="switchTab('classes',this)">🏫 My Classes</button>
     <button class="tnav-btn" onclick="switchTab('announcements',this)">📢 Announcements</button>
     <button class="tnav-btn" onclick="switchTab('topics',this)">📚 Quiz Topics</button>
     <button class="tnav-btn" onclick="switchTab('exams',this)">📝 Exams</button>
@@ -286,6 +287,57 @@ textarea.form-input{min-height:100px;resize:vertical}
               <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">Loading...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CLASSES ══ -->
+    <div class="tab-panel" id="tab-classes">
+      <!-- Create class -->
+      <div class="card">
+        <h3>🏫 Create a New Class</h3>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem">Students join using the unique code generated after creation.</p>
+        <div class="form-group">
+          <label>Class Title</label>
+          <input class="form-input" id="cls-title" placeholder="e.g. Introduction to Biology">
+        </div>
+        <div class="form-group">
+          <label>Description (optional)</label>
+          <input class="form-input" id="cls-desc" placeholder="Brief description of the class">
+        </div>
+        <button class="btn-sm" onclick="createClass()">Create Class</button>
+      </div>
+
+      <!-- My classes list -->
+      <div class="card">
+        <div class="card-head">
+          <h3>My Classes</h3>
+          <button class="btn-outline" onclick="loadLecturerClasses()">↻ Refresh</button>
+        </div>
+        <div id="lec-classes-list"><div style="color:var(--muted);font-size:.82rem">Loading...</div></div>
+      </div>
+
+      <!-- Class detail -->
+      <div id="lec-class-detail" style="display:none">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3 id="lec-cd-title"></h3>
+              <div style="font-size:.78rem;color:var(--muted)" id="lec-cd-code"></div>
+            </div>
+            <button class="btn-outline" onclick="$('lec-class-detail').style.display='none';loadLecturerClasses()">← Back</button>
+          </div>
+
+          <!-- Class management tabs -->
+          <div style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--border);margin-bottom:1rem;scrollbar-width:none">
+            <button class="class-tab active" onclick="switchLecTab('materials',this)">📚 Materials</button>
+            <button class="class-tab" onclick="switchLecTab('link',this)">🎥 Class Link</button>
+            <button class="class-tab" onclick="switchLecTab('assignments-l',this)">📋 Assignments</button>
+            <button class="class-tab" onclick="switchLecTab('exams-l',this)">📝 Exams</button>
+            <button class="class-tab" onclick="switchLecTab('students-l',this)">👥 Students</button>
+            <button class="class-tab" onclick="switchLecTab('discuss-l',this)">💬 Discussion</button>
+          </div>
+          <div id="lec-class-content"></div>
         </div>
       </div>
     </div>
@@ -867,6 +919,269 @@ function loadLocalData() {
 }
 
 // ═══════════════════ TOAST ══════════════════════════════
+// ═══════════════════ CLASSES ════════════════════
+let LEC_CURRENT_CLASS = null;
+
+async function createClass() {
+  const title = $('cls-title').value.trim();
+  const desc  = $('cls-desc').value.trim();
+  if (!title) { toast('Enter a class title.'); return; }
+  try {
+    const r = await fetch('/api/class/create', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ token: TOKEN, title, description: desc, lecturer: NAME })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Failed');
+    $('cls-title').value = '';
+    $('cls-desc').value  = '';
+    toast(`Class created! Code: ${d.code} 🎉`);
+    loadLecturerClasses();
+  } catch(e) { toast('Failed to create class: ' + e.message); }
+}
+
+async function loadLecturerClasses() {
+  try {
+    const r = await fetch(`/api/class/lecturer/all?token=${TOKEN}&lecturer=${encodeURIComponent(NAME)}`);
+    const d = await r.json();
+    const classes = d.classes || [];
+    $('lec-classes-list').innerHTML = classes.length
+      ? classes.map(cls => `
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-bottom:.625rem;cursor:pointer" onclick="openLecClass('${cls.code}')">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-weight:600;font-size:.9rem">${esc(cls.title)}</div>
+                <div style="font-size:.75rem;color:var(--muted);margin-top:2px">👥 ${cls.students.length} students · Code: <strong style="color:var(--accent)">${cls.code}</strong></div>
+              </div>
+              <button class="btn-outline" onclick="event.stopPropagation();copyCode('${cls.code}')">Copy Code</button>
+            </div>
+          </div>`).join('')
+      : '<div style="color:var(--muted);font-size:.82rem">No classes yet — create one above.</div>';
+  } catch { $('lec-classes-list').innerHTML = '<div style="color:var(--muted);font-size:.82rem">Error loading classes.</div>'; }
+}
+
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(() => toast(`Code ${code} copied! 📋`));
+}
+
+async function openLecClass(code) {
+  try {
+    const r = await fetch(`/api/class/${code}/lecturer?token=${TOKEN}`);
+    LEC_CURRENT_CLASS = await r.json();
+    $('lec-cd-title').textContent = LEC_CURRENT_CLASS.title;
+    $('lec-cd-code').textContent  = `Code: ${LEC_CURRENT_CLASS.code} · ${LEC_CURRENT_CLASS.students.length} students`;
+    $('lec-class-detail').style.display = 'block';
+    switchLecTab('materials', document.querySelector('#lec-class-detail .class-tab'));
+  } catch { toast('Could not load class.'); }
+}
+
+function switchLecTab(tab, btn) {
+  document.querySelectorAll('#lec-class-detail .class-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const cls     = LEC_CURRENT_CLASS;
+  const content = $('lec-class-content');
+  if (!cls) return;
+
+  if (tab === 'materials') {
+    content.innerHTML = `
+      <div style="margin-bottom:1rem">
+        <div style="font-weight:600;font-size:.85rem;margin-bottom:.75rem">Add Material</div>
+        <div class="form-group"><label>Title</label><input class="form-input" id="mat-title" placeholder="e.g. Chapter 3 Notes"></div>
+        <div class="form-group"><label>Type</label>
+          <select class="form-input" id="mat-type"><option value="link">🔗 Link</option><option value="note">📝 Note</option></select>
+        </div>
+        <div class="form-group"><label>URL (if link)</label><input class="form-input" id="mat-url" placeholder="https://..."></div>
+        <div class="form-group"><label>Content (if note)</label><textarea class="form-input" id="mat-content" style="min-height:80px" placeholder="Write notes here..."></textarea></div>
+        <button class="btn-sm" onclick="addMaterial('${cls.code}')">Add Material</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:1rem">
+        ${cls.materials.length ? cls.materials.map(m => `
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.875rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-weight:600;font-size:.85rem">${m.type === 'link' ? '🔗' : '📝'} ${esc(m.title)}</div>
+              ${m.url ? `<a href="${esc(m.url)}" target="_blank" style="font-size:.75rem;color:var(--accent)">${esc(m.url)}</a>` : ''}
+              ${m.content ? `<div style="font-size:.78rem;color:var(--muted);margin-top:3px">${esc(m.content.slice(0,100))}...</div>` : ''}
+            </div>
+            <button class="btn-danger" onclick="deleteMaterial('${cls.code}','${m.id}')">✕</button>
+          </div>`).join('')
+        : '<div style="color:var(--muted);font-size:.82rem">No materials yet.</div>'}
+      </div>`;
+  }
+
+  else if (tab === 'link') {
+    content.innerHTML = `
+      <div style="margin-bottom:1rem">
+        <div class="form-group"><label>Online Class Link</label>
+          <input class="form-input" id="cls-link-input" placeholder="https://meet.google.com/..." value="${esc(cls.class_link||'')}">
+        </div>
+        <button class="btn-sm" onclick="saveClassLink('${cls.code}')">Save Link</button>
+      </div>
+      ${cls.class_link ? `<div style="color:var(--muted);font-size:.82rem">Current: <a href="${esc(cls.class_link)}" target="_blank" style="color:var(--accent)">${esc(cls.class_link)}</a></div>` : ''}`;
+  }
+
+  else if (tab === 'assignments-l') {
+    content.innerHTML = `
+      <div style="margin-bottom:1rem">
+        <div class="form-group"><label>Title</label><input class="form-input" id="asn-title" placeholder="Assignment 1"></div>
+        <div class="form-group"><label>Description</label><textarea class="form-input" id="asn-desc" style="min-height:60px" placeholder="What students need to do..."></textarea></div>
+        <div class="form-group"><label>Due Date</label><input class="form-input" id="asn-due" placeholder="e.g. Friday 23rd March"></div>
+        <button class="btn-sm" onclick="addAssignment('${cls.code}')">Post Assignment</button>
+      </div>
+      ${cls.assignments.length ? cls.assignments.map(a => `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.875rem;margin-bottom:.5rem">
+          <div style="font-weight:600;font-size:.85rem">📋 ${esc(a.title)}</div>
+          ${a.due ? `<div style="font-size:.75rem;color:var(--yellow)">⏰ Due: ${esc(a.due)}</div>` : ''}
+          <div style="font-size:.75rem;color:var(--muted);margin-top:3px">${(a.submissions||[]).length} submission(s)</div>
+          ${(a.submissions||[]).length ? `<div style="margin-top:.5rem">${a.submissions.map(s => `
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-top:4px;font-size:.78rem">
+              <strong>${esc(s.name)}</strong> · ${s.date}<br><span style="color:var(--muted)">${esc(s.text.slice(0,100))}...</span>
+            </div>`).join('')}</div>` : ''}
+        </div>`).join('')
+      : '<div style="color:var(--muted);font-size:.82rem">No assignments yet.</div>'}`;
+  }
+
+  else if (tab === 'exams-l') {
+    // Load saved exams to assign
+    fetch(`/api/lecturer/exams?token=${TOKEN}`).then(r=>r.json()).then(d => {
+      const exams = d.exams || [];
+      content.innerHTML = `
+        <div style="margin-bottom:1rem">
+          <div style="font-weight:600;font-size:.85rem;margin-bottom:.75rem">Assign an Exam to this Class</div>
+          ${exams.length ? `
+            <select class="form-input" id="assign-exam-select">
+              <option value="">Select an exam...</option>
+              ${exams.map(e => `<option value="${e.id}">${esc(e.title)}</option>`).join('')}
+            </select>
+            <button class="btn-sm" style="margin-top:8px" onclick="assignExam('${cls.code}')">Assign Exam</button>
+          ` : '<div style="color:var(--muted);font-size:.82rem">No exams created yet. Go to the Exams tab to create one.</div>'}
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:1rem">
+          ${(cls.exams||[]).length ? cls.exams.map(e => `
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.875rem;margin-bottom:.5rem">
+              <div style="font-weight:600;font-size:.85rem">📝 ${esc(e.title)}</div>
+              <div style="font-size:.75rem;color:var(--muted)">⏱ ${e.duration} mins · ${e.questions_per_student} questions per student</div>
+            </div>`).join('')
+          : '<div style="color:var(--muted);font-size:.82rem">No exams assigned yet.</div>'}
+        </div>`;
+    });
+  }
+
+  else if (tab === 'students-l') {
+    content.innerHTML = cls.students.length
+      ? cls.students.map((s,i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff">${s.name[0].toUpperCase()}</div>
+            <div><div style="font-size:.85rem;font-weight:600">${esc(s.name)}</div><div style="font-size:.72rem;color:var(--muted)">Joined ${s.joined}</div></div>
+          </div>`).join('')
+      : '<div style="color:var(--muted);font-size:.82rem">No students have joined yet.</div>';
+  }
+
+  else if (tab === 'discuss-l') {
+    const msgs = cls.discussions || [];
+    content.innerHTML = `
+      <div style="max-height:300px;overflow-y:auto;margin-bottom:1rem">
+        ${msgs.length ? msgs.map(m => `
+          <div style="display:flex;gap:8px;margin-bottom:.75rem">
+            <div style="width:28px;height:28px;border-radius:50%;background:${m.role==='lecturer'?'linear-gradient(135deg,var(--green),#16a34a)':'linear-gradient(135deg,var(--accent),var(--accent2))'};display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0">${m.name[0].toUpperCase()}</div>
+            <div><div style="font-size:.72rem;color:var(--muted)">${esc(m.name)} ${m.role==='lecturer'?'👤':''}· ${m.time}</div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-size:.83rem;margin-top:2px">${esc(m.message)}</div></div>
+          </div>`).join('')
+        : '<div style="color:var(--muted);font-size:.82rem;margin-bottom:1rem">No messages yet.</div>'}
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="lec-discuss-input" class="form-input" placeholder="Message your class..." onkeydown="if(event.key==='Enter') lecPostDiscussion('${cls.code}')">
+        <button class="btn-sm" onclick="lecPostDiscussion('${cls.code}')">Send</button>
+      </div>`;
+  }
+}
+
+async function addMaterial(code) {
+  const title   = $('mat-title').value.trim();
+  const type    = $('mat-type').value;
+  const url     = $('mat-url').value.trim();
+  const content = $('mat-content').value.trim();
+  if (!title) { toast('Enter a material title.'); return; }
+  try {
+    await fetch(`/api/class/${code}/material`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token:TOKEN, title, url, type, content })
+    });
+    toast('Material added ✓');
+    await openLecClass(code);
+    switchLecTab('materials', document.querySelector('#lec-class-detail .class-tab'));
+  } catch { toast('Failed to add material.'); }
+}
+
+async function deleteMaterial(code, id) {
+  try {
+    await fetch(`/api/class/${code}/material/delete`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token:TOKEN, id })
+    });
+    toast('Material removed ✓');
+    await openLecClass(code);
+    switchLecTab('materials', document.querySelector('#lec-class-detail .class-tab'));
+  } catch { toast('Failed to remove.'); }
+}
+
+async function saveClassLink(code) {
+  const link = $('cls-link-input').value.trim();
+  try {
+    await fetch(`/api/class/${code}/link`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token:TOKEN, link })
+    });
+    toast('Class link saved ✓');
+    LEC_CURRENT_CLASS.class_link = link;
+  } catch { toast('Failed to save link.'); }
+}
+
+async function addAssignment(code) {
+  const title = $('asn-title').value.trim();
+  const desc  = $('asn-desc').value.trim();
+  const due   = $('asn-due').value.trim();
+  if (!title) { toast('Enter assignment title.'); return; }
+  try {
+    await fetch(`/api/class/${code}/assignment`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token:TOKEN, title, description:desc, due })
+    });
+    toast('Assignment posted ✓');
+    await openLecClass(code);
+    switchLecTab('assignments-l', null);
+  } catch { toast('Failed to post.'); }
+}
+
+async function assignExam(code) {
+  const examId = $('assign-exam-select').value;
+  if (!examId) { toast('Select an exam first.'); return; }
+  try {
+    await fetch(`/api/class/${code}/exam`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token:TOKEN, exam_id:examId })
+    });
+    toast('Exam assigned to class ✓');
+    await openLecClass(code);
+    switchLecTab('exams-l', null);
+  } catch { toast('Failed to assign exam.'); }
+}
+
+async function lecPostDiscussion(code) {
+  const input   = $('lec-discuss-input');
+  const message = input.value.trim();
+  if (!message) return;
+  try {
+    await fetch(`/api/class/${code}/discuss`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token:TOKEN, name:NAME, message, sid:'lecturer_'+NAME })
+    });
+    input.value = '';
+    await openLecClass(code);
+    switchLecTab('discuss-l', null);
+  } catch { toast('Failed to send.'); }
+}
+
 function toast(msg, ms=2500) {
   const el = $('toast'); el.textContent = msg;
   el.classList.add('show');
