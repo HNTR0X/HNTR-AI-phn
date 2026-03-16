@@ -1508,6 +1508,23 @@ h1{{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;margin-bott
 {q_html}
 </body></html>""")
 
+# ── Leaderboard ──────────────────────────────────────────────
+
+@app.get("/api/leaderboard")
+async def leaderboard():
+    """Public leaderboard — top students by quiz average."""
+    students = get_all_students()
+    # Only include students who have taken at least 1 quiz
+    ranked = [s for s in students if s["quizzes"] > 0]
+    ranked.sort(key=lambda s: (s["avg_score"], s["quizzes"]), reverse=True)
+    # Add sid field for "you" highlighting — derived from name + matric
+    for s in ranked:
+        name   = s["name"].lower().strip()
+        matric = s["matric"].lower().strip()
+        s["sid"] = re.sub(r"[^a-z0-9_]", "_", f"{name}_{matric}")
+    return {"leaderboard": ranked[:20]}  # Top 20
+
+
 # ── Health check ──────────────────────────────────────────────
 
 @app.get("/health")
