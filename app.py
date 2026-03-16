@@ -63,7 +63,14 @@ LOG_DIR     = _BASE / "logs"
 for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR, LOG_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "sivarr_admin_2024")
+ADMIN_PASSWORD     = os.environ.get("ADMIN_PASSWORD", "sivarr_admin_2024")
+LECTURER_PASSWORD  = os.environ.get("LECTURER_PASSWORD", "sivarr_lecturer_2024")
+
+# ── Shared file paths (defined early so all functions can use them) ──
+ANN_PATH    = DATA_DIR / "announcements.json"
+TOPICS_PATH = DATA_DIR / "class_topics.json"
+EXAMS_PATH  = DATA_DIR / "exams.json"
+CLASSES_PATH = DATA_DIR / "classes.json"
 
 # ── Rate limiting config ──────────────────────────────────────
 RATE_LIMIT_CHAT     = int(os.environ.get("RATE_LIMIT_CHAT", 30))      # max chat msgs per window
@@ -1090,70 +1097,39 @@ async def admin_students(token: str):
 
 
 # ═══════════════════════════════════════════════════════════════
-#  LECTURER SYSTEM
+#  LECTURER ENDPOINTS
 # ═══════════════════════════════════════════════════════════════
-
-LECTURER_PASSWORD = os.environ.get("LECTURER_PASSWORD", "lecturer2024")
-LECTURER_DIR      = Path("lecturer_data")
-LECTURER_DIR.mkdir(exist_ok=True)
-
-def ann_path():   return LECTURER_DIR / "announcements.json"
-def topics_path():return LECTURER_DIR / "class_topics.json"
-def exams_path(): return LECTURER_DIR / "exams.json"
-
-def load_lecturer_json(p):
-    return json.loads(p.read_text()) if p.exists() else []
-
-def save_lecturer_json(p, data):
-    tmp = str(p) + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(data, f, indent=2)
-    shutil.move(tmp, str(p))
-
-def valid_lecturer_token(token: str) -> bool:
-    return token == "lect_" + LECTURER_PASSWORD[:8]
-
-
-class LecturerLoginRequest(BaseModel):
-    name: str
-    password: str
-
-class AnnounceRequest(BaseModel):
-    token: str
-    message: str
-    author: str
-
-class TopicsRequest(BaseModel):
-    token: str
-    topics: list
-
-class ExamPublishRequest(BaseModel):
-    token: str
-    title: str
-    questions: list
-    questions_per_student: int
-
 
 @app.get("/lecturer", response_class=HTMLResponse)
 async def lecturer_page():
     return Path("templates/lecturer.html").read_text()
 
 
+class LecturerLoginRequest(BaseModel):
+    name: str
+    password: str
+
+
+def verify_lecturer(token: str):
+    """Verify lecturer token — accepts both token formats."""
+    if not (token.startswith("lecturer_") or token.startswith("lect_")):
+        raise HTTPException(401, "Unauthorized")
+
+
 @app.post("/api/lecturer/login")
 async def lecturer_login(req: LecturerLoginRequest, request: Request):
     key = get_client_key(request)
-    check_rate_limit(key, 5, "lecturer_login")
+    check_rate_limit(key, 5, "lec_login")
     if req.password != LECTURER_PASSWORD:
         log.warning(f"Failed lecturer login: {req.name}")
         raise HTTPException(401, "Invalid password")
     log.info(f"Lecturer login: {req.name}")
-    return {"ok": True, "token": "lect_" + LECTURER_PASSWORD[:8]}
+    return {"ok": True, "token": "lecturer_" + LECTURER_PASSWORD[:6]}
 
 
 @app.get("/api/lecturer/students")
 async def lecturer_students(token: str):
-    if not valid_lecturer_token(token):
-        raise HTTPException(401, "Unauthorized")
+    verify_lecturer(token)
     students = get_all_students()
     total_q  = sum(s["questions"] for s in students)
     total_qz = sum(s["quizzes"] for s in students)
@@ -1166,155 +1142,10 @@ async def lecturer_students(token: str):
 
 
 @app.get("/api/lecturer/announcements")
-async def get_announcements(token: str = ""):
-    # Announcements are readable by students too (no token needed for GET)
-    return {"announcements": load_lecturer_json(ann_path())}
-
-
-@app.post("/api/lecturer/announce")
-async def post_announcement(req: AnnounceRequest):
-    if not valid_lecturer_token(req.token):
-        raise HTTPException(401, "Unauthorized")
-    msg = sanitize_text(req.message, 1000)
-    if not msg:
-        raise HTTPException(400, "Message cannot be empty")
-    anns = load_lecturer_json(ann_path())
-    anns.insert(0, {
-        "message": msg,
-        "author":  sanitize_text(req.author, MAX_NAME_LEN),
-        "date":    datetime.datetime.now().strftime("%d %b %Y, %H:%M"),
-    })
-    anns = anns[:20]  # Keep last 20
-    save_lecturer_json(ann_path(), anns)
-    log.info(f"Announcement posted by {req.author}")
-    return {"ok": True, "announcements": anns}
-
-
-@app.post("/api/lecturer/announce/delete")
-async def delete_announcement(data: dict):
-    if not valid_lecturer_token(data.get("token","")):
-        raise HTTPException(401, "Unauthorized")
-    anns = load_lecturer_json(ann_path())
-    idx  = int(data.get("index", -1))
-    if 0 <= idx < len(anns):
-        anns.pop(idx)
-    save_lecturer_json(ann_path(), anns)
-    return {"ok": True, "announcements": anns}
-
-
-@app.get("/api/lecturer/topics")
-async def get_class_topics(token: str = ""):
-    return {"topics": load_lecturer_json(topics_path())}
-
-
-@app.post("/api/lecturer/topics/save")
-async def save_class_topics(req: TopicsRequest):
-    if not valid_lecturer_token(req.token):
-        raise HTTPException(401, "Unauthorized")
-    topics = [sanitize_text(t, 100) for t in req.topics if t][:50]
-    save_lecturer_json(topics_path(), topics)
-    log.info(f"Class topics updated: {topics}")
-    return {"ok": True, "topics": topics}
-
-
-@app.get("/api/lecturer/exams")
-async def get_exams(token: str):
-    if not valid_lecturer_token(token):
-        raise HTTPException(401, "Unauthorized")
-    exams = load_lecturer_json(exams_path())
-    # Return safe summary (not full question list)
-    return {"exams": [{
-        "title": e["title"],
-        "total_questions": len(e.get("questions",[])),
-        "per_student": e.get("questions_per_student", 20),
-        "date": e.get("date",""),
-    } for e in exams]}
-
-
-@app.post("/api/lecturer/exam/publish")
-async def publish_exam(req: ExamPublishRequest):
-    if not valid_lecturer_token(req.token):
-        raise HTTPException(401, "Unauthorized")
-    if not req.title.strip():
-        raise HTTPException(400, "Exam title required")
-    if len(req.questions) < req.questions_per_student:
-        raise HTTPException(400, f"Need at least {req.questions_per_student} questions")
-
-    exams = load_lecturer_json(exams_path())
-    exams.insert(0, {
-        "title":                 sanitize_text(req.title, 200),
-        "questions":             req.questions[:100],
-        "questions_per_student": min(req.questions_per_student, len(req.questions)),
-        "date":                  datetime.date.today().isoformat(),
-    })
-    save_lecturer_json(exams_path(), exams)
-    log.info(f"Exam published: {req.title} ({len(req.questions)} questions)")
-    return {"ok": True}
-
-
-@app.post("/api/lecturer/exam/delete")
-async def delete_exam(data: dict):
-    if not valid_lecturer_token(data.get("token","")):
-        raise HTTPException(401, "Unauthorized")
-    exams = load_lecturer_json(exams_path())
-    idx   = int(data.get("index", -1))
-    if 0 <= idx < len(exams):
-        exams.pop(idx)
-    save_lecturer_json(exams_path(), exams)
-    return {"ok": True}
-
-
-@app.get("/api/exam/student")
-async def get_student_exam(sid: str):
-    """
-    Return a shuffled exam for a specific student.
-    Each student gets a unique shuffle based on their SID.
-    """
-    sid   = sanitize_text(sid, 100)
-    exams = load_lecturer_json(exams_path())
-    if not exams:
-        return {"exam": None}
-
-    # Get the most recently published exam
-    exam = exams[0]
-    questions = exam.get("questions", [])
-    per_student = exam.get("questions_per_student", 20)
-
-    # Deterministic shuffle per student (same student always gets same set)
-    import hashlib
-    seed = int(hashlib.md5(f"{sid}_{exam['title']}".encode()).hexdigest(), 16)
-    rng  = random.Random(seed)
-    shuffled = questions.copy()
-    rng.shuffle(shuffled)
-    student_questions = shuffled[:per_student]
-
-    return {
-        "exam": {
-            "title":     exam["title"],
-            "questions": student_questions,
-            "total":     len(student_questions),
-        }
-    }
-
-
-# ── Lecturer page ─────────────────────────────────────────────
-
-@app.get("/lecturer", response_class=HTMLResponse)
-async def lecturer_page():
-    return Path("templates/lecturer.html").read_text()
-
-
-# ── Lecturer data paths ───────────────────────────────────────
-
-LECTURER_PASSWORD = os.environ.get("LECTURER_PASSWORD", "sivarr_lecturer_2024")
-ANN_PATH   = DATA_DIR / "announcements.json"
-TOPICS_PATH = DATA_DIR / "class_topics.json"
-EXAMS_PATH  = DATA_DIR / "exams.json"
-
-
-class LecturerLoginRequest(BaseModel):
-    name: str
-    password: str
+async def get_announcements(token: str):
+    verify_lecturer(token)
+    data = json.loads(ANN_PATH.read_text()) if ANN_PATH.exists() else []
+    return {"announcements": data}
 
 
 class AnnouncementRequest(BaseModel):
@@ -1322,34 +1153,6 @@ class AnnouncementRequest(BaseModel):
     text: str
     type: str
     lecturer: str
-
-
-class TopicsRequest(BaseModel):
-    token: str
-    topics: list
-
-
-def verify_lecturer(token: str):
-    if not token.startswith("lecturer_"):
-        raise HTTPException(401, "Unauthorized")
-
-
-@app.post("/api/lecturer/login")
-async def lecturer_login(req: LecturerLoginRequest, request: Request):
-    key = get_client_key(request)
-    check_rate_limit(key, 5, "lec_login")
-    if req.password != LECTURER_PASSWORD:
-        log.warning(f"Failed lecturer login from {key}")
-        raise HTTPException(401, "Invalid password")
-    log.info(f"Lecturer login: {req.name}")
-    return {"ok": True, "token": "lecturer_" + LECTURER_PASSWORD[:6]}
-
-
-@app.get("/api/lecturer/announcements")
-async def get_announcements(token: str):
-    verify_lecturer(token)
-    data = json.loads(ANN_PATH.read_text()) if ANN_PATH.exists() else []
-    return {"announcements": data}
 
 
 @app.post("/api/lecturer/announcement")
@@ -1363,7 +1166,6 @@ async def post_announcement(req: AnnouncementRequest):
         "date":     datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
     })
     ANN_PATH.write_text(json.dumps(data, indent=2))
-    log.info(f"Announcement posted by {req.lecturer}")
     return {"ok": True}
 
 
@@ -1380,9 +1182,13 @@ async def delete_announcement(data: dict):
 
 @app.get("/api/announcements/active")
 async def active_announcements():
-    """Public endpoint — students call this on login."""
     data = json.loads(ANN_PATH.read_text()) if ANN_PATH.exists() else []
-    return {"announcements": data[-5:]}  # Return last 5
+    return {"announcements": data[-5:]}
+
+
+class TopicsRequest(BaseModel):
+    token: str
+    topics: list
 
 
 @app.post("/api/lecturer/topics")
@@ -1393,25 +1199,8 @@ async def save_class_topics(req: TopicsRequest):
     return {"ok": True}
 
 
-@app.get("/api/lecturer/students")
-async def lecturer_students(token: str):
-    """Lecturer version of student list — accepts lecturer_ token."""
-    if not token.startswith("lecturer_") and not token.startswith("admin_"):
-        raise HTTPException(401, "Unauthorized")
-    students = get_all_students()
-    total_q  = sum(s["questions"] for s in students)
-    total_qz = sum(s["quizzes"] for s in students)
-    avg_all  = (sum(s["avg_score"] for s in students) / len(students)) if students else 0
-    return {
-        "students": students, "total": len(students),
-        "total_questions": total_q, "total_quizzes": total_qz,
-        "avg_score": round(avg_all, 1),
-    }
-
-
 @app.get("/api/lecturer/topics")
 async def get_class_topics():
-    """Public — students can see suggested topics."""
     data = json.loads(TOPICS_PATH.read_text()) if TOPICS_PATH.exists() else []
     return {"topics": data}
 
@@ -1431,7 +1220,6 @@ async def save_exam(data: dict):
     }
     exams.append(exam)
     EXAMS_PATH.write_text(json.dumps(exams, indent=2))
-    log.info(f"Exam saved: {exam['title']} by {exam['lecturer']}")
     return {"ok": True, "id": exam["id"]}
 
 
@@ -1453,77 +1241,20 @@ async def delete_exam(data: dict):
     return {"ok": True}
 
 
-@app.get("/exam/{exam_id}", response_class=HTMLResponse)
-async def student_exam(exam_id: str, sid: str = ""):
-    """Student-facing exam page — shuffles questions uniquely per student."""
-    exams = json.loads(EXAMS_PATH.read_text()) if EXAMS_PATH.exists() else []
-    exam  = next((e for e in exams if e["id"] == exam_id), None)
-    if not exam:
-        return HTMLResponse("<h2>Exam not found.</h2>", status_code=404)
-
-    # Shuffle questions uniquely per student using their sid as seed
-    import hashlib
-    questions = exam["questions"].copy()
-    seed = int(hashlib.md5((sid + exam_id).encode()).hexdigest(), 16) % (2**32)
-    rng  = random.Random(seed)
-    rng.shuffle(questions)
-    selected = questions[:exam["questions_per_student"]]
-
-    # Build exam page
-    q_html = "".join(f'<div class="eq"><span class="eq-num">{i+1}.</span><span>{esc(q)}</span></div>'
-                     for i, q in enumerate(selected))
-
-    return HTMLResponse(f"""<!DOCTYPE html>
-<html><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{esc(exam['title'])}</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<style>
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:#08090d;color:#f0f1f5;font-family:'DM Sans',sans-serif;padding:2rem;min-height:100vh}}
-.header{{background:#13151c;border:1px solid #1c1f2a;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem}}
-.logo{{display:flex;align-items:center;gap:8px;margin-bottom:1rem}}
-.mono{{width:32px;height:32px;background:linear-gradient(135deg,#4f6ef7,#7c3aed);border-radius:8px;
-  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;font-family:'Outfit',sans-serif}}
-h1{{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:.3rem}}
-.meta{{color:#5a5f7a;font-size:.83rem}}
-.pill{{display:inline-block;background:#4f6ef715;border:1px solid #4f6ef730;color:#4f6ef7;
-  padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;margin:2px}}
-.eq{{background:#13151c;border:1px solid #1c1f2a;border-radius:10px;padding:12px 16px;
-  margin-bottom:8px;display:flex;gap:10px;font-size:.9rem;line-height:1.6}}
-.eq-num{{font-family:'Outfit',sans-serif;font-weight:700;color:#4f6ef7;min-width:24px}}
-.warning{{background:#78350f20;border:1px solid #f59e0b40;border-radius:10px;padding:10px 14px;
-  color:#f59e0b;font-size:.82rem;margin-bottom:1rem}}
-</style></head><body>
-<div class="header">
-  <div class="logo"><div class="mono">Sr</div><strong style="font-family:'Outfit',sans-serif">Sivarr AI</strong></div>
-  <h1>{esc(exam['title'])}</h1>
-  <div class="meta">By {esc(exam['lecturer'])} · {exam['questions_per_student']} questions · {exam['duration']} minutes</div>
-  <div style="margin-top:.75rem">
-    <span class="pill">📝 {exam['questions_per_student']} Questions</span>
-    <span class="pill">⏱ {exam['duration']} mins</span>
-  </div>
-</div>
-<div class="warning">⚠️ Questions are shuffled uniquely for each student. Complete on paper or as directed by your lecturer.</div>
-{q_html}
-</body></html>""")
-
-# ── Leaderboard ──────────────────────────────────────────────
-
-@app.get("/api/leaderboard")
-async def leaderboard():
-    """Public leaderboard — top students by quiz average."""
+@app.post("/api/admin/login")
+@app.get("/api/admin/students")
+async def admin_students(token: str):
+    if not token.startswith("admin_"):
+        raise HTTPException(401, "Unauthorized")
     students = get_all_students()
-    # Only include students who have taken at least 1 quiz
-    ranked = [s for s in students if s["quizzes"] > 0]
-    ranked.sort(key=lambda s: (s["avg_score"], s["quizzes"]), reverse=True)
-    # Add sid field for "you" highlighting — derived from name + matric
-    for s in ranked:
-        name   = s["name"].lower().strip()
-        matric = s["matric"].lower().strip()
-        s["sid"] = re.sub(r"[^a-z0-9_]", "_", f"{name}_{matric}")
-    return {"leaderboard": ranked[:20]}  # Top 20
-
+    total_q  = sum(s["questions"] for s in students)
+    total_qz = sum(s["quizzes"] for s in students)
+    avg_all  = (sum(s["avg_score"] for s in students) / len(students)) if students else 0
+    return {
+        "students": students, "total": len(students),
+        "total_questions": total_q, "total_quizzes": total_qz,
+        "avg_score": round(avg_all, 1),
+    }
 
 
 # ═══════════════════════════════════════════════════════════════
