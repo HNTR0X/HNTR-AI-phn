@@ -1525,6 +1525,757 @@ async def leaderboard():
     return {"leaderboard": ranked[:20]}  # Top 20
 
 
+
+# ═══════════════════════════════════════════════════════════════
+#  CLASSES SYSTEM
+# ═══════════════════════════════════════════════════════════════
+
+CLASSES_PATH = DATA_DIR / "classes.json"
+SUBMISSIONS_DIR = DATA_DIR / "submissions"
+SUBMISSIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def load_classes() -> dict:
+    if CLASSES_PATH.exists():
+        return json.loads(CLASSES_PATH.read_text())
+    return {}
+
+
+def save_classes(data: dict):
+    CLASSES_PATH.write_text(json.dumps(data, indent=2))
+
+
+def get_class(code: str) -> dict:
+    return load_classes().get(code.upper())
+
+
+def verify_class_lecturer(code: str, token: str) -> dict:
+    cls = get_class(code)
+    if not cls:
+        raise HTTPException(404, "Class not found.")
+    if not token.startswith("lecturer_"):
+        raise HTTPException(401, "Unauthorized.")
+    return cls
+
+
+# ── Create class (lecturer) ───────────────────────────────────
+
+@app.post("/api/class/create")
+async def create_class(data: dict):
+    token = data.get("token", "")
+    if not token.startswith("lecturer_"):
+        raise HTTPException(401, "Unauthorized.")
+
+    title       = sanitize_text(str(data.get("title", "")), 100)
+    description = sanitize_text(str(data.get("description", "")), 300)
+    lecturer    = sanitize_text(str(data.get("lecturer", "")), MAX_NAME_LEN)
+
+    if not title:
+        raise HTTPException(400, "Class title required.")
+
+    # Generate unique 6-char code
+    classes = load_classes()
+    while True:
+        code = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
+        if code not in classes:
+            break
+
+    classes[code] = {
+        "code":         code,
+        "title":        title,
+        "description":  description,
+        "lecturer":     lecturer,
+        "created":      datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "students":     [],
+        "materials":    [],
+        "announcements":[],
+        "assignments":  [],
+        "class_link":   "",
+        "discussions":  [],
+        "exams":        [],
+    }
+    save_classes(classes)
+    log.info(f"Class created: {title} [{code}] by {lecturer}")
+    return {"ok": True, "code": code, "class": classes[code]}
+
+
+# ── Join class (student) ──────────────────────────────────────
+
+@app.post("/api/class/join")
+async def join_class(data: dict):
+    code = str(data.get("code", "")).strip().upper()
+    sid  = sanitize_text(str(data.get("sid", "")), 100)
+    name = sanitize_text(str(data.get("name", "")), MAX_NAME_LEN)
+
+    cls = get_class(code)
+    if not cls:
+        raise HTTPException(404, "Class not found. Check the code and try again.")
+
+    classes = load_classes()
+    students = classes[code].get("students", [])
+    if not any(s["sid"] == sid for s in students):
+        students.append({
+            "sid":    sid,
+            "name":   name,
+            "joined": datetime.date.today().isoformat()
+        })
+        classes[code]["students"] = students
+        save_classes(classes)
+        log.info(f"Student {name} joined class {code}")
+
+    return {"ok": True, "class": classes[code]}
+
+
+# ── Get student's classes ─────────────────────────────────────
+
+@app.get("/api/class/my")
+async def my_classes(sid: str):
+    sid = sanitize_text(sid, 100)
+    classes = load_classes()
+    result  = []
+    for code, cls in classes.items():
+        if any(s["sid"] == sid for s in cls.get("students", [])):
+            result.append({
+                "code":          cls["code"],
+                "title":         cls["title"],
+                "description":   cls["description"],
+                "lecturer":      cls["lecturer"],
+                "student_count": len(cls.get("students", [])),
+                "materials":     cls.get("materials", []),
+                "announcements": cls.get("announcements", []),
+                "assignments":   cls.get("assignments", []),
+                "discussions":   cls.get("discussions", []),
+                "class_link":    cls.get("class_link", ""),
+                "exams":         [{"id": e["id"], "title": e["title"], "duration": e["duration"]} 
+                                  for e in cls.get("exams", [])],
+            })
+    return {"classes": result}
+
+
+# ── Get single class ──────────────────────────────────────────
+
+@app.get("/api/class/{code}")
+async def get_class_detail(code: str, sid: str = ""):
+    code = code.strip().upper()
+    cls  = get_class(code)
+    if not cls:
+        raise HTTPException(404, "Class not found.")
+    return {
+        "code":          cls["code"],
+        "title":         cls["title"],
+        "description":   cls["description"],
+        "lecturer":      cls["lecturer"],
+        "student_count": len(cls.get("students", [])),
+        "materials":     cls.get("materials", []),
+        "announcements": cls.get("announcements", []),
+        "assignments":   cls.get("assignments", []),
+        "discussions":   cls.get("discussions", []),
+        "class_link":    cls.get("class_link", ""),
+        "exams":         [{"id": e["id"], "title": e["title"], "duration": e["duration"]}
+                          for e in cls.get("exams", [])],
+    }
+
+
+# ── Post announcement to class ────────────────────────────────
+
+@app.post("/api/class/{code}/announcement")
+async def class_announcement(code: str, data: dict):
+    token = data.get("token", "")
+    cls   = verify_class_lecturer(code.upper(), token)
+    text  = sanitize_text(str(data.get("text", "")), 500)
+    atype = data.get("type", "info")
+    if atype not in ["info", "warning", "deadline", "exam"]:
+        atype = "info"
+
+    classes = load_classes()
+    classes[code.upper()]["announcements"].append({
+        "text":     text,
+        "type":     atype,
+        "lecturer": cls["lecturer"],
+        "date":     datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    })
+    save_classes(classes)
+    return {"ok": True}
+
+
+# ── Add material ──────────────────────────────────────────────
+
+@app.post("/api/class/{code}/material")
+async def add_material(code: str, data: dict):
+    token = data.get("token", "")
+    cls   = verify_class_lecturer(code.upper(), token)
+    title = sanitize_text(str(data.get("title", "")), 200)
+    url   = sanitize_text(str(data.get("url", "")), 500)
+    mtype = data.get("type", "link")  # link, note, file
+
+    if not title:
+        raise HTTPException(400, "Material title required.")
+
+    classes = load_classes()
+    classes[code.upper()]["materials"].append({
+        "id":      str(uuid.uuid4())[:8],
+        "title":   title,
+        "url":     url,
+        "type":    mtype,
+        "content": sanitize_text(str(data.get("content", "")), 2000),
+        "date":    datetime.date.today().isoformat(),
+    })
+    save_classes(classes)
+    return {"ok": True}
+
+
+# ── Delete material ───────────────────────────────────────────
+
+@app.post("/api/class/{code}/material/delete")
+async def delete_material(code: str, data: dict):
+    token = data.get("token", "")
+    verify_class_lecturer(code.upper(), token)
+    mid     = data.get("id", "")
+    classes = load_classes()
+    classes[code.upper()]["materials"] = [
+        m for m in classes[code.upper()].get("materials", []) if m["id"] != mid
+    ]
+    save_classes(classes)
+    return {"ok": True}
+
+
+# ── Set class link ────────────────────────────────────────────
+
+@app.post("/api/class/{code}/link")
+async def set_class_link(code: str, data: dict):
+    token = data.get("token", "")
+    verify_class_lecturer(code.upper(), token)
+    link    = sanitize_text(str(data.get("link", "")), 500)
+    classes = load_classes()
+    classes[code.upper()]["class_link"] = link
+    save_classes(classes)
+    return {"ok": True}
+
+
+# ── Add assignment ────────────────────────────────────────────
+
+@app.post("/api/class/{code}/assignment")
+async def add_assignment(data: dict, code: str):
+    token = data.get("token", "")
+    verify_class_lecturer(code.upper(), token)
+    title   = sanitize_text(str(data.get("title", "")), 200)
+    desc    = sanitize_text(str(data.get("description", "")), 1000)
+    due     = sanitize_text(str(data.get("due", "")), 50)
+    classes = load_classes()
+    classes[code.upper()]["assignments"].append({
+        "id":          str(uuid.uuid4())[:8],
+        "title":       title,
+        "description": desc,
+        "due":         due,
+        "date":        datetime.date.today().isoformat(),
+        "submissions": [],
+    })
+    save_classes(classes)
+    return {"ok": True}
+
+
+# ── Submit assignment (student) ───────────────────────────────
+
+@app.post("/api/class/{code}/submit")
+async def submit_assignment(code: str, data: dict):
+    sid       = sanitize_text(str(data.get("sid", "")), 100)
+    name      = sanitize_text(str(data.get("name", "")), MAX_NAME_LEN)
+    assign_id = data.get("assignment_id", "")
+    text      = sanitize_text(str(data.get("text", "")), 5000)
+
+    classes = load_classes()
+    cls     = classes.get(code.upper())
+    if not cls:
+        raise HTTPException(404, "Class not found.")
+
+    for a in cls["assignments"]:
+        if a["id"] == assign_id:
+            # Remove previous submission from same student
+            a["submissions"] = [s for s in a.get("submissions", []) if s["sid"] != sid]
+            a["submissions"].append({
+                "sid":  sid,
+                "name": name,
+                "text": text,
+                "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            })
+            break
+
+    save_classes(classes)
+    log.info(f"Assignment submitted: {name} → {code}")
+    return {"ok": True}
+
+
+# ── Discussion message ────────────────────────────────────────
+
+@app.post("/api/class/{code}/discuss")
+async def post_discussion(code: str, data: dict):
+    sid     = sanitize_text(str(data.get("sid", "")), 100)
+    name    = sanitize_text(str(data.get("name", "")), MAX_NAME_LEN)
+    message = sanitize_text(str(data.get("message", "")), 1000)
+    role    = "lecturer" if data.get("token", "").startswith("lecturer_") else "student"
+
+    classes = load_classes()
+    cls     = classes.get(code.upper())
+    if not cls:
+        raise HTTPException(404, "Class not found.")
+
+    cls["discussions"].append({
+        "sid":     sid,
+        "name":    name,
+        "message": message,
+        "role":    role,
+        "time":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    })
+    # Keep last 100 messages
+    cls["discussions"] = cls["discussions"][-100:]
+    save_classes(classes)
+    return {"ok": True}
+
+
+# ── Add exam to class ─────────────────────────────────────────
+
+@app.post("/api/class/{code}/exam")
+async def add_class_exam(code: str, data: dict):
+    token = data.get("token", "")
+    verify_class_lecturer(code.upper(), token)
+
+    # Get existing exam by id if provided
+    exam_id = data.get("exam_id", "")
+    classes = load_classes()
+    cls     = classes.get(code.upper())
+    if not cls:
+        raise HTTPException(404, "Class not found.")
+
+    # Load from exams.json if exam_id given
+    if exam_id and EXAMS_PATH.exists():
+        exams = json.loads(EXAMS_PATH.read_text())
+        exam  = next((e for e in exams if e["id"] == exam_id), None)
+        if exam:
+            cls["exams"].append(exam)
+            save_classes(classes)
+            return {"ok": True}
+
+    raise HTTPException(400, "Exam not found.")
+
+
+# ── Lecturer: get class students & submissions ────────────────
+
+@app.get("/api/class/{code}/lecturer")
+async def class_lecturer_view(code: str, token: str):
+    cls = verify_class_lecturer(code.upper(), token)
+    classes = load_classes()
+    cls     = classes.get(code.upper(), cls)
+    return {
+        "code":          cls["code"],
+        "title":         cls["title"],
+        "students":      cls.get("students", []),
+        "materials":     cls.get("materials", []),
+        "announcements": cls.get("announcements", []),
+        "assignments":   cls.get("assignments", []),
+        "discussions":   cls.get("discussions", []),
+        "class_link":    cls.get("class_link", ""),
+        "exams":         cls.get("exams", []),
+    }
+
+
+# ── Lecturer: get all their classes ──────────────────────────
+
+@app.get("/api/class/lecturer/all")
+async def lecturer_classes(token: str, lecturer: str):
+    if not token.startswith("lecturer_"):
+        raise HTTPException(401, "Unauthorized.")
+    classes = load_classes()
+    result  = [cls for cls in classes.values() if cls.get("lecturer") == lecturer]
+    return {"classes": result}
+
+
+# ── Delete announcement from class ───────────────────────────
+
+@app.post("/api/class/{code}/announcement/delete")
+async def delete_class_announcement(code: str, data: dict):
+    token = data.get("token", "")
+    verify_class_lecturer(code.upper(), token)
+    idx     = int(data.get("index", -1))
+    classes = load_classes()
+    anns    = classes[code.upper()].get("announcements", [])
+    if 0 <= idx < len(anns):
+        anns.pop(idx)
+    save_classes(classes)
+    return {"ok": True}
+
+
+# ═══════════════════════════════════════════════════════════════
+#  CLASSES SYSTEM
+# ═══════════════════════════════════════════════════════════════
+
+CLASSES_PATH = DATA_DIR / "classes.json"
+
+def load_classes() -> dict:
+    """Load all classes."""
+    if CLASSES_PATH.exists():
+        return json.loads(CLASSES_PATH.read_text())
+    return {}
+
+def save_classes(classes: dict):
+    """Save classes atomically."""
+    tmp = str(CLASSES_PATH) + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(classes, f, indent=2)
+    shutil.move(tmp, str(CLASSES_PATH))
+
+def generate_class_code() -> str:
+    """Generate a unique 6-char alphanumeric class code."""
+    import string
+    chars = string.ascii_uppercase + string.digits
+    classes = load_classes()
+    while True:
+        code = "".join(random.choices(chars, k=6))
+        if code not in classes:
+            return code
+
+def get_student_classes(sid: str) -> list:
+    """Return all classes a student has joined."""
+    classes = load_classes()
+    return [
+        {**cls, "code": code}
+        for code, cls in classes.items()
+        if sid in cls.get("students", [])
+    ]
+
+# ── Class request models ──────────────────────────────────────
+
+class CreateClassRequest(BaseModel):
+    token: str
+    name: str
+    subject: str
+    lecturer: str
+
+class JoinClassRequest(BaseModel):
+    sid: str
+    code: str
+
+class ClassActionRequest(BaseModel):
+    token: str
+    code: str
+
+class MaterialRequest(BaseModel):
+    token: str
+    code: str
+    title: str
+    content: str
+    type: str  # link, note, file
+
+class ClassAnnouncementRequest(BaseModel):
+    token: str
+    code: str
+    text: str
+    type: str
+
+class LiveClassRequest(BaseModel):
+    token: str
+    code: str
+    link: str
+    title: str
+
+class AssignmentRequest(BaseModel):
+    token: str
+    code: str
+    title: str
+    description: str
+    due_date: str
+
+class SubmitAssignmentRequest(BaseModel):
+    sid: str
+    code: str
+    assignment_id: str
+    content: str
+
+class DiscussionRequest(BaseModel):
+    sid: str
+    code: str
+    message: str
+    name: str
+
+class AssignExamRequest(BaseModel):
+    token: str
+    code: str
+    exam_id: str
+
+# ── Lecturer: Create class ────────────────────────────────────
+
+@app.post("/api/class/create")
+async def create_class(req: CreateClassRequest):
+    verify_lecturer(req.token)
+    code    = generate_class_code()
+    classes = load_classes()
+    classes[code] = {
+        "name":          sanitize_text(req.name, 100),
+        "subject":       sanitize_text(req.subject, 100),
+        "lecturer":      sanitize_text(req.lecturer, MAX_NAME_LEN),
+        "code":          code,
+        "created":       datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "students":      [],
+        "materials":     [],
+        "announcements": [],
+        "live_class":    None,
+        "assignments":   [],
+        "discussions":   [],
+        "exams":         [],
+    }
+    save_classes(classes)
+    log.info(f"Class created: {req.name} ({code}) by {req.lecturer}")
+    return {"ok": True, "code": code}
+
+# ── Lecturer: Get their classes ───────────────────────────────
+
+@app.get("/api/class/lecturer")
+async def lecturer_classes(token: str):
+    verify_lecturer(token)
+    classes = load_classes()
+    return {
+        "classes": [
+            {**cls, "code": code, "student_count": len(cls.get("students", []))}
+            for code, cls in classes.items()
+        ]
+    }
+
+# ── Lecturer: Post material ───────────────────────────────────
+
+@app.post("/api/class/material")
+async def add_material(req: MaterialRequest):
+    verify_lecturer(req.token)
+    classes = load_classes()
+    if req.code not in classes:
+        raise HTTPException(404, "Class not found")
+    material = {
+        "id":      str(uuid.uuid4())[:8],
+        "title":   sanitize_text(req.title, 200),
+        "content": sanitize_text(req.content, 2000),
+        "type":    req.type if req.type in ["link","note","file"] else "note",
+        "date":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    classes[req.code].setdefault("materials", []).append(material)
+    save_classes(classes)
+    return {"ok": True}
+
+# ── Lecturer: Post class announcement ────────────────────────
+
+@app.post("/api/class/announcement")
+async def class_announcement(req: ClassAnnouncementRequest):
+    verify_lecturer(req.token)
+    classes = load_classes()
+    if req.code not in classes:
+        raise HTTPException(404, "Class not found")
+    ann = {
+        "id":   str(uuid.uuid4())[:8],
+        "text": sanitize_text(req.text, 500),
+        "type": req.type if req.type in ["info","warning","deadline","exam"] else "info",
+        "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    classes[req.code].setdefault("announcements", []).append(ann)
+    save_classes(classes)
+    return {"ok": True}
+
+# ── Lecturer: Set live class link ─────────────────────────────
+
+@app.post("/api/class/live")
+async def set_live_class(req: LiveClassRequest):
+    verify_lecturer(req.token)
+    classes = load_classes()
+    if req.code not in classes:
+        raise HTTPException(404, "Class not found")
+    classes[req.code]["live_class"] = {
+        "link":  sanitize_text(req.link, 500),
+        "title": sanitize_text(req.title, 200),
+        "date":  datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    save_classes(classes)
+    return {"ok": True}
+
+# ── Lecturer: Create assignment ───────────────────────────────
+
+@app.post("/api/class/assignment")
+async def create_assignment(req: AssignmentRequest):
+    verify_lecturer(req.token)
+    classes = load_classes()
+    if req.code not in classes:
+        raise HTTPException(404, "Class not found")
+    assignment = {
+        "id":          str(uuid.uuid4())[:8],
+        "title":       sanitize_text(req.title, 200),
+        "description": sanitize_text(req.description, 1000),
+        "due_date":    sanitize_text(req.due_date, 50),
+        "date":        datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "submissions": [],
+    }
+    classes[req.code].setdefault("assignments", []).append(assignment)
+    save_classes(classes)
+    return {"ok": True, "id": assignment["id"]}
+
+# ── Lecturer: Assign exam to class ───────────────────────────
+
+@app.post("/api/class/assign-exam")
+async def assign_exam_to_class(req: AssignExamRequest):
+    verify_lecturer(req.token)
+    classes = load_classes()
+    exams   = json.loads(EXAMS_PATH.read_text()) if EXAMS_PATH.exists() else []
+    exam    = next((e for e in exams if e["id"] == req.exam_id), None)
+    if not exam:
+        raise HTTPException(404, "Exam not found")
+    if req.code not in classes:
+        raise HTTPException(404, "Class not found")
+    classes[req.code].setdefault("exams", [])
+    if req.exam_id not in [e["id"] for e in classes[req.code]["exams"]]:
+        classes[req.code]["exams"].append({
+            "id":    exam["id"],
+            "title": exam["title"],
+            "date":  datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        })
+    save_classes(classes)
+    return {"ok": True}
+
+# ── Lecturer: View submissions ────────────────────────────────
+
+@app.get("/api/class/submissions")
+async def get_submissions(token: str, code: str, assignment_id: str):
+    verify_lecturer(token)
+    classes = load_classes()
+    if code not in classes:
+        raise HTTPException(404, "Class not found")
+    for a in classes[code].get("assignments", []):
+        if a["id"] == assignment_id:
+            return {"submissions": a.get("submissions", [])}
+    raise HTTPException(404, "Assignment not found")
+
+# ── Lecturer: Delete class ────────────────────────────────────
+
+@app.post("/api/class/delete")
+async def delete_class(data: dict):
+    verify_lecturer(data.get("token", ""))
+    code    = data.get("code", "")
+    classes = load_classes()
+    if code in classes:
+        del classes[code]
+        save_classes(classes)
+    return {"ok": True}
+
+# ── Student: Join class ───────────────────────────────────────
+
+@app.post("/api/class/join")
+async def join_class(req: JoinClassRequest, request: Request):
+    key = get_client_key(request, req.sid)
+    check_rate_limit(key, 10, "join_class")
+    classes = load_classes()
+    code    = req.code.upper().strip()
+    if code not in classes:
+        raise HTTPException(404, "Class not found. Check the code and try again.")
+    cls = classes[code]
+    if req.sid not in cls["students"]:
+        cls["students"].append(req.sid)
+        save_classes(classes)
+    return {
+        "ok":      True,
+        "code":    code,
+        "name":    cls["name"],
+        "subject": cls["subject"],
+        "lecturer": cls["lecturer"],
+    }
+
+# ── Student: Leave class ──────────────────────────────────────
+
+@app.post("/api/class/leave")
+async def leave_class(data: dict):
+    sid     = sanitize_text(str(data.get("sid", "")), 100)
+    code    = sanitize_text(str(data.get("code", "")), 10).upper()
+    classes = load_classes()
+    if code in classes and sid in classes[code]["students"]:
+        classes[code]["students"].remove(sid)
+        save_classes(classes)
+    return {"ok": True}
+
+# ── Student: Get their classes ────────────────────────────────
+
+@app.get("/api/class/student")
+async def student_classes(sid: str):
+    sid = sanitize_text(sid, 100)
+    return {"classes": get_student_classes(sid)}
+
+# ── Student/All: Get class detail ────────────────────────────
+
+@app.get("/api/class/detail")
+async def class_detail(code: str, sid: str = ""):
+    code    = sanitize_text(code, 10).upper()
+    classes = load_classes()
+    if code not in classes:
+        raise HTTPException(404, "Class not found")
+    cls = dict(classes[code])
+    cls["code"]          = code
+    cls["student_count"] = len(cls.get("students", []))
+    cls["is_member"]     = sid in cls.get("students", []) if sid else False
+    # Don't expose student list publicly
+    cls.pop("students", None)
+    return cls
+
+# ── Student: Submit assignment ────────────────────────────────
+
+@app.post("/api/class/submit")
+async def submit_assignment(req: SubmitAssignmentRequest):
+    classes = load_classes()
+    if req.code not in classes:
+        raise HTTPException(404, "Class not found")
+    p    = load_progress(req.sid)
+    name = p.get("name", "Unknown")
+    for a in classes[req.code].get("assignments", []):
+        if a["id"] == req.assignment_id:
+            # Check if already submitted
+            existing = [s for s in a.get("submissions", []) if s["sid"] == req.sid]
+            if existing:
+                existing[0]["content"] = sanitize_text(req.content, 5000)
+                existing[0]["date"]    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                existing[0]["resubmitted"] = True
+            else:
+                a.setdefault("submissions", []).append({
+                    "sid":     req.sid,
+                    "name":    name,
+                    "content": sanitize_text(req.content, 5000),
+                    "date":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                })
+            save_classes(classes)
+            return {"ok": True}
+    raise HTTPException(404, "Assignment not found")
+
+# ── Discussion ────────────────────────────────────────────────
+
+@app.post("/api/class/discuss")
+async def post_discussion(req: DiscussionRequest, request: Request):
+    key = get_client_key(request, req.sid)
+    check_rate_limit(key, 20, "discuss")
+    classes = load_classes()
+    if req.code not in classes:
+        raise HTTPException(404, "Class not found")
+    msg = {
+        "id":      str(uuid.uuid4())[:8],
+        "sid":     req.sid,
+        "name":    sanitize_text(req.name, MAX_NAME_LEN),
+        "message": sanitize_text(req.message, 1000),
+        "date":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    classes[req.code].setdefault("discussions", []).append(msg)
+    # Keep last 200 messages
+    classes[req.code]["discussions"] = classes[req.code]["discussions"][-200:]
+    save_classes(classes)
+    return {"ok": True, "msg": msg}
+
+@app.get("/api/class/discuss")
+async def get_discussion(code: str, since: str = ""):
+    code    = sanitize_text(code, 10).upper()
+    classes = load_classes()
+    if code not in classes:
+        raise HTTPException(404, "Class not found")
+    msgs = classes[code].get("discussions", [])
+    return {"messages": msgs[-50:]}  # Last 50 messages
+
+
 # ── Health check ──────────────────────────────────────────────
 
 @app.get("/health")
@@ -1537,3 +2288,4 @@ async def health():
         "gemini":  GEMINI_AVAILABLE,
         "model":   _model_name or "not initialized",
     }
+
