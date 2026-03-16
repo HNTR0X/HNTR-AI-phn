@@ -1020,6 +1020,24 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
   cursor: pointer;
 }
 
+/* ── Class tabs ───────────────────────────────────────────── */
+.class-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+
+.class-tab:hover { color: var(--text); }
+.class-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
 /* ── Leaderboard ──────────────────────────────────────────── */
 .lb-item {
   display: flex;
@@ -1102,7 +1120,171 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 }
 .note-item .note-del:hover { color: var(--red); }
 
-/* ── UI Tweaks ────────────────────────────────────────────── */
+/* ── Classes ──────────────────────────────────────────────── */
+.class-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin-bottom: .75rem;
+  cursor: pointer;
+  transition: border-color .2s, transform .15s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.class-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+.class-icon {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.class-info { flex: 1; min-width: 0; }
+.class-name { font-family: var(--font); font-weight: 700; font-size: .95rem; }
+.class-meta { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+.class-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.class-tabs::-webkit-scrollbar { display: none; }
+
+.ctab {
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  color: var(--muted);
+  font-family: var(--font); font-size: .8rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: all .2s;
+}
+
+.ctab:hover { color: var(--text); }
+.ctab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.class-content { flex: 1; overflow-y: auto; padding: 1.25rem; min-height: 0; }
+
+.material-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 13px;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.material-item:hover { border-color: var(--accent); }
+
+.discuss-msg {
+  display: flex;
+  gap: 9px;
+  margin-bottom: .875rem;
+  animation: msgIn .2s ease;
+}
+
+.discuss-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-weight: 700; font-size: .72rem;
+  color: #fff; flex-shrink: 0;
+}
+
+.discuss-bubble {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  border-top-left-radius: 3px;
+  padding: 8px 12px;
+  font-size: .84rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.discuss-name { font-weight: 600; font-size: .75rem; color: var(--accent); margin-bottom: 2px; }
+.discuss-date { font-size: .68rem; color: var(--muted); margin-top: 3px; }
+
+.assign-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.assign-title { font-weight: 600; font-size: .9rem; margin-bottom: 4px; }
+.assign-desc  { font-size: .82rem; color: var(--muted); margin-bottom: 8px; }
+.assign-due   { font-size: .72rem; color: var(--yellow); font-weight: 600; }
+
+.join-code-input {
+  width: 100%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+  transition: border-color .2s;
+  margin-bottom: 10px;
+}
+
+.join-code-input:focus { border-color: var(--accent); }
+
+.live-class-banner {
+  background: linear-gradient(135deg, #22c55e15, #22c55e08);
+  border: 1px solid #22c55e40;
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+
+.live-class-banner:hover { border-color: var(--green); }
+
+/* ── Announcement items ───────────────────────────────────── */
+.ann-card {
+  border-radius: var(--radius);
+  padding: .875rem 1rem;
+  margin-bottom: .75rem;
+  border: 1px solid;
+}
+
+.ann-card.info     { background: #4f6ef710; border-color: #4f6ef730; }
+.ann-card.warning  { background: #f59e0b10; border-color: #f59e0b30; }
+.ann-card.deadline { background: #ef444410; border-color: #ef444430; }
+.ann-card.exam     { background: #7c3aed10; border-color: #7c3aed30; }
+
+.ann-card-text { font-size: .88rem; line-height: 1.55; }
+.ann-card-meta { font-size: .72rem; color: var(--muted); margin-top: 5px; }
+
+
 /* Smoother message bubbles */
 .msg-bub { transition: opacity .1s; }
 
@@ -1294,8 +1476,11 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
           <button class="pd-item" onclick="nav('notes', null); closeProfile()">
             <span class="pd-icon">📓</span> My Notes
           </button>
-          <button class="pd-item" onclick="nav('leaderboard', null); closeProfile()">
-            <span class="pd-icon">🏆</span> Leaderboard
+          <button class="pd-item" onclick="nav('classes', null); closeProfile()">
+            <span class="pd-icon">🏫</span> My Classes
+          </button>
+          <button class="pd-item" onclick="nav('announcements', null); closeProfile()">
+            <span class="pd-icon">📢</span> Announcements
           </button>
 
           <div class="pd-divider"></div>
@@ -1328,11 +1513,14 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
     <button class="tab-pill" id="tab-quiz" onclick="navTab('quiz', this)">
       <span class="tp-icon">📝</span> Quiz
     </button>
+    <button class="tab-pill" id="tab-classes" onclick="navTab('classes', this)">
+      <span class="tp-icon">🏫</span> Classes
+    </button>
+    <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements', this)">
+      <span class="tp-icon">📢</span> Notices
+    </button>
     <button class="tab-pill" id="tab-stats" onclick="navTab('stats', this)">
       <span class="tp-icon">📊</span> Progress
-    </button>
-    <button class="tab-pill" id="tab-leaderboard" onclick="navTab('leaderboard', this)">
-      <span class="tp-icon">🏆</span> Leaderboard
     </button>
     <button class="tab-pill" id="tab-notes" onclick="navTab('notes', this)">
       <span class="tp-icon">📓</span> Notes
@@ -1351,8 +1539,9 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
         <div class="nav-label">Menu</div>
         <button class="nav-btn active" onclick="nav('chat',this)"><span class="ni">💬</span> Chat</button>
         <button class="nav-btn" onclick="nav('quiz',this)"><span class="ni">📝</span> Quiz</button>
+        <button class="nav-btn" onclick="nav('classes',this)"><span class="ni">🏫</span> My Classes</button>
+        <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
-        <button class="nav-btn" onclick="nav('leaderboard',this)"><span class="ni">🏆</span> Leaderboard</button>
         <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
       </div>
       <div class="stat-mini" id="sb-stats">
@@ -1404,29 +1593,68 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
         <div class="stats-wrap" id="sw"></div>
       </div>
 
-      <!-- Leaderboard -->
-      <div class="panel" id="panel-leaderboard">
-        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+      <!-- Classes -->
+      <div class="panel" id="panel-classes">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
             <div>
-              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏆 Leaderboard</h2>
-              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Top students by quiz performance</p>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Join and manage your classes</p>
             </div>
-            <button onclick="loadLeaderboard()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--muted);font-size:.75rem;cursor:pointer;">↻ Refresh</button>
+            <button onclick="showJoinClass()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:8px 14px;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">+ Join Class</button>
           </div>
-          <!-- My rank card -->
-          <div id="my-rank-card" style="background:linear-gradient(135deg,#4f6ef715,#7c3aed15);border:1px solid #4f6ef730;border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;display:none">
-            <div style="font-size:.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Your Ranking</div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <div style="font-family:var(--font);font-size:2rem;font-weight:800;color:var(--accent)" id="my-rank-num">—</div>
-              <div>
-                <div style="font-weight:600;font-size:.9rem" id="my-rank-name"></div>
-                <div style="font-size:.75rem;color:var(--muted)" id="my-rank-score"></div>
-              </div>
+
+          <!-- Join class form (hidden by default) -->
+          <div id="join-class-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem">
+            <div style="font-family:var(--font);font-weight:700;font-size:.9rem;margin-bottom:.75rem">Join a Class</div>
+            <div style="display:flex;gap:8px">
+              <input id="class-code-input" type="text" placeholder="Enter class code e.g. AB1234"
+                style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:.87rem;outline:none;text-transform:uppercase"
+                oninput="this.value=this.value.toUpperCase()"
+                onkeydown="if(event.key==='Enter') joinClass()">
+              <button onclick="joinClass()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:9px 16px;font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer">Join</button>
+              <button onclick="$('join-class-form').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--muted);font-size:.82rem;cursor:pointer">Cancel</button>
             </div>
+            <div id="join-error" style="color:var(--red);font-size:.78rem;margin-top:6px"></div>
           </div>
-          <div id="leaderboard-list">
-            <div class="empty-state"><div class="es-icon">🏆</div><div class="es-text">Loading leaderboard...</div></div>
+
+          <!-- Classes list -->
+          <div id="classes-list">
+            <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">No classes yet — join one with a class code from your lecturer!</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Single Class View -->
+      <div class="panel" id="panel-class-detail">
+        <div style="flex-shrink:0;padding:.875rem 1.25rem;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <button onclick="nav('classes',null)" style="background:none;border:none;color:var(--accent);font-size:1rem;cursor:pointer;padding:4px">←</button>
+          <div>
+            <div id="cd-title" style="font-family:var(--font);font-weight:700;font-size:.95rem"></div>
+            <div id="cd-lecturer" style="font-size:.72rem;color:var(--muted)"></div>
+          </div>
+        </div>
+        <!-- Class tabs -->
+        <div style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none">
+          <button class="class-tab active" onclick="switchClassTab('materials',this)" id="ct-materials">📚 Materials</button>
+          <button class="class-tab" onclick="switchClassTab('announcements-c',this)" id="ct-announcements-c">📢 Notices</button>
+          <button class="class-tab" onclick="switchClassTab('class-link',this)" id="ct-class-link">🎥 Online Class</button>
+          <button class="class-tab" onclick="switchClassTab('exams-c',this)" id="ct-exams-c">📝 Exams</button>
+          <button class="class-tab" onclick="switchClassTab('assignments',this)" id="ct-assignments">📋 Assignments</button>
+          <button class="class-tab" onclick="switchClassTab('discussions',this)" id="ct-discussions">💬 Discussion</button>
+        </div>
+        <!-- Class tab content -->
+        <div style="flex:1;overflow-y:auto;padding:1rem;min-height:0" id="class-tab-content">
+          <div class="empty-state"><div class="es-icon">📚</div><div class="es-text">Loading class...</div></div>
+        </div>
+      </div>
+
+      <!-- Announcements Panel -->
+      <div class="panel" id="panel-announcements">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0">
+          <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:1.25rem">📢 Announcements</h2>
+          <div id="all-announcements-list">
+            <div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>
           </div>
         </div>
       </div>
@@ -1452,6 +1680,24 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
           <div id="notes-list">
             <div class="empty-state"><div class="es-icon">📓</div><div class="es-text">No notes yet — write your first one above!</div></div>
           </div>
+        </div>
+      </div>
+
+      <!-- Announcements Panel -->
+      <div class="panel" id="panel-announcements">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+          <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.3rem">📢 Announcements</h2>
+          <p style="font-size:.78rem;color:var(--muted);margin-bottom:1.25rem">Messages from your lecturers</p>
+          <div id="ann-panel-list">
+            <div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Classes Panel -->
+      <div class="panel" id="panel-classes">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0" id="classes-root">
+          <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">Loading classes...</div></div>
         </div>
       </div>
 
@@ -2093,10 +2339,12 @@ function nav(name, btn) {
   if (p) p.classList.add('active');
   if (btn) btn.classList.add('active');
   const mob = document.getElementById(`mn-${name}`); if (mob) mob.classList.add('active');
-  if (name === 'stats')       loadStats();
-  if (name === 'more')        syncMore();
-  if (name === 'leaderboard') loadLeaderboard();
-  if (name === 'notes')       loadNotes();
+  if (name === 'stats')         loadStats();
+  if (name === 'more')          syncMore();
+  if (name === 'leaderboard')   loadLeaderboard();
+  if (name === 'notes')         loadNotes();
+  if (name === 'classes')       loadClasses();
+  if (name === 'announcements') loadAllAnnouncements();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
@@ -2118,10 +2366,12 @@ function navTab(name, btn) {
   const desktopBtn = document.querySelector(`.nav-btn[onclick*="'${name}'"]`);
   if (desktopBtn) desktopBtn.classList.add('active');
 
-  if (name === 'stats')       loadStats();
-  if (name === 'more')        syncMore();
-  if (name === 'leaderboard') loadLeaderboard();
-  if (name === 'notes')       loadNotes();
+  if (name === 'stats')         loadStats();
+  if (name === 'more')          syncMore();
+  if (name === 'leaderboard')   loadLeaderboard();
+  if (name === 'notes')         loadNotes();
+  if (name === 'classes')       loadClasses();
+  if (name === 'announcements') loadAllAnnouncements();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
@@ -2173,8 +2423,609 @@ function toast(msg, ms=2500) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), ms);
 }
-// ═══════════════════════════ LEADERBOARD ════════════════════════
-async function loadLeaderboard() {
+// ═══════════════════════════ CLASSES ════════════════════════════
+let CURRENT_CLASS = null;
+
+function showJoinClass() {
+  $('join-class-form').style.display = 'block';
+  $('class-code-input').focus();
+}
+
+async function joinClass() {
+  const code = $('class-code-input').value.trim().toUpperCase();
+  const err  = $('join-error');
+  if (!code) { err.textContent = 'Enter a class code.'; return; }
+
+  err.textContent = 'Joining...';
+  try {
+    const r = await fetch('/api/class/join', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ code, sid: S.sid, name: S.name })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Failed to join.');
+    $('join-class-form').style.display = 'none';
+    $('class-code-input').value = '';
+    err.textContent = '';
+    toast(`Joined ${d.class.title}! 🎉`);
+    loadClasses();
+  } catch(e) {
+    err.textContent = e.message;
+  }
+}
+
+async function loadClasses() {
+  if (!S.sid) return;
+  try {
+    const r = await fetch(`/api/class/my?sid=${S.sid}`);
+    const d = await r.json();
+    renderClassesList(d.classes || []);
+  } catch {
+    $('classes-list').innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Could not load classes.</div></div>';
+  }
+}
+
+function renderClassesList(classes) {
+  const list = $('classes-list');
+  if (!classes.length) {
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">No classes yet — join one with a class code from your lecturer!</div></div>';
+    return;
+  }
+  list.innerHTML = classes.map(cls => `
+    <div onclick="openClass('${cls.code}')" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-family:var(--font);font-weight:700;font-size:.95rem">${esc(cls.title)}</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">👤 ${esc(cls.lecturer)} · ${cls.student_count} student${cls.student_count !== 1 ? 's' : ''}</div>
+          ${cls.description ? `<div style="font-size:.8rem;color:var(--muted);margin-top:4px">${esc(cls.description)}</div>` : ''}
+        </div>
+        <div style="background:#4f6ef715;border:1px solid #4f6ef730;border-radius:8px;padding:3px 9px;font-family:var(--font);font-size:.72rem;font-weight:700;color:var(--accent);white-space:nowrap">${cls.code}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
+        ${cls.materials.length ? `<span style="font-size:.72rem;color:var(--muted)">📚 ${cls.materials.length} material${cls.materials.length !== 1 ? 's' : ''}</span>` : ''}
+        ${cls.announcements.length ? `<span style="font-size:.72rem;color:var(--yellow)">📢 ${cls.announcements.length} notice${cls.announcements.length !== 1 ? 's' : ''}</span>` : ''}
+        ${cls.assignments.length ? `<span style="font-size:.72rem;color:var(--green)">📋 ${cls.assignments.length} assignment${cls.assignments.length !== 1 ? 's' : ''}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function openClass(code) {
+  try {
+    const r = await fetch(`/api/class/${code}?sid=${S.sid}`);
+    const d = await r.json();
+    CURRENT_CLASS = d;
+    $('cd-title').textContent    = d.title;
+    $('cd-lecturer').textContent = `👤 ${d.lecturer} · ${d.student_count} students`;
+    // Switch to detail panel
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    $('panel-class-detail').classList.add('active');
+    // Show materials tab by default
+    switchClassTab('materials', document.getElementById('ct-materials'));
+  } catch {
+    toast('Could not load class. Try again.');
+  }
+}
+
+function switchClassTab(tab, btn) {
+  document.querySelectorAll('.class-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const cls = CURRENT_CLASS;
+  if (!cls) return;
+  const content = $('class-tab-content');
+
+  if (tab === 'materials') {
+    content.innerHTML = cls.materials.length
+      ? cls.materials.map(m => `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-bottom:.625rem">
+            <div style="display:flex;align-items:flex-start;gap:8px">
+              <span style="font-size:1.1rem">${m.type === 'link' ? '🔗' : m.type === 'note' ? '📝' : '📄'}</span>
+              <div style="flex:1">
+                <div style="font-weight:600;font-size:.88rem">${esc(m.title)}</div>
+                ${m.content ? `<div style="font-size:.82rem;color:var(--muted);margin-top:3px;white-space:pre-wrap">${esc(m.content)}</div>` : ''}
+                ${m.url ? `<a href="${esc(m.url)}" target="_blank" style="font-size:.78rem;color:var(--accent);text-decoration:none;display:inline-block;margin-top:4px">Open link →</a>` : ''}
+                <div style="font-size:.7rem;color:var(--muted2);margin-top:4px">${m.date}</div>
+              </div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📚</div><div class="es-text">No materials posted yet.</div></div>';
+  }
+
+  else if (tab === 'announcements-c') {
+    content.innerHTML = cls.announcements.length
+      ? cls.announcements.map(a => {
+          const colors = {info:'#4f6ef7',warning:'#f59e0b',deadline:'#ef4444',exam:'#7c3aed'};
+          const icons  = {info:'📘',warning:'⚠️',deadline:'⏰',exam:'📝'};
+          return `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-bottom:.625rem">
+            <div style="display:flex;gap:8px">
+              <span>${icons[a.type]||'📘'}</span>
+              <div>
+                <div style="font-size:.87rem;color:${colors[a.type]||'var(--accent)'};font-weight:600">${esc(a.text)}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:3px">${a.date}</div>
+              </div>
+            </div>
+          </div>`;}).join('')
+      : '<div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>';
+  }
+
+  else if (tab === 'class-link') {
+    content.innerHTML = cls.class_link
+      ? `<div style="text-align:center;padding:2rem">
+          <div style="font-size:3rem;margin-bottom:.75rem">🎥</div>
+          <div style="font-family:var(--font);font-weight:700;font-size:1.1rem;margin-bottom:.5rem">Online Class</div>
+          <div style="color:var(--muted);font-size:.85rem;margin-bottom:1.5rem">Your lecturer has shared a link to join the class.</div>
+          <a href="${esc(cls.class_link)}" target="_blank" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:var(--font);font-size:.95rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block">Join Online Class →</a>
+        </div>`
+      : '<div class="empty-state"><div class="es-icon">🎥</div><div class="es-text">No online class link yet. Check back later.</div></div>';
+  }
+
+  else if (tab === 'exams-c') {
+    content.innerHTML = cls.exams && cls.exams.length
+      ? cls.exams.map(e => `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-bottom:.625rem;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div>
+              <div style="font-weight:600;font-size:.88rem">📝 ${esc(e.title)}</div>
+              <div style="font-size:.75rem;color:var(--muted);margin-top:2px">⏱ ${e.duration} minutes</div>
+            </div>
+            <a href="/exam/${e.id}?sid=${S.sid}" target="_blank" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap">Start Exam</a>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📝</div><div class="es-text">No exams posted yet.</div></div>';
+  }
+
+  else if (tab === 'assignments') {
+    content.innerHTML = cls.assignments.length
+      ? cls.assignments.map(a => `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-bottom:.625rem">
+            <div style="font-weight:600;font-size:.88rem">📋 ${esc(a.title)}</div>
+            ${a.description ? `<div style="font-size:.82rem;color:var(--muted);margin-top:4px">${esc(a.description)}</div>` : ''}
+            ${a.due ? `<div style="font-size:.75rem;color:var(--yellow);margin-top:4px">⏰ Due: ${esc(a.due)}</div>` : ''}
+            <div style="margin-top:.75rem">
+              <textarea id="submit-${a.id}" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-family:var(--font-body);font-size:.83rem;outline:none;resize:none;min-height:80px" placeholder="Type your answer or submission here..."></textarea>
+              <button onclick="submitAssignment('${CURRENT_CLASS.code}','${a.id}','submit-${a.id}')" style="margin-top:6px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">Submit</button>
+            </div>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📋</div><div class="es-text">No assignments yet.</div></div>';
+  }
+
+  else if (tab === 'discussions') {
+    const msgs = cls.discussions || [];
+    content.innerHTML = `
+      <div id="discussion-msgs" style="margin-bottom:1rem">
+        ${msgs.length ? msgs.map(m => `
+          <div style="display:flex;gap:8px;margin-bottom:.75rem;${m.sid === S.sid ? 'flex-direction:row-reverse' : ''}">
+            <div style="width:28px;height:28px;border-radius:50%;background:${m.role === 'lecturer' ? 'linear-gradient(135deg,var(--green),#16a34a)' : 'linear-gradient(135deg,var(--accent),var(--accent2))'};display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0">${m.name[0].toUpperCase()}</div>
+            <div style="max-width:75%">
+              <div style="font-size:.7rem;color:var(--muted);margin-bottom:2px${m.sid === S.sid ? ';text-align:right' : ''}">${esc(m.name)} ${m.role === 'lecturer' ? '👤 Lecturer' : ''} · ${m.time}</div>
+              <div style="background:${m.sid === S.sid ? 'linear-gradient(135deg,var(--accent),var(--accent2))' : 'var(--card)'};border:${m.sid === S.sid ? 'none' : '1px solid var(--border)'};border-radius:10px;padding:8px 11px;font-size:.85rem;color:${m.sid === S.sid ? '#fff' : 'var(--text)'}">${esc(m.message)}</div>
+            </div>
+          </div>`).join('')
+        : '<div class="empty-state"><div class="es-icon">💬</div><div class="es-text">No messages yet — start the conversation!</div></div>'}
+      </div>
+      <div style="display:flex;gap:8px;position:sticky;bottom:0;background:var(--bg);padding-top:8px">
+        <input id="discuss-input" type="text" placeholder="Type a message..." onkeydown="if(event.key==='Enter') postDiscussion('${CURRENT_CLASS.code}')"
+          style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:.85rem;outline:none">
+        <button onclick="postDiscussion('${CURRENT_CLASS.code}')" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;width:40px;height:40px;cursor:pointer;color:#fff;font-size:1rem">➤</button>
+      </div>`;
+  }
+}
+
+async function submitAssignment(code, assignId, inputId) {
+  const text = document.getElementById(inputId).value.trim();
+  if (!text) { toast('Write something first!'); return; }
+  try {
+    const r = await fetch(`/api/class/${code}/submit`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, name: S.name, assignment_id: assignId, text })
+    });
+    if (!r.ok) throw new Error();
+    document.getElementById(inputId).value = '';
+    toast('Assignment submitted ✓');
+  } catch { toast('Submission failed — try again.'); }
+}
+
+async function postDiscussion(code) {
+  const input   = $('discuss-input');
+  const message = input.value.trim();
+  if (!message) return;
+  try {
+    await fetch(`/api/class/${code}/discuss`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, name: S.name, message })
+    });
+    input.value = '';
+    // Reload class to refresh discussions
+    const r = await fetch(`/api/class/${code}?sid=${S.sid}`);
+    CURRENT_CLASS = await r.json();
+    switchClassTab('discussions', document.getElementById('ct-discussions'));
+  } catch { toast('Could not send message.'); }
+}
+
+// ═══════════════════════════ ANNOUNCEMENTS ══════════════════════
+async function loadAllAnnouncements() {
+  try {
+    const r = await fetch('/api/announcements/active');
+    const d = await r.json();
+    const anns = d.announcements || [];
+    const TYPE_COLORS = {info:'#4f6ef7', warning:'#f59e0b', deadline:'#ef4444', exam:'#7c3aed'};
+    const TYPE_ICONS  = {info:'📘', warning:'⚠️', deadline:'⏰', exam:'📝'};
+    const list = $('all-announcements-list');
+    if (!list) return;
+    list.innerHTML = anns.length
+      ? anns.reverse().map(a => `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.75rem">
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <span style="font-size:1.2rem">${TYPE_ICONS[a.type]||'📘'}</span>
+              <div style="flex:1">
+                <div style="font-size:.88rem;font-weight:600;color:${TYPE_COLORS[a.type]||'var(--accent)'}">${esc(a.text)}</div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:4px">From ${esc(a.lecturer)} · ${a.date}</div>
+              </div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements from your lecturers yet.</div></div>';
+  } catch {}
+}
+
+// ═══════════════════════════ ANNOUNCEMENTS PANEL ════════════════
+async function loadAnnouncementsPanel() {
+  const list = $('ann-panel-list');
+  if (!list) return;
+  try {
+    const r = await fetch('/api/announcements/active');
+    const d = await r.json();
+    const anns = d.announcements || [];
+
+    // Also load class-specific announcements
+    const classAnns = [];
+    if (S.sid) {
+      const cr = await fetch(`/api/class/student?sid=${S.sid}`);
+      const cd = await cr.json();
+      (cd.classes || []).forEach(cls => {
+        (cls.announcements || []).forEach(a => {
+          classAnns.push({...a, class_name: cls.name});
+        });
+      });
+    }
+
+    const allAnns = [...anns.map(a => ({...a, source: 'General'})),
+                     ...classAnns.map(a => ({...a, source: a.class_name}))];
+
+    const ICONS = {info:'📘', warning:'⚠️', deadline:'⏰', exam:'📝'};
+
+    if (!allAnns.length) {
+      list.innerHTML = '<div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>';
+      return;
+    }
+
+    list.innerHTML = allAnns.reverse().map(a => `
+      <div class="ann-card ${a.type || 'info'}">
+        <div class="ann-card-text">${ICONS[a.type]||'📘'} ${esc(a.text)}</div>
+        <div class="ann-card-meta">From: ${esc(a.source || 'Lecturer')} · ${a.date || ''}</div>
+      </div>`).join('');
+  } catch {
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Couldn\'t load announcements.</div></div>';
+  }
+}
+
+// ═══════════════════════════ CLASSES ════════════════════════════
+let CURRENT_CLASS = null;
+let CURRENT_CLASS_TAB = 'materials';
+let DISCUSS_INTERVAL = null;
+
+async function loadClasses() {
+  const root = $('classes-root');
+  if (!root || !S.sid) return;
+
+  try {
+    const r = await fetch(`/api/class/student?sid=${S.sid}`);
+    const d = await r.json();
+    const classes = d.classes || [];
+    renderClassesList(classes);
+  } catch {
+    root.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Couldn\'t load classes.</div></div>';
+  }
+}
+
+function renderClassesList(classes) {
+  const root = $('classes-root');
+  root.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <div>
+        <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:2px">${classes.length} class${classes.length !== 1 ? 'es' : ''} joined</p>
+      </div>
+      <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
+    </div>
+
+    ${classes.length ? classes.map(cls => `
+      <div class="class-card" onclick="openClass('${cls.code}')">
+        <div class="class-icon">📚</div>
+        <div class="class-info">
+          <div class="class-name">${esc(cls.name)}</div>
+          <div class="class-meta">${esc(cls.subject)} · ${esc(cls.lecturer)}</div>
+        </div>
+        <span style="color:var(--muted);font-size:1rem">›</span>
+      </div>`).join('') : `
+      <div class="empty-state">
+        <div class="es-icon">🏫</div>
+        <div class="es-text">No classes yet — ask your lecturer for a class code!</div>
+      </div>`}`;
+}
+
+function showJoinClass() {
+  const root = $('classes-root');
+  root.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem">
+      <button onclick="loadClasses()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">←</button>
+      <h2 style="font-family:var(--font);font-size:1.1rem;font-weight:800">Join a Class</h2>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center">
+      <div style="font-size:2rem;margin-bottom:.75rem">🔑</div>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.25rem">Enter the 6-character class code from your lecturer</p>
+      <input class="join-code-input" id="join-code-inp" maxlength="6" placeholder="ABC123"
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter') submitJoinClass()">
+      <button class="btn-start" style="width:100%;padding:12px" onclick="submitJoinClass()">Join Class</button>
+    </div>`;
+  setTimeout(() => { const i = $('join-code-inp'); if(i) i.focus(); }, 100);
+}
+
+async function submitJoinClass() {
+  const code = ($('join-code-inp').value || '').trim().toUpperCase();
+  if (code.length !== 6) { toast('Enter a 6-character code'); return; }
+  try {
+    const r = await fetch('/api/class/join', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, code })
+    });
+    if (!r.ok) {
+      const e = await r.json();
+      toast(e.detail || 'Class not found'); return;
+    }
+    const d = await r.json();
+    toast(`Joined "${d.name}" ✓`);
+    loadClasses();
+  } catch { toast('Could not join class — try again.'); }
+}
+
+async function openClass(code) {
+  const r = await fetch(`/api/class/detail?code=${code}&sid=${S.sid}`);
+  if (!r.ok) { toast('Could not load class'); return; }
+  CURRENT_CLASS = await r.json();
+  CURRENT_CLASS.code = code;
+  renderClassDetail(CURRENT_CLASS);
+}
+
+function renderClassDetail(cls) {
+  const root = $('classes-root');
+  root.innerHTML = `
+    <!-- Class header -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <button onclick="loadClasses();clearInterval(DISCUSS_INTERVAL)"
+        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;flex-shrink:0">←</button>
+      <div class="class-icon" style="width:36px;height:36px;font-size:1rem">📚</div>
+      <div>
+        <div style="font-family:var(--font);font-weight:700;font-size:1rem">${esc(cls.name)}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${esc(cls.subject)} · ${esc(cls.lecturer)}</div>
+      </div>
+      <button onclick="confirmLeaveClass('${cls.code}')"
+        style="background:none;border:1px solid var(--border);border-radius:7px;padding:3px 9px;
+               color:var(--muted);font-size:.7rem;cursor:pointer;margin-left:auto">Leave</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="class-tabs" id="class-tabs">
+      <button class="ctab active" onclick="switchClassTab('materials',this)">📁 Materials</button>
+      <button class="ctab" onclick="switchClassTab('announcements',this)">📢 Announcements</button>
+      <button class="ctab" onclick="switchClassTab('live',this)">🔴 Live Class</button>
+      <button class="ctab" onclick="switchClassTab('exams',this)">📝 Exams</button>
+      <button class="ctab" onclick="switchClassTab('assignments',this)">📋 Assignments</button>
+      <button class="ctab" onclick="switchClassTab('discuss',this)">💬 Discussion</button>
+    </div>
+
+    <!-- Tab content -->
+    <div class="class-content" id="class-tab-content"></div>`;
+
+  switchClassTab('materials');
+}
+
+function switchClassTab(tab, btn) {
+  CURRENT_CLASS_TAB = tab;
+  document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    const btns = document.querySelectorAll('.ctab');
+    btns.forEach(b => { if (b.textContent.toLowerCase().includes(tab.slice(0,3))) b.classList.add('active'); });
+  }
+  clearInterval(DISCUSS_INTERVAL);
+  renderClassTab(tab);
+}
+
+function renderClassTab(tab) {
+  const content = $('class-tab-content');
+  if (!content || !CURRENT_CLASS) return;
+  const cls = CURRENT_CLASS;
+
+  if (tab === 'materials') {
+    const mats = cls.materials || [];
+    const ICONS = {link:'🔗', note:'📝', file:'📄'};
+    content.innerHTML = mats.length
+      ? mats.map(m => `
+          <div class="material-item" onclick="openMaterial('${m.type}','${encodeURIComponent(m.content)}')">
+            <span style="font-size:1.2rem">${ICONS[m.type]||'📄'}</span>
+            <div>
+              <div style="font-weight:600;font-size:.88rem">${esc(m.title)}</div>
+              <div style="font-size:.72rem;color:var(--muted)">${m.type} · ${m.date}</div>
+            </div>
+            <span style="color:var(--muted);margin-left:auto">›</span>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📁</div><div class="es-text">No materials uploaded yet.</div></div>';
+  }
+
+  else if (tab === 'announcements') {
+    const anns = cls.announcements || [];
+    const ICONS = {info:'📘', warning:'⚠️', deadline:'⏰', exam:'📝'};
+    content.innerHTML = anns.length
+      ? anns.slice().reverse().map(a => `
+          <div class="ann-card ${a.type||'info'}">
+            <div class="ann-card-text">${ICONS[a.type]||'📘'} ${esc(a.text)}</div>
+            <div class="ann-card-meta">${a.date}</div>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>';
+  }
+
+  else if (tab === 'live') {
+    const live = cls.live_class;
+    content.innerHTML = live
+      ? `<div class="live-class-banner" onclick="window.open('${esc(live.link)}','_blank')">
+          <span style="font-size:1.5rem">🔴</span>
+          <div>
+            <div style="font-weight:700;color:var(--green)">${esc(live.title)}</div>
+            <div style="font-size:.75rem;color:var(--muted)">Set ${live.date} · Tap to join</div>
+          </div>
+          <span style="color:var(--green);margin-left:auto;font-weight:700">Join →</span>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted)">Check with your lecturer for the session schedule.</p>`
+      : '<div class="empty-state"><div class="es-icon">🔴</div><div class="es-text">No live class link set yet.</div></div>';
+  }
+
+  else if (tab === 'exams') {
+    const exams = cls.exams || [];
+    content.innerHTML = exams.length
+      ? exams.map(e => `
+          <div class="assign-item">
+            <div class="assign-title">📝 ${esc(e.title)}</div>
+            <div class="assign-due">Assigned ${e.date}</div>
+            <button class="btn-start" style="padding:8px 16px;font-size:.8rem;margin-top:10px"
+              onclick="window.open('/exam/${e.id}?sid=${S.sid}','_blank')">Take Exam →</button>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📝</div><div class="es-text">No exams assigned yet.</div></div>';
+  }
+
+  else if (tab === 'assignments') {
+    const assigns = cls.assignments || [];
+    content.innerHTML = assigns.length
+      ? assigns.map(a => `
+          <div class="assign-item">
+            <div class="assign-title">${esc(a.title)}</div>
+            <div class="assign-desc">${esc(a.description)}</div>
+            <div class="assign-due">⏰ Due: ${esc(a.due_date)}</div>
+            <div style="margin-top:10px">
+              <textarea id="sub-${a.id}" class="notes-area" style="min-height:80px;margin-bottom:6px"
+                placeholder="Type your submission here..."></textarea>
+              <button class="btn-start" style="padding:8px 16px;font-size:.8rem"
+                onclick="submitAssignment('${cls.code}','${a.id}')">Submit</button>
+            </div>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📋</div><div class="es-text">No assignments yet.</div></div>';
+  }
+
+  else if (tab === 'discuss') {
+    content.innerHTML = `
+      <div id="discuss-msgs" style="min-height:200px;margin-bottom:1rem"></div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <textarea id="discuss-input" class="notes-area" style="min-height:42px;max-height:100px;flex:1"
+          placeholder="Type a message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDiscussion()}"></textarea>
+        <button class="send-btn" onclick="sendDiscussion()">➤</button>
+      </div>`;
+    loadDiscussion(cls.code);
+    // Poll for new messages every 5 seconds
+    DISCUSS_INTERVAL = setInterval(() => loadDiscussion(cls.code), 5000);
+  }
+}
+
+function openMaterial(type, encodedContent) {
+  const content = decodeURIComponent(encodedContent);
+  if (type === 'link') {
+    window.open(content.startsWith('http') ? content : 'https://' + content, '_blank');
+  } else {
+    // Show note in a modal-style overlay
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(4px)';
+    div.innerHTML = `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;max-width:500px;width:100%;max-height:70vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;margin-bottom:1rem">
+          <span style="font-weight:700;font-family:var(--font)">📝 Material</span>
+          <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">✕</button>
+        </div>
+        <div style="white-space:pre-wrap;font-size:.88rem;line-height:1.65">${esc(content)}</div>
+      </div>`;
+    document.body.appendChild(div);
+  }
+}
+
+async function loadDiscussion(code) {
+  const msgs = $('discuss-msgs');
+  if (!msgs) return;
+  try {
+    const r = await fetch(`/api/class/discuss?code=${code}`);
+    const d = await r.json();
+    const messages = d.messages || [];
+    if (!messages.length) {
+      msgs.innerHTML = '<div class="empty-state"><div class="es-icon">💬</div><div class="es-text">No messages yet — start the conversation!</div></div>';
+      return;
+    }
+    const wasAtBottom = msgs.scrollHeight - msgs.scrollTop <= msgs.clientHeight + 50;
+    msgs.innerHTML = messages.map(m => `
+      <div class="discuss-msg">
+        <div class="discuss-av">${m.name[0].toUpperCase()}</div>
+        <div class="discuss-bubble">
+          <div class="discuss-name ${m.sid === S.sid ? '' : ''}" style="color:${m.sid === S.sid ? 'var(--accent)' : 'var(--green)'}">${esc(m.name)}</div>
+          <div>${esc(m.message)}</div>
+          <div class="discuss-date">${m.date}</div>
+        </div>
+      </div>`).join('');
+    if (wasAtBottom) msgs.scrollTop = msgs.scrollHeight;
+  } catch {}
+}
+
+async function sendDiscussion() {
+  const input = $('discuss-input');
+  const msg   = input?.value.trim();
+  if (!msg || !CURRENT_CLASS) return;
+  input.value = '';
+  try {
+    await fetch('/api/class/discuss', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, code: CURRENT_CLASS.code, message: msg, name: S.name })
+    });
+    loadDiscussion(CURRENT_CLASS.code);
+  } catch { toast('Could not send message.'); }
+}
+
+async function submitAssignment(code, assignId) {
+  const ta      = $(`sub-${assignId}`);
+  const content = ta?.value.trim();
+  if (!content) { toast('Write your submission first.'); return; }
+  try {
+    const r = await fetch('/api/class/submit', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, code, assignment_id: assignId, content })
+    });
+    if (!r.ok) throw new Error();
+    toast('Assignment submitted ✓');
+    if (ta) ta.value = '';
+  } catch { toast('Submission failed — try again.'); }
+}
+
+async function confirmLeaveClass(code) {
+  if (!confirm('Leave this class?')) return;
+  await fetch('/api/class/leave', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ sid: S.sid, code })
+  });
+  toast('Left class ✓');
+  clearInterval(DISCUSS_INTERVAL);
+  loadClasses();
+}
+
+
+async function loadLeaderboard() {}
   const list = $('leaderboard-list');
   if (!S.sid) return;
 
