@@ -35,14 +35,10 @@ except ImportError:
 #  LOGGING SETUP
 # ═══════════════════════════════════════════════════════════════
 
-LOG_DIR = Path("logs")
-LOG_DIR.mkdir(exist_ok=True)
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
     handlers=[
-        logging.FileHandler(LOG_DIR / "sivarr.log"),
         logging.StreamHandler(),
     ]
 )
@@ -56,12 +52,16 @@ VERSION       = "4.2"
 CACHE_EXPIRY  = 30
 HISTORY_LIMIT = 40
 BANK_LIMIT    = 20
-DATA_DIR      = Path("data")
-UPLOADS_DIR   = Path("uploads")
-SHARES_DIR    = Path("shares")
+# Use Railway persistent volume if available, else local
+# Set RAILWAY_VOLUME_MOUNT_PATH in Railway environment variables
+_BASE = Path(os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "."))
+DATA_DIR    = _BASE / "data"
+UPLOADS_DIR = _BASE / "uploads"
+SHARES_DIR  = _BASE / "shares"
+LOG_DIR     = _BASE / "logs"
 
 for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR, LOG_DIR]:
-    d.mkdir(exist_ok=True)
+    d.mkdir(parents=True, exist_ok=True)
 
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "sivarr_admin_2024")
 
@@ -1537,4 +1537,3 @@ async def health():
         "gemini":  GEMINI_AVAILABLE,
         "model":   _model_name or "not initialized",
     }
-
