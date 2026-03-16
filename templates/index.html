@@ -1020,7 +1020,187 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
   cursor: pointer;
 }
 
-/* ── Download / Share buttons ─────────────────────────────── */
+/* ── Leaderboard ──────────────────────────────────────────── */
+.lb-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  transition: border-color .15s;
+}
+
+.lb-item:hover { border-color: var(--accent); }
+.lb-item.me { border-color: var(--accent); background: #4f6ef708; }
+
+.lb-rank {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 1rem;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.lb-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: .82rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.lb-info { flex: 1; min-width: 0; }
+.lb-name { font-weight: 600; font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-meta { font-size: .72rem; color: var(--muted); }
+.lb-score { font-family: var(--font); font-weight: 800; font-size: .95rem; color: var(--accent); flex-shrink: 0; }
+
+/* ── Notes ────────────────────────────────────────────────── */
+.notes-area {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 13px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: .87rem;
+  line-height: 1.65;
+  outline: none;
+  resize: none;
+  min-height: 140px;
+  transition: border-color .2s;
+}
+
+.notes-area:focus { border-color: var(--accent); }
+.notes-area::placeholder { color: var(--muted2); }
+
+.note-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 13px;
+  margin-bottom: 7px;
+  font-size: .84rem;
+  line-height: 1.55;
+  position: relative;
+}
+
+.note-item .note-date { font-size: .7rem; color: var(--muted); margin-top: 5px; }
+.note-item .note-del {
+  position: absolute; top: 8px; right: 8px;
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: .8rem; padding: 2px 5px;
+  border-radius: 5px; transition: color .15s;
+}
+.note-item .note-del:hover { color: var(--red); }
+
+/* ── UI Tweaks ────────────────────────────────────────────── */
+/* Smoother message bubbles */
+.msg-bub { transition: opacity .1s; }
+
+/* Better empty states */
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+}
+.empty-state .es-icon { font-size: 2rem; margin-bottom: .5rem; }
+.empty-state .es-text { font-size: .85rem; }
+
+/* Improved stat cards with hover */
+.stat-card { transition: border-color .2s, transform .15s; cursor: default; }
+.stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+/* Glowing send button */
+.send-btn { box-shadow: 0 0 0 0 #4f6ef740; transition: opacity .2s, box-shadow .2s; }
+.send-btn:hover { box-shadow: 0 0 0 6px #4f6ef720; }
+
+/* Better quiz options on hover */
+.opt-btn { transition: border-color .15s, background .15s, transform .1s; }
+.opt-btn:hover:not(:disabled) { transform: translateX(3px); }
+
+/* ── Profile Dropdown ─────────────────────────────────────── */
+.profile-menu { position: relative; }
+
+.profile-trigger {
+  display: flex; align-items: center; gap: 7px;
+  background: none; border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px 4px 5px;
+  cursor: pointer; transition: border-color .2s, background .2s;
+}
+
+.profile-trigger:hover { border-color: var(--accent); background: #4f6ef708; }
+
+.profile-trigger .pa {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-weight: 700; font-size: .75rem; color: #fff; flex-shrink: 0;
+}
+
+.profile-trigger .pn {
+  font-size: .8rem; font-weight: 600; color: var(--text);
+  max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.profile-trigger .pa-arrow { font-size: .6rem; color: var(--muted); transition: transform .2s; }
+.profile-trigger.open .pa-arrow { transform: rotate(180deg); }
+
+.profile-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 220px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 8px; z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  display: none; animation: fadeUp .2s ease;
+}
+
+.profile-dropdown.open { display: block; }
+
+.pd-header { padding: 8px 10px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.pd-name { font-family: var(--font); font-weight: 700; font-size: .92rem; }
+.pd-matric { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+
+.pd-item {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  background: none; border: none; border-radius: 9px; padding: 9px 10px;
+  color: var(--text); font-family: var(--font-body); font-size: .84rem;
+  cursor: pointer; text-align: left; transition: background .15s;
+}
+
+.pd-item:hover { background: var(--surface); }
+.pd-item .pd-icon { font-size: 1rem; width: 20px; text-align: center; }
+.pd-item.danger { color: var(--red); }
+.pd-item.danger:hover { background: #ef444415; }
+.pd-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+.pd-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 10px; border-radius: 9px; cursor: pointer; transition: background .15s;
+}
+
+.pd-toggle:hover { background: var(--surface); }
+.pd-toggle-left { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--text); }
+
+.toggle-sw {
+  width: 34px; height: 18px; background: var(--border2);
+  border-radius: 20px; position: relative; transition: background .2s; flex-shrink: 0;
+}
+
+.toggle-sw.on { background: var(--accent); }
+.toggle-sw::after {
+  content: ''; position: absolute; width: 14px; height: 14px;
+  background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform .2s;
+}
+.toggle-sw.on::after { transform: translateX(16px); }
+
 .action-btn {
   background: none;
   border: 1px solid var(--border);
@@ -1083,24 +1263,60 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 
   <!-- Topbar -->
   <header class="topbar">
+    <!-- Left: Logo -->
     <div class="topbar-left">
       <a class="topbar-logo" href="https://sivarr.vercel.app" target="_blank">
         <div class="topbar-monogram">Sr</div>
-        <span class="topbar-name">Sivarr</span>
+        <span class="topbar-name">Sivarr <span style="color:var(--accent)">AI</span></span>
       </a>
-      <span class="ai-chip">AI</span>
     </div>
+
+    <!-- Right: Profile dropdown -->
     <div class="topbar-right">
-      <div class="topbar-user">
-        <div style="text-align:right">
-          <div class="user-name" id="tb-name"></div>
-          <div class="user-matric" id="tb-matric"></div>
+      <div class="profile-menu" id="profile-menu">
+        <button class="profile-trigger" id="profile-trigger" onclick="toggleProfile()">
+          <div class="pa" id="tb-av">?</div>
+          <span class="pn" id="tb-name">Student</span>
+          <span class="pa-arrow">▼</span>
+        </button>
+
+        <div class="profile-dropdown" id="profile-dropdown">
+          <!-- Header -->
+          <div class="pd-header">
+            <div class="pd-name" id="pd-name">Student</div>
+            <div class="pd-matric" id="pd-matric">Matric</div>
+          </div>
+
+          <!-- View Profile -->
+          <button class="pd-item" onclick="nav('stats', null); closeProfile()">
+            <span class="pd-icon">📊</span> My Progress
+          </button>
+          <button class="pd-item" onclick="nav('notes', null); closeProfile()">
+            <span class="pd-icon">📓</span> My Notes
+          </button>
+          <button class="pd-item" onclick="nav('leaderboard', null); closeProfile()">
+            <span class="pd-icon">🏆</span> Leaderboard
+          </button>
+
+          <div class="pd-divider"></div>
+
+          <!-- Dark/Light toggle -->
+          <div class="pd-toggle" onclick="toggleThemeFromMenu()">
+            <div class="pd-toggle-left">
+              <span class="pd-icon" id="pd-theme-icon">🌙</span>
+              <span id="pd-theme-label">Dark Mode</span>
+            </div>
+            <div class="toggle-sw" id="pd-toggle-sw"></div>
+          </div>
+
+          <div class="pd-divider"></div>
+
+          <!-- Sign out -->
+          <button class="pd-item danger" onclick="logout()">
+            <span class="pd-icon">🚪</span> Sign out
+          </button>
         </div>
-        <div class="user-avatar" id="tb-av"></div>
       </div>
-      <button class="diff-pill diff-medium" id="diff-btn" onclick="openDiff()">Medium</button>
-      <button onclick="toggleTheme()" id="theme-btn" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:.85rem;cursor:pointer;">🌙</button>
-      <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:var(--font-body);">Sign out</button>
     </div>
   </header>
 
@@ -1114,6 +1330,12 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
     </button>
     <button class="tab-pill" id="tab-stats" onclick="navTab('stats', this)">
       <span class="tp-icon">📊</span> Progress
+    </button>
+    <button class="tab-pill" id="tab-leaderboard" onclick="navTab('leaderboard', this)">
+      <span class="tp-icon">🏆</span> Leaderboard
+    </button>
+    <button class="tab-pill" id="tab-notes" onclick="navTab('notes', this)">
+      <span class="tp-icon">📓</span> Notes
     </button>
     <button class="tab-pill" id="tab-more" onclick="navTab('more', this)">
       <span class="tp-icon">💡</span> More
@@ -1130,6 +1352,8 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
         <button class="nav-btn active" onclick="nav('chat',this)"><span class="ni">💬</span> Chat</button>
         <button class="nav-btn" onclick="nav('quiz',this)"><span class="ni">📝</span> Quiz</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
+        <button class="nav-btn" onclick="nav('leaderboard',this)"><span class="ni">🏆</span> Leaderboard</button>
+        <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
       </div>
       <div class="stat-mini" id="sb-stats">
         <div class="stat-mini-title">Quick Stats</div>
@@ -1178,6 +1402,57 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
       <!-- Stats -->
       <div class="panel" id="panel-stats">
         <div class="stats-wrap" id="sw"></div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="panel" id="panel-leaderboard">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏆 Leaderboard</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Top students by quiz performance</p>
+            </div>
+            <button onclick="loadLeaderboard()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--muted);font-size:.75rem;cursor:pointer;">↻ Refresh</button>
+          </div>
+          <!-- My rank card -->
+          <div id="my-rank-card" style="background:linear-gradient(135deg,#4f6ef715,#7c3aed15);border:1px solid #4f6ef730;border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;display:none">
+            <div style="font-size:.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Your Ranking</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="font-family:var(--font);font-size:2rem;font-weight:800;color:var(--accent)" id="my-rank-num">—</div>
+              <div>
+                <div style="font-weight:600;font-size:.9rem" id="my-rank-name"></div>
+                <div style="font-size:.75rem;color:var(--muted)" id="my-rank-score"></div>
+              </div>
+            </div>
+          </div>
+          <div id="leaderboard-list">
+            <div class="empty-state"><div class="es-icon">🏆</div><div class="es-text">Loading leaderboard...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="panel" id="panel-notes">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;min-height:0">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">📓 My Notes</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Personal study notes — saved to your device</p>
+            </div>
+          </div>
+          <!-- New note -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
+            <textarea class="notes-area" id="new-note-text" placeholder="Write a study note... e.g. Newton's 2nd Law: F = ma. Remember to revise this before the exam."></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+              <span style="font-size:.72rem;color:var(--muted)" id="note-char-count">0 / 1000</span>
+              <button class="btn-start" style="padding:8px 18px;font-size:.82rem" onclick="saveNote()">Save Note</button>
+            </div>
+          </div>
+          <!-- Saved notes -->
+          <div id="notes-list">
+            <div class="empty-state"><div class="es-icon">📓</div><div class="es-text">No notes yet — write your first one above!</div></div>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -1482,9 +1757,11 @@ async function doLogin(name, matric) {
     // Save to localStorage for auto-login next visit
     saveSession(name, matric);
 
-    $('tb-name').textContent   = r.name;
-    $('tb-matric').textContent = r.matric;
-    $('tb-av').textContent     = r.name[0].toUpperCase();
+    $('tb-av').textContent   = r.name[0].toUpperCase();
+    $('tb-name').textContent = r.name;
+    // Update dropdown header
+    const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
+    const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
     updateDiff(r.difficulty);
     updateSBStats();
     renderTopics(r.topics, r.weak);
@@ -1797,9 +2074,15 @@ async function setDiff(level) {
 }
 
 function updateDiff(level) {
+  // Difficulty pill now only lives in quiz section
   const btn = $('diff-btn');
-  btn.className = `diff-pill diff-${level}`;
-  btn.textContent = level.charAt(0).toUpperCase()+level.slice(1);
+  if (btn) {
+    btn.className   = `diff-pill diff-${level}`;
+    btn.textContent = level.charAt(0).toUpperCase()+level.slice(1);
+  }
+  // Update quiz start label too
+  const qd = $('qd-label');
+  if (qd) qd.textContent = level.charAt(0).toUpperCase()+level.slice(1);
 }
 
 // ═══════════════════════════ NAV ════════════════════════════════
@@ -1810,8 +2093,10 @@ function nav(name, btn) {
   if (p) p.classList.add('active');
   if (btn) btn.classList.add('active');
   const mob = document.getElementById(`mn-${name}`); if (mob) mob.classList.add('active');
-  if (name === 'stats') loadStats();
-  if (name === 'more') syncMore();
+  if (name === 'stats')       loadStats();
+  if (name === 'more')        syncMore();
+  if (name === 'leaderboard') loadLeaderboard();
+  if (name === 'notes')       loadNotes();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
@@ -1819,26 +2104,24 @@ function nav(name, btn) {
 
 // Mobile tab bar navigation with smooth pill scroll
 function navTab(name, btn) {
-  // Switch panel
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const panel = document.getElementById(`panel-${name}`);
   if (panel) panel.classList.add('active');
 
-  // Update tab pills
   document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
   if (btn) {
     btn.classList.add('active');
-    // Smooth scroll the active pill into view
     btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 
-  // Also sync desktop nav
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const desktopBtn = document.querySelector(`.nav-btn[onclick*="'${name}'"]`);
   if (desktopBtn) desktopBtn.classList.add('active');
 
-  if (name === 'stats') loadStats();
-  if (name === 'more') syncMore();
+  if (name === 'stats')       loadStats();
+  if (name === 'more')        syncMore();
+  if (name === 'leaderboard') loadLeaderboard();
+  if (name === 'notes')       loadNotes();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
@@ -1890,18 +2173,160 @@ function toast(msg, ms=2500) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), ms);
 }
-// ═══════════════════════════ THEME TOGGLE ═══════════════════════
-function toggleTheme() {
+// ═══════════════════════════ LEADERBOARD ════════════════════════
+async function loadLeaderboard() {
+  const list = $('leaderboard-list');
+  if (!S.sid) return;
+
+  list.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading...</div></div>';
+
+  try {
+    const r = await fetch('/api/leaderboard');
+    const d = await r.json();
+    const students = d.leaderboard || [];
+
+    if (!students.length) {
+      list.innerHTML = '<div class="empty-state"><div class="es-icon">🏆</div><div class="es-text">No rankings yet — take a quiz to appear here!</div></div>';
+      return;
+    }
+
+    const medals = ['🥇','🥈','🥉'];
+    list.innerHTML = students.map((s, i) => {
+      const isMe = s.sid === S.sid;
+      const rank = i + 1;
+      return `
+        <div class="lb-item ${isMe ? 'me' : ''}">
+          <div class="lb-rank">${rank <= 3 ? medals[rank-1] : rank}</div>
+          <div class="lb-avatar">${s.name[0].toUpperCase()}</div>
+          <div class="lb-info">
+            <div class="lb-name">${esc(s.name)} ${isMe ? '<span style="color:var(--accent);font-size:.7rem">(you)</span>' : ''}</div>
+            <div class="lb-meta">${s.quizzes} quiz${s.quizzes !== 1 ? 'zes' : ''} · ${s.questions} questions</div>
+          </div>
+          <div class="lb-score">${s.avg_score}%</div>
+        </div>`;
+    }).join('');
+
+    // Show my rank card
+    const myRank = students.findIndex(s => s.sid === S.sid);
+    if (myRank !== -1) {
+      const me = students[myRank];
+      $('my-rank-card').style.display = 'block';
+      $('my-rank-num').textContent    = `#${myRank + 1}`;
+      $('my-rank-name').textContent   = me.name;
+      $('my-rank-score').textContent  = `${me.avg_score}% avg · ${me.quizzes} quizzes taken`;
+    }
+
+  } catch(e) {
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Couldn\'t load leaderboard — try again.</div></div>';
+  }
+}
+
+// ═══════════════════════════ NOTES ══════════════════════════════
+function loadNotes() {
+  const raw   = localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]';
+  const notes = JSON.parse(raw);
+  renderNotes(notes);
+}
+
+function renderNotes(notes) {
+  const list = $('notes-list');
+  if (!notes.length) {
+    list.innerHTML = '<div class="empty-state"><div class="es-icon">📓</div><div class="es-text">No notes yet — write your first one above!</div></div>';
+    return;
+  }
+  list.innerHTML = notes.map((n, i) => `
+    <div class="note-item">
+      <button class="note-del" onclick="deleteNote(${i})">✕</button>
+      <div style="white-space:pre-wrap;padding-right:20px">${esc(n.text)}</div>
+      <div class="note-date">📅 ${n.date}</div>
+    </div>`).join('');
+}
+
+function saveNote() {
+  const text = $('new-note-text').value.trim();
+  if (!text) { toast('Write something first!'); return; }
+  if (text.length > 1000) { toast('Note too long — max 1000 characters.'); return; }
+
+  const raw   = localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]';
+  const notes = JSON.parse(raw);
+  notes.unshift({
+    text,
+    date: new Date().toLocaleString(),
+  });
+  // Keep last 50 notes
+  const trimmed = notes.slice(0, 50);
+  localStorage.setItem(`sivarr_notes_${S.sid}`, JSON.stringify(trimmed));
+  $('new-note-text').value = '';
+  $('note-char-count').textContent = '0 / 1000';
+  renderNotes(trimmed);
+  toast('Note saved ✓');
+}
+
+function deleteNote(idx) {
+  const raw   = localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]';
+  const notes = JSON.parse(raw);
+  notes.splice(idx, 1);
+  localStorage.setItem(`sivarr_notes_${S.sid}`, JSON.stringify(notes));
+  renderNotes(notes);
+  toast('Note deleted');
+}
+
+// Character counter for notes
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('new-note-text');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      const len = ta.value.length;
+      const counter = $('note-char-count');
+      if (counter) {
+        counter.textContent = `${len} / 1000`;
+        counter.style.color = len > 900 ? 'var(--yellow)' : len > 999 ? 'var(--red)' : 'var(--muted)';
+      }
+    });
+  }
+});
+
+
+// ═══════════════════════════ PROFILE DROPDOWN ═══════════════════
+function toggleProfile() {
+  const trigger  = $('profile-trigger');
+  const dropdown = $('profile-dropdown');
+  if (!trigger || !dropdown) return;
+  const isOpen = dropdown.classList.contains('open');
+  if (isOpen) { closeProfile(); }
+  else { trigger.classList.add('open'); dropdown.classList.add('open'); }
+}
+
+function closeProfile() {
+  const t = $('profile-trigger'); if (t) t.classList.remove('open');
+  const d = $('profile-dropdown'); if (d) d.classList.remove('open');
+}
+
+document.addEventListener('click', e => {
+  const menu = $('profile-menu');
+  if (menu && !menu.contains(e.target)) closeProfile();
+});
+
+function toggleThemeFromMenu() {
   const isLight = document.body.classList.toggle('light');
-  $('theme-btn').textContent = isLight ? '☀️' : '🌙';
+  const sw      = $('pd-toggle-sw');
+  const icon    = $('pd-theme-icon');
+  const label   = $('pd-theme-label');
+  if (sw)    sw.classList.toggle('on', isLight);
+  if (icon)  icon.textContent  = isLight ? '☀️' : '🌙';
+  if (label) label.textContent = isLight ? 'Light Mode' : 'Dark Mode';
   localStorage.setItem('sivarr_theme', isLight ? 'light' : 'dark');
 }
+
+function toggleTheme() { toggleThemeFromMenu(); }
 
 // Apply saved theme on load
 window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('sivarr_theme') === 'light') {
     document.body.classList.add('light');
-    const btn = $('theme-btn'); if (btn) btn.textContent = '☀️';
+    const sw    = $('pd-toggle-sw');    if (sw)    sw.classList.add('on');
+    const icon  = $('pd-theme-icon');   if (icon)  icon.textContent  = '☀️';
+    const label = $('pd-theme-label');  if (label) label.textContent = 'Light Mode';
   }
 });
 
