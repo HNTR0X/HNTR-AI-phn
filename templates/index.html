@@ -1593,93 +1593,10 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
         <div class="stats-wrap" id="sw"></div>
       </div>
 
-      <!-- Classes -->
+      <!-- Classes Panel -->
       <div class="panel" id="panel-classes">
-        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
-            <div>
-              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
-              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Join and manage your classes</p>
-            </div>
-            <button onclick="showJoinClass()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:8px 14px;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">+ Join Class</button>
-          </div>
-
-          <!-- Join class form (hidden by default) -->
-          <div id="join-class-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem">
-            <div style="font-family:var(--font);font-weight:700;font-size:.9rem;margin-bottom:.75rem">Join a Class</div>
-            <div style="display:flex;gap:8px">
-              <input id="class-code-input" type="text" placeholder="Enter class code e.g. AB1234"
-                style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:.87rem;outline:none;text-transform:uppercase"
-                oninput="this.value=this.value.toUpperCase()"
-                onkeydown="if(event.key==='Enter') joinClass()">
-              <button onclick="joinClass()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:9px;padding:9px 16px;font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer">Join</button>
-              <button onclick="$('join-class-form').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--muted);font-size:.82rem;cursor:pointer">Cancel</button>
-            </div>
-            <div id="join-error" style="color:var(--red);font-size:.78rem;margin-top:6px"></div>
-          </div>
-
-          <!-- Classes list -->
-          <div id="classes-list">
-            <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">No classes yet — join one with a class code from your lecturer!</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Single Class View -->
-      <div class="panel" id="panel-class-detail">
-        <div style="flex-shrink:0;padding:.875rem 1.25rem;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-          <button onclick="nav('classes',null)" style="background:none;border:none;color:var(--accent);font-size:1rem;cursor:pointer;padding:4px">←</button>
-          <div>
-            <div id="cd-title" style="font-family:var(--font);font-weight:700;font-size:.95rem"></div>
-            <div id="cd-lecturer" style="font-size:.72rem;color:var(--muted)"></div>
-          </div>
-        </div>
-        <!-- Class tabs -->
-        <div style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none">
-          <button class="class-tab active" onclick="switchClassTab('materials',this)" id="ct-materials">📚 Materials</button>
-          <button class="class-tab" onclick="switchClassTab('announcements-c',this)" id="ct-announcements-c">📢 Notices</button>
-          <button class="class-tab" onclick="switchClassTab('class-link',this)" id="ct-class-link">🎥 Online Class</button>
-          <button class="class-tab" onclick="switchClassTab('exams-c',this)" id="ct-exams-c">📝 Exams</button>
-          <button class="class-tab" onclick="switchClassTab('assignments',this)" id="ct-assignments">📋 Assignments</button>
-          <button class="class-tab" onclick="switchClassTab('discussions',this)" id="ct-discussions">💬 Discussion</button>
-        </div>
-        <!-- Class tab content -->
-        <div style="flex:1;overflow-y:auto;padding:1rem;min-height:0" id="class-tab-content">
-          <div class="empty-state"><div class="es-icon">📚</div><div class="es-text">Loading class...</div></div>
-        </div>
-      </div>
-
-      <!-- Announcements Panel -->
-      <div class="panel" id="panel-announcements">
-        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0">
-          <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:1.25rem">📢 Announcements</h2>
-          <div id="all-announcements-list">
-            <div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Notes -->
-      <div class="panel" id="panel-notes">
-        <div style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;min-height:0">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div>
-              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">📓 My Notes</h2>
-              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Personal study notes — saved to your device</p>
-            </div>
-          </div>
-          <!-- New note -->
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
-            <textarea class="notes-area" id="new-note-text" placeholder="Write a study note... e.g. Newton's 2nd Law: F = ma. Remember to revise this before the exam."></textarea>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-              <span style="font-size:.72rem;color:var(--muted)" id="note-char-count">0 / 1000</span>
-              <button class="btn-start" style="padding:8px 18px;font-size:.82rem" onclick="saveNote()">Save Note</button>
-            </div>
-          </div>
-          <!-- Saved notes -->
-          <div id="notes-list">
-            <div class="empty-state"><div class="es-icon">📓</div><div class="es-text">No notes yet — write your first one above!</div></div>
-          </div>
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0" id="classes-root">
+          <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">Loading classes...</div></div>
         </div>
       </div>
 
@@ -1694,10 +1611,23 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
         </div>
       </div>
 
-      <!-- Classes Panel -->
-      <div class="panel" id="panel-classes">
-        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0" id="classes-root">
-          <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">Loading classes...</div></div>
+      <!-- Notes Panel -->
+      <div class="panel" id="panel-notes">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;min-height:0">
+          <div>
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">📓 My Notes</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Personal study notes — saved to your device</p>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
+            <textarea class="notes-area" id="new-note-text" placeholder="Write a study note..."></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+              <span style="font-size:.72rem;color:var(--muted)" id="note-char-count">0 / 1000</span>
+              <button class="btn-start" style="padding:8px 18px;font-size:.82rem" onclick="saveNote()">Save Note</button>
+            </div>
+          </div>
+          <div id="notes-list">
+            <div class="empty-state"><div class="es-icon">📓</div><div class="es-text">No notes yet!</div></div>
+          </div>
         </div>
       </div>
 
