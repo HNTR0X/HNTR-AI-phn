@@ -298,12 +298,12 @@ textarea.form-input{min-height:100px;resize:vertical}
         <h3>🏫 Create a New Class</h3>
         <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem">Students join using the unique code generated after creation.</p>
         <div class="form-group">
-          <label>Class Title</label>
-          <input class="form-input" id="cls-title" placeholder="e.g. Introduction to Biology">
+          <label>Class Name</label>
+          <input class="form-input" id="cls-name" placeholder="e.g. Introduction to Biology">
         </div>
         <div class="form-group">
-          <label>Description (optional)</label>
-          <input class="form-input" id="cls-desc" placeholder="Brief description of the class">
+          <label>Subject</label>
+          <input class="form-input" id="cls-subject" placeholder="e.g. Biology, Physics, Mathematics">
         </div>
         <button class="btn-sm" onclick="createClass()">Create Class</button>
       </div>
@@ -923,22 +923,28 @@ function loadLocalData() {
 let LEC_CURRENT_CLASS = null;
 
 async function createClass() {
-  const title = $('cls-title').value.trim();
-  const desc  = $('cls-desc').value.trim();
-  if (!title) { toast('Enter a class title.'); return; }
+  const name    = $('cls-name')?.value.trim();
+  const subject = $('cls-subject')?.value.trim();
+  if (!name)    { toast('Enter a class name.'); return; }
+  if (!subject) { toast('Enter a subject.'); return; }
   try {
     const r = await fetch('/api/class/create', {
-      method: 'POST',
+      method:  'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ token: TOKEN, title, description: desc, lecturer: NAME })
+      body:    JSON.stringify({ token: TOKEN, name, subject, lecturer: NAME })
     });
     const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || 'Failed');
-    $('cls-title').value = '';
-    $('cls-desc').value  = '';
+    if (!r.ok) {
+      const msg = d.detail || (Array.isArray(d.detail) ? d.detail.map(e=>e.msg).join(', ') : 'Failed');
+      toast('Failed to create class: ' + msg); return;
+    }
+    $('cls-name').value    = '';
+    $('cls-subject').value = '';
     toast(`Class created! Code: ${d.code} 🎉`);
     loadLecturerClasses();
-  } catch(e) { toast('Failed to create class: ' + e.message); }
+  } catch(e) {
+    toast('Failed to create class — check connection.');
+  }
 }
 
 async function loadLecturerClasses() {
@@ -948,17 +954,25 @@ async function loadLecturerClasses() {
     const classes = d.classes || [];
     $('lec-classes-list').innerHTML = classes.length
       ? classes.map(cls => `
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-bottom:.625rem;cursor:pointer" onclick="openLecClass('${cls.code}')">
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <div>
-                <div style="font-weight:600;font-size:.9rem">${esc(cls.title)}</div>
-                <div style="font-size:.75rem;color:var(--muted);margin-top:2px">👥 ${cls.students.length} students · Code: <strong style="color:var(--accent)">${cls.code}</strong></div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.875rem;margin-bottom:.625rem;cursor:pointer;transition:border-color .15s"
+               onmouseover="this.style.borderColor='var(--accent)'"
+               onmouseout="this.style.borderColor='var(--border)'"
+               onclick="openLecClass('${cls.code}')">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <div style="min-width:0">
+                <div style="font-weight:600;font-size:.9rem">${esc(cls.name)}</div>
+                <div style="font-size:.75rem;color:var(--muted);margin-top:2px">
+                  ${esc(cls.subject || '')} · 👥 ${cls.student_count || 0} students ·
+                  Code: <strong style="color:var(--accent);letter-spacing:.05em">${cls.code}</strong>
+                </div>
               </div>
-              <button class="btn-outline" onclick="event.stopPropagation();copyCode('${cls.code}')">Copy Code</button>
+              <button class="btn-outline" style="flex-shrink:0" onclick="event.stopPropagation();copyCode('${cls.code}')">Copy Code</button>
             </div>
           </div>`).join('')
       : '<div style="color:var(--muted);font-size:.82rem">No classes yet — create one above.</div>';
-  } catch { $('lec-classes-list').innerHTML = '<div style="color:var(--muted);font-size:.82rem">Error loading classes.</div>'; }
+  } catch(e) {
+    $('lec-classes-list').innerHTML = '<div style="color:var(--muted);font-size:.82rem">Error loading classes — try refreshing.</div>';
+  }
 }
 
 function copyCode(code) {
