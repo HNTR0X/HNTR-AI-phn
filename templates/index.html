@@ -2568,10 +2568,11 @@ async function submitJoinClass() {
       return;
     }
     toast(`Joined "${d.name}" ✓ 🎉`);
-    // Go back to classes list then open the class
-    await loadClasses();
-    // Auto-open the class we just joined
-    setTimeout(() => openClass(code), 300);
+    // Small delay to ensure toast shows, then reload and open class
+    setTimeout(async () => {
+      await loadClasses();
+      setTimeout(() => openClass(code), 200);
+    }, 400);
   } catch {
     if (err) err.textContent = 'Connection error — try again.';
     if (btn) { btn.disabled = false; btn.textContent = 'Join Class'; }
