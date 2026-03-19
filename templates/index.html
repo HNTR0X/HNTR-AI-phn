@@ -1621,9 +1621,17 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 
       <!-- Classes Panel -->
       <div class="panel" id="panel-classes" style="overflow-y:auto;padding:0">
-        <div id="classes-root" style="padding:1.25rem;min-height:100%;display:flex;flex-direction:column"
-             onclick="if(this.dataset.empty==='1') loadClasses()">
-          <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">Loading...</div></div>
+        <div style="padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px" id="classes-subtitle">Tap to load</p>
+            </div>
+            <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
+          </div>
+          <div id="classes-list-area">
+            <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">Loading your classes...</div></div>
+          </div>
         </div>
       </div>
 
@@ -1970,7 +1978,6 @@ async function doLogin(name, matric) {
     renderTopics(r.topics, r.weak);
     renderFileList();
     loadWrong();
-    loadClasses(); // preload classes in background
 
     $('login-screen').style.display = 'none';
     const dash = $('dashboard');
@@ -2402,61 +2409,64 @@ let CURRENT_CLASS = null;
 async function loadClasses() {
   clearInterval(DISCUSS_INTERVAL);
 
+  // If we're in class detail view, restore the panel first
   const panel = $('panel-classes');
   if (!panel) return;
 
-  // Rebuild panel with classes-root inside
-  panel.innerHTML = `
-    <div id="classes-root" style="flex:1;overflow-y:auto;padding:1.25rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
-        <div>
-          <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
-          <p style="font-size:.78rem;color:var(--muted);margin-top:2px" id="classes-subtitle">Loading...</p>
+  // If panel was replaced by class detail, restore base structure
+  if (!$('classes-list-area')) {
+    panel.innerHTML = `
+      <div style="padding:1.25rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <div>
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:2px" id="classes-subtitle">Loading...</p>
+          </div>
+          <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
         </div>
-        <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
-      </div>
-      <div id="classes-list-area">
-        <div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading classes...</div></div>
-      </div>
-    </div>`;
+        <div id="classes-list-area"></div>
+      </div>`;
+  }
+
+  const area     = $('classes-list-area');
+  const subtitle = $('classes-subtitle');
+  if (!area) return;
+
+  area.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading...</div></div>';
 
   if (!S.sid) {
-    $('classes-list-area').innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Please log in first.</div></div>';
+    area.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Please log in first.</div></div>';
     return;
   }
 
   try {
     const r = await fetch(`/api/class/student?sid=${encodeURIComponent(S.sid)}`);
     if (!r.ok) throw new Error(`${r.status}`);
-    const d = await r.json();
+    const d       = await r.json();
     const classes = d.classes || [];
 
-    $('classes-subtitle').textContent = `${classes.length} class${classes.length !== 1 ? 'es' : ''} joined`;
+    if (subtitle) subtitle.textContent = `${classes.length} class${classes.length !== 1 ? 'es' : ''} joined`;
 
-    if (!classes.length) {
-      $('classes-list-area').innerHTML = `
-        <div class="empty-state">
-          <div class="es-icon">🏫</div>
-          <div class="es-text">No classes yet — tap "+ Join Class" and enter your lecturer's code!</div>
-        </div>`;
-      return;
-    }
-
-    $('classes-list-area').innerHTML = classes.map(cls => `
-      <div class="class-card" onclick="openClass('${esc(cls.code)}')">
-        <div class="class-icon">📚</div>
-        <div class="class-info">
-          <div class="class-name">${esc(cls.name)}</div>
-          <div class="class-meta">${esc(cls.subject || '')} · ${esc(cls.lecturer || '')}</div>
-        </div>
-        <span style="color:var(--muted);font-size:1.1rem">›</span>
-      </div>`).join('');
+    area.innerHTML = classes.length
+      ? classes.map(cls => `
+          <div class="class-card" onclick="openClass('${esc(cls.code)}')">
+            <div class="class-icon">📚</div>
+            <div class="class-info">
+              <div class="class-name">${esc(cls.name)}</div>
+              <div class="class-meta">${esc(cls.subject || '')} · ${esc(cls.lecturer || '')}</div>
+            </div>
+            <span style="color:var(--muted);font-size:1.1rem">›</span>
+          </div>`).join('')
+      : `<div class="empty-state">
+           <div class="es-icon">🏫</div>
+           <div class="es-text">No classes yet — tap "+ Join Class" and enter your lecturer's code!</div>
+         </div>`;
 
   } catch(e) {
-    $('classes-list-area').innerHTML = `
+    area.innerHTML = `
       <div class="empty-state">
         <div class="es-icon">⚠️</div>
-        <div class="es-text" style="margin-bottom:1rem">Couldn't load classes. Check your connection.</div>
+        <div class="es-text" style="margin-bottom:1rem">Couldn't load classes.</div>
         <button class="btn-start" style="padding:8px 20px;font-size:.82rem" onclick="loadClasses()">↻ Try Again</button>
       </div>`;
   }
@@ -2598,7 +2608,6 @@ function renderClassDetail(cls) {
       <button onclick="loadClasses();clearInterval(DISCUSS_INTERVAL)"
         style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;
                flex-shrink:0;padding:2px 6px;border-radius:6px" title="Back">←</button>
-      <div class="class-icon" style="width:34px;height:34px;font-size:.95rem;flex-shrink:0">📚</div>
       <div style="flex:1;min-width:0">
         <div style="font-family:var(--font);font-weight:700;font-size:.95rem;
                     white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cls.name)}</div>
@@ -3145,4 +3154,3 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
-
