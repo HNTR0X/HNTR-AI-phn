@@ -1242,6 +1242,62 @@ async def delete_exam(data: dict):
 
 
 
+
+# ── Class request models ──────────────────────────────────────
+
+class CreateClassRequest(BaseModel):
+    token: str
+    name: str
+    subject: str
+    lecturer: str
+
+class JoinClassRequest(BaseModel):
+    sid: str
+    code: str
+
+class MaterialRequest(BaseModel):
+    token: str
+    code: str = ""
+    title: str
+    content: str
+    type: str
+
+class ClassAnnouncementRequest(BaseModel):
+    token: str
+    code: str
+    text: str
+    type: str
+
+class LiveClassRequest(BaseModel):
+    token: str
+    code: str = ""
+    link: str
+    title: str
+
+class AssignmentRequest(BaseModel):
+    token: str
+    code: str = ""
+    title: str
+    description: str
+    due_date: str
+
+class SubmitAssignmentRequest(BaseModel):
+    sid: str
+    code: str
+    assignment_id: str
+    content: str
+
+class DiscussionRequest(BaseModel):
+    sid: str
+    code: str
+    message: str
+    name: str
+
+class AssignExamRequest(BaseModel):
+    token: str
+    code: str = ""
+    exam_id: str
+
 # ── Classes helper functions ──────────────────────────────────
 
 def load_classes() -> dict:
