@@ -2568,11 +2568,8 @@ async function submitJoinClass() {
       return;
     }
     toast(`Joined "${d.name}" ✓ 🎉`);
-    // Small delay to ensure toast shows, then reload and open class
-    setTimeout(async () => {
-      await loadClasses();
-      setTimeout(() => openClass(code), 200);
-    }, 400);
+    // Open the class directly — loadClasses() will run when we go back
+    setTimeout(() => openClass(code), 500);
   } catch {
     if (err) err.textContent = 'Connection error — try again.';
     if (btn) { btn.disabled = false; btn.textContent = 'Join Class'; }
@@ -2580,12 +2577,22 @@ async function submitJoinClass() {
 }
 
 async function openClass(code) {
-  const area = $('classes-list-area');
-  if (area) area.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading class...</div></div>';
+  const panel = $('panel-classes');
+  if (!panel) return;
+
+  // Show loading directly in the panel
+  panel.innerHTML = `
+    <div style="padding:1.25rem">
+      <div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading class...</div></div>
+    </div>`;
 
   try {
     const r = await fetch(`/api/class/detail?code=${encodeURIComponent(code)}&sid=${encodeURIComponent(S.sid)}`);
-    if (!r.ok) { toast('Could not load class — try again.'); loadClasses(); return; }
+    if (!r.ok) {
+      toast('Could not load class — try again.');
+      loadClasses();
+      return;
+    }
     CURRENT_CLASS      = await r.json();
     CURRENT_CLASS.code = code;
     renderClassDetail(CURRENT_CLASS);
