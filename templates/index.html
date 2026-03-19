@@ -2409,30 +2409,26 @@ let CURRENT_CLASS = null;
 async function loadClasses() {
   clearInterval(DISCUSS_INTERVAL);
 
-  // If we're in class detail view, restore the panel first
   const panel = $('panel-classes');
   if (!panel) return;
 
-  // If panel was replaced by class detail, restore base structure
-  if (!$('classes-list-area')) {
-    panel.innerHTML = `
-      <div style="padding:1.25rem">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
-          <div>
-            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
-            <p style="font-size:.78rem;color:var(--muted);margin-top:2px" id="classes-subtitle">Loading...</p>
-          </div>
-          <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
+  // Always rebuild — safe no matter what was showing before
+  panel.innerHTML = `
+    <div style="padding:1.25rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <div>
+          <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+          <p style="font-size:.78rem;color:var(--muted);margin-top:2px" id="classes-subtitle">Loading...</p>
         </div>
-        <div id="classes-list-area"></div>
-      </div>`;
-  }
+        <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
+      </div>
+      <div id="classes-list-area">
+        <div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading classes...</div></div>
+      </div>
+    </div>`;
 
   const area     = $('classes-list-area');
   const subtitle = $('classes-subtitle');
-  if (!area) return;
-
-  area.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading...</div></div>';
 
   if (!S.sid) {
     area.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Please log in first.</div></div>';
@@ -3145,4 +3141,3 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
-
