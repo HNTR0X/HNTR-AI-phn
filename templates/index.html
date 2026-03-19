@@ -2572,7 +2572,10 @@ async function submitJoinClass() {
       return;
     }
     toast(`Joined "${d.name}" ✓ 🎉`);
-    loadClasses();
+    // Go back to classes list then open the class
+    await loadClasses();
+    // Auto-open the class we just joined
+    setTimeout(() => openClass(code), 300);
   } catch {
     if (err) err.textContent = 'Connection error — try again.';
     if (btn) { btn.disabled = false; btn.textContent = 'Join Class'; }
@@ -2580,9 +2583,8 @@ async function submitJoinClass() {
 }
 
 async function openClass(code) {
-  // Show loading state
-  const root = $('classes-root');
-  if (root) root.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading class...</div></div>';
+  const area = $('classes-list-area');
+  if (area) area.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading class...</div></div>';
 
   try {
     const r = await fetch(`/api/class/detail?code=${encodeURIComponent(code)}&sid=${encodeURIComponent(S.sid)}`);
@@ -2597,17 +2599,15 @@ async function openClass(code) {
 }
 
 function renderClassDetail(cls) {
-  // Replace the entire panel-classes content with a flex column layout
   const panel = $('panel-classes');
   if (!panel) return;
 
   panel.innerHTML = `
-    <!-- Header -->
     <div style="display:flex;align-items:center;gap:10px;padding:.875rem 1.25rem;
                 background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
-      <button onclick="loadClasses();clearInterval(DISCUSS_INTERVAL)"
+      <button onclick="clearInterval(DISCUSS_INTERVAL);loadClasses()"
         style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;
-               flex-shrink:0;padding:2px 6px;border-radius:6px" title="Back">←</button>
+               flex-shrink:0;padding:2px 6px;border-radius:6px">←</button>
       <div style="flex:1;min-width:0">
         <div style="font-family:var(--font);font-weight:700;font-size:.95rem;
                     white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cls.name)}</div>
@@ -2618,7 +2618,6 @@ function renderClassDetail(cls) {
                color:var(--muted);font-size:.7rem;cursor:pointer;flex-shrink:0">Leave</button>
     </div>
 
-    <!-- Tab bar -->
     <div class="class-tabs" id="class-tabs" style="flex-shrink:0">
       <button class="ctab active" onclick="switchClassTab('materials',this)">📁 Materials</button>
       <button class="ctab" onclick="switchClassTab('announcements',this)">📢 Notices</button>
@@ -2628,15 +2627,7 @@ function renderClassDetail(cls) {
       <button class="ctab" onclick="switchClassTab('discuss',this)">💬 Chat</button>
     </div>
 
-    <!-- Tab content — scrollable -->
     <div id="class-tab-content" style="flex:1;overflow-y:auto;padding:1rem;min-height:0"></div>`;
-
-  // Restore classes-root so loadClasses() works when going back
-  // (hidden placeholder so $('classes-root') doesn't return null)
-  const hiddenRoot = document.createElement('div');
-  hiddenRoot.id    = 'classes-root';
-  hiddenRoot.style.display = 'none';
-  panel.appendChild(hiddenRoot);
 
   switchClassTab('materials');
 }
@@ -3154,3 +3145,4 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
+
