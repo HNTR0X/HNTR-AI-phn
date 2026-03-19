@@ -1595,7 +1595,7 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 
       <!-- Classes Panel -->
       <div class="panel" id="panel-classes">
-        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0" id="classes-root">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0;display:flex;flex-direction:column" id="classes-root">
           <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">Loading classes...</div></div>
         </div>
       </div>
@@ -2356,46 +2356,34 @@ function toast(msg, ms=2500) {
 // ═══════════════════════════ CLASSES ════════════════════════════
 let CURRENT_CLASS = null;
 
-async function joinClass() {
-  const code = $('class-code-input').value.trim().toUpperCase();
-  const err  = $('join-error');
-  if (!code) { err.textContent = 'Enter a class code.'; return; }
-
-  err.textContent = 'Joining...';
-  try {
-    const r = await fetch('/api/class/join', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ code, sid: S.sid, name: S.name })
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.detail || 'Failed to join.');
-    $('join-class-form').style.display = 'none';
-    $('class-code-input').value = '';
-    err.textContent = '';
-    toast(`Joined ${d.class.title}! 🎉`);
-    loadClasses();
-  } catch(e) {
-    err.textContent = e.message;
-  }
-}
-
 async function loadClasses() {
-  const root = $('classes-root');
-  if (!root || !S.sid) return;
+  clearInterval(DISCUSS_INTERVAL);
+
+  // Restore the panel to its original structure with classes-root
+  const panel = $('panel-classes');
+  if (panel) {
+    panel.innerHTML = `
+      <div style="flex:1;overflow-y:auto;padding:1.25rem;min-height:0;display:flex;flex-direction:column"
+           id="classes-root">
+        <div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading...</div></div>
+      </div>`;
+  }
+
+  if (!S.sid) return;
 
   try {
-    const r = await fetch(`/api/class/student?sid=${S.sid}`);
+    const r = await fetch(`/api/class/student?sid=${encodeURIComponent(S.sid)}`);
     const d = await r.json();
-    const classes = d.classes || [];
-    renderClassesList(classes);
+    renderClassesList(d.classes || []);
   } catch {
-    root.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Couldn\'t load classes.</div></div>';
+    const root = $('classes-root');
+    if (root) root.innerHTML = '<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Couldn\'t load classes — try again.</div></div>';
   }
 }
 
 function renderClassesList(classes) {
   const root = $('classes-root');
+  if (!root) return;
   root.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
       <div>
@@ -2404,19 +2392,18 @@ function renderClassesList(classes) {
       </div>
       <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
     </div>
-
     ${classes.length ? classes.map(cls => `
-      <div class="class-card" onclick="openClass('${cls.code}')">
+      <div class="class-card" onclick="openClass('${esc(cls.code)}')">
         <div class="class-icon">📚</div>
         <div class="class-info">
           <div class="class-name">${esc(cls.name)}</div>
-          <div class="class-meta">${esc(cls.subject)} · ${esc(cls.lecturer)}</div>
+          <div class="class-meta">${esc(cls.subject || '')} · ${esc(cls.lecturer || '')}</div>
         </div>
-        <span style="color:var(--muted);font-size:1rem">›</span>
+        <span style="color:var(--muted);font-size:1.1rem">›</span>
       </div>`).join('') : `
-      <div class="empty-state">
+      <div class="empty-state" style="margin-top:1rem">
         <div class="es-icon">🏫</div>
-        <div class="es-text">No classes yet — ask your lecturer for a class code!</div>
+        <div class="es-text">No classes yet — tap "+ Join Class" and enter your lecturer's code!</div>
       </div>`}`;
 }
 
@@ -2425,100 +2412,138 @@ function showJoinClass() {
   if (!root) return;
   root.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem">
-      <button onclick="loadClasses()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">←</button>
+      <button onclick="loadClasses()"
+        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;padding:2px 6px">←</button>
       <h2 style="font-family:var(--font);font-size:1.1rem;font-weight:800">Join a Class</h2>
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center">
-      <div style="font-size:2rem;margin-bottom:.75rem">🔑</div>
-      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.25rem">Enter the 6-character class code from your lecturer</p>
+      <div style="font-size:2.5rem;margin-bottom:.75rem">🔑</div>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.25rem">Enter the class code from your lecturer</p>
       <input
         type="text"
         id="join-code-inp"
-        maxlength="6"
+        maxlength="8"
         placeholder="e.g. 4AFN9P"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="characters"
         spellcheck="false"
         style="width:100%;background:var(--surface);border:2px solid var(--border);border-radius:12px;
-               padding:14px;color:var(--text);font-family:var(--font);font-size:1.3rem;font-weight:700;
-               letter-spacing:.2em;text-align:center;text-transform:uppercase;outline:none;
-               transition:border-color .2s;margin-bottom:10px;box-sizing:border-box"
+               padding:14px;color:var(--text);font-family:var(--font);font-size:1.4rem;font-weight:800;
+               letter-spacing:.25em;text-align:center;text-transform:uppercase;outline:none;
+               margin-bottom:8px;box-sizing:border-box;transition:border-color .2s"
         onfocus="this.style.borderColor='var(--accent)'"
         onblur="this.style.borderColor='var(--border)'"
         onkeydown="if(event.key==='Enter') submitJoinClass()">
-      <button class="btn-start" style="width:100%;padding:12px" onclick="submitJoinClass()">Join Class</button>
+      <div id="join-err-msg" style="color:var(--red);font-size:.8rem;min-height:18px;margin-bottom:8px"></div>
+      <button id="join-submit-btn" class="btn-start" style="width:100%;padding:12px"
+        onclick="submitJoinClass()">Join Class</button>
     </div>`;
+
   setTimeout(() => {
     const inp = $('join-code-inp');
-    if (inp) {
-      inp.focus();
-      // Also listen for input to force uppercase since autocapitalize may not work on all browsers
-      inp.addEventListener('input', function() {
-        const pos = this.selectionStart;
-        this.value = this.value.toUpperCase();
-        this.setSelectionRange(pos, pos);
-      });
-    }
-  }, 150);
+    if (!inp) return;
+    inp.focus();
+    inp.addEventListener('input', function() {
+      const pos = this.selectionStart;
+      this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+      this.setSelectionRange(pos, pos);
+    });
+  }, 100);
 }
 
 async function submitJoinClass() {
-  const code = ($('join-code-inp').value || '').trim().toUpperCase();
-  if (code.length !== 6) { toast('Enter a 6-character code'); return; }
+  const inp  = $('join-code-inp');
+  const btn  = $('join-submit-btn');
+  const err  = $('join-err-msg');
+  const code = (inp?.value || '').trim().toUpperCase();
+
+  if (code.length < 4) {
+    if (err) err.textContent = 'Enter a valid class code.';
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Joining...'; }
+  if (err) err.textContent = '';
+
   try {
     const r = await fetch('/api/class/join', {
-      method: 'POST',
+      method:  'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ sid: S.sid, code })
+      body:    JSON.stringify({ sid: S.sid, code }),
     });
-    if (!r.ok) {
-      const e = await r.json();
-      toast(e.detail || 'Class not found'); return;
-    }
     const d = await r.json();
-    toast(`Joined "${d.name}" ✓`);
+    if (!r.ok) {
+      if (err) err.textContent = d.detail || 'Class not found. Check the code.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Join Class'; }
+      return;
+    }
+    toast(`Joined "${d.name}" ✓ 🎉`);
     loadClasses();
-  } catch { toast('Could not join class — try again.'); }
+  } catch {
+    if (err) err.textContent = 'Connection error — try again.';
+    if (btn) { btn.disabled = false; btn.textContent = 'Join Class'; }
+  }
 }
 
 async function openClass(code) {
-  const r = await fetch(`/api/class/detail?code=${code}&sid=${S.sid}`);
-  if (!r.ok) { toast('Could not load class'); return; }
-  CURRENT_CLASS = await r.json();
-  CURRENT_CLASS.code = code;
-  renderClassDetail(CURRENT_CLASS);
+  // Show loading state
+  const root = $('classes-root');
+  if (root) root.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading class...</div></div>';
+
+  try {
+    const r = await fetch(`/api/class/detail?code=${encodeURIComponent(code)}&sid=${encodeURIComponent(S.sid)}`);
+    if (!r.ok) { toast('Could not load class — try again.'); loadClasses(); return; }
+    CURRENT_CLASS      = await r.json();
+    CURRENT_CLASS.code = code;
+    renderClassDetail(CURRENT_CLASS);
+  } catch(e) {
+    toast('Connection error — try again.');
+    loadClasses();
+  }
 }
 
 function renderClassDetail(cls) {
-  const root = $('classes-root');
-  root.innerHTML = `
-    <!-- Class header -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+  // Replace the entire panel-classes content with a flex column layout
+  const panel = $('panel-classes');
+  if (!panel) return;
+
+  panel.innerHTML = `
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:10px;padding:.875rem 1.25rem;
+                background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
       <button onclick="loadClasses();clearInterval(DISCUSS_INTERVAL)"
-        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;flex-shrink:0">←</button>
-      <div class="class-icon" style="width:36px;height:36px;font-size:1rem">📚</div>
-      <div>
-        <div style="font-family:var(--font);font-weight:700;font-size:1rem">${esc(cls.name)}</div>
-        <div style="font-size:.72rem;color:var(--muted)">${esc(cls.subject)} · ${esc(cls.lecturer)}</div>
+        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;
+               flex-shrink:0;padding:2px 6px;border-radius:6px" title="Back">←</button>
+      <div class="class-icon" style="width:34px;height:34px;font-size:.95rem;flex-shrink:0">📚</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--font);font-weight:700;font-size:.95rem;
+                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cls.name)}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${esc(cls.subject || '')} · ${esc(cls.lecturer || '')}</div>
       </div>
       <button onclick="confirmLeaveClass('${cls.code}')"
         style="background:none;border:1px solid var(--border);border-radius:7px;padding:3px 9px;
-               color:var(--muted);font-size:.7rem;cursor:pointer;margin-left:auto">Leave</button>
+               color:var(--muted);font-size:.7rem;cursor:pointer;flex-shrink:0">Leave</button>
     </div>
 
-    <!-- Tabs -->
-    <div class="class-tabs" id="class-tabs">
+    <!-- Tab bar -->
+    <div class="class-tabs" id="class-tabs" style="flex-shrink:0">
       <button class="ctab active" onclick="switchClassTab('materials',this)">📁 Materials</button>
-      <button class="ctab" onclick="switchClassTab('announcements',this)">📢 Announcements</button>
-      <button class="ctab" onclick="switchClassTab('live',this)">🔴 Live Class</button>
+      <button class="ctab" onclick="switchClassTab('announcements',this)">📢 Notices</button>
+      <button class="ctab" onclick="switchClassTab('live',this)">🔴 Live</button>
       <button class="ctab" onclick="switchClassTab('exams',this)">📝 Exams</button>
-      <button class="ctab" onclick="switchClassTab('assignments',this)">📋 Assignments</button>
-      <button class="ctab" onclick="switchClassTab('discuss',this)">💬 Discussion</button>
+      <button class="ctab" onclick="switchClassTab('assignments',this)">📋 Tasks</button>
+      <button class="ctab" onclick="switchClassTab('discuss',this)">💬 Chat</button>
     </div>
 
-    <!-- Tab content -->
-    <div class="class-content" id="class-tab-content"></div>`;
+    <!-- Tab content — scrollable -->
+    <div id="class-tab-content" style="flex:1;overflow-y:auto;padding:1rem;min-height:0"></div>`;
+
+  // Restore classes-root div for when user goes back
+  const root = document.createElement('div');
+  root.id    = 'classes-root';
+  root.style.cssText = 'display:none';
+  panel.appendChild(root);
 
   switchClassTab('materials');
 }
