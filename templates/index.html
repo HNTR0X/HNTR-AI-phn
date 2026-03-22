@@ -1285,6 +1285,63 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 .ann-card-meta { font-size: .72rem; color: var(--muted); margin-top: 5px; }
 
 
+/* ── Lecture Lab ──────────────────────────────────────────── */
+.lab-tab {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-family: var(--font);
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.lab-tab.active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+
+.lab-content, .lab-content-d {
+  font-size: .83rem;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.lab-content h2, .lab-content-d h2 {
+  font-family: var(--font);
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--accent2);
+  margin: .875rem 0 .4rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.lab-content h3, .lab-content-d h3 {
+  font-family: var(--font);
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: .75rem 0 .3rem;
+}
+
+.lab-content strong, .lab-content-d strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.lab-content ol, .lab-content ul,
+.lab-content-d ol, .lab-content-d ul {
+  padding-left: 1.25rem;
+  margin: .3rem 0;
+}
+
 /* ── Note Accordion ───────────────────────────────────────── */
 .note-accordion {
   background: var(--surface);
@@ -1670,6 +1727,37 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 
     <!-- Right Panel -->
     <aside class="right">
+      <div class="r-card" style="border-color:#7c3aed40;background:linear-gradient(135deg,#7c3aed08,transparent)">
+        <div class="r-title" style="color:var(--accent2)">🧪 Lecture Lab</div>
+        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">Upload lecture notes → get a full study pack.</p>
+        <div style="border:2px dashed var(--border2);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s"
+          onclick="$('lab-file-input-d').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--accent2)'"
+          ondragleave="this.style.borderColor='var(--border2)'"
+          ondrop="handleLabDropD(event)">
+          <div style="font-size:1.5rem;margin-bottom:.3rem">📄</div>
+          <div style="font-size:.78rem;color:var(--muted)">Drop file or tap to upload</div>
+          <div style="font-size:.68rem;color:var(--muted2);margin-top:2px">.txt · .pdf · .md</div>
+        </div>
+        <input type="file" id="lab-file-input-d" style="display:none"
+          accept=".txt,.pdf,.md" onchange="runLectureLabD(this)">
+        <div id="lab-result-d" style="display:none;margin-top:.75rem">
+          <div style="font-size:.75rem;font-weight:700;color:var(--accent2);margin-bottom:.5rem" id="lab-filename-d"></div>
+          <div style="display:flex;gap:4px;margin-bottom:.5rem">
+            <button class="lab-tab active" onclick="switchLabTabD('summary',this)" style="font-size:.7rem;padding:3px 8px">📋</button>
+            <button class="lab-tab" onclick="switchLabTabD('notes',this)" style="font-size:.7rem;padding:3px 8px">📚</button>
+            <button class="lab-tab" onclick="switchLabTabD('questions',this)" style="font-size:.7rem;padding:3px 8px">❓</button>
+          </div>
+          <div id="lab-summary-d" class="lab-content-d"></div>
+          <div id="lab-notes-d" class="lab-content-d" style="display:none"></div>
+          <div id="lab-questions-d" class="lab-content-d" style="display:none"></div>
+          <div style="display:flex;gap:6px;margin-top:.5rem">
+            <button onclick="saveLabAsNoteD()" class="action-btn" style="font-size:.7rem">📓 Save</button>
+            <button onclick="downloadLabResultD()" class="action-btn" style="font-size:.7rem">⬇ Download</button>
+          </div>
+        </div>
+      </div>
+
       <div class="r-card">
         <div class="r-title">📎 Upload Document</div>
         <div class="upload-zone" id="upload-zone" onclick="$('file-input').click()"
@@ -1704,6 +1792,52 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
       <!-- More Panel (mobile only) -->
       <div class="panel" id="panel-more">
         <div style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem">
+
+          <!-- Lecture Lab -->
+          <div class="r-card" style="border-color:#7c3aed40;background:linear-gradient(135deg,#7c3aed08,transparent)">
+            <div class="r-title" style="color:var(--accent2)">🧪 Lecture Lab</div>
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:.875rem">
+              Upload your lecture notes or slides — Sivarr generates a full study pack instantly.
+            </p>
+
+            <!-- Upload zone -->
+            <div id="lab-drop-zone"
+              style="border:2px dashed var(--border2);border-radius:10px;padding:1.25rem;
+                     text-align:center;cursor:pointer;transition:all .2s;margin-bottom:.75rem"
+              onclick="$('lab-file-input').click()"
+              ondragover="event.preventDefault();this.style.borderColor='var(--accent2)'"
+              ondragleave="this.style.borderColor='var(--border2)'"
+              ondrop="handleLabDrop(event)">
+              <div style="font-size:1.75rem;margin-bottom:.4rem">📄</div>
+              <div style="font-size:.82rem;color:var(--muted)">Drop lecture file or tap to upload</div>
+              <div style="font-size:.72rem;color:var(--muted2);margin-top:3px">.txt · .pdf · .md</div>
+            </div>
+            <input type="file" id="lab-file-input" style="display:none"
+              accept=".txt,.pdf,.md" onchange="runLectureLab(this)">
+
+            <!-- Result area -->
+            <div id="lab-result" style="display:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+                <span style="font-size:.78rem;font-weight:700;color:var(--accent2)" id="lab-filename"></span>
+                <div style="display:flex;gap:6px">
+                  <button onclick="saveLabAsNote()" class="action-btn">📓 Save as Note</button>
+                  <button onclick="downloadLabResult()" class="action-btn">⬇ Download</button>
+                </div>
+              </div>
+
+              <!-- Tabs -->
+              <div style="display:flex;gap:4px;margin-bottom:.75rem;border-bottom:1px solid var(--border);padding-bottom:6px">
+                <button class="lab-tab active" onclick="switchLabTab('summary',this)">📋 Summary</button>
+                <button class="lab-tab" onclick="switchLabTab('notes',this)">📚 Notes</button>
+                <button class="lab-tab" onclick="switchLabTab('questions',this)">❓ Questions</button>
+              </div>
+
+              <div id="lab-summary" class="lab-content"></div>
+              <div id="lab-notes"   class="lab-content" style="display:none"></div>
+              <div id="lab-questions" class="lab-content" style="display:none"></div>
+            </div>
+          </div>
+
           <div class="r-card">
             <div class="r-title">📚 Topics Studied</div>
             <div id="topics-list-m"><span style="color:var(--muted);font-size:.78rem">Start chatting to build your topic list</span></div>
@@ -2403,6 +2537,150 @@ function toast(msg, ms=2500) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), ms);
 }
+// ═══════════════════════════ LECTURE LAB ════════════════════════
+
+let LAB_RESULT_TEXT = '';
+
+function parseLabResult(raw) {
+  const summaryMatch = raw.match(/##\s*📋\s*SUMMARY([\s\S]*?)(?=##\s*📚|$)/i);
+  const notesMatch   = raw.match(/##\s*📚\s*STRUCTURED NOTES([\s\S]*?)(?=##\s*❓|$)/i);
+  const questMatch   = raw.match(/##\s*❓\s*PRACTICE QUESTIONS([\s\S]*?)$/i);
+  return {
+    summary:   summaryMatch ? summaryMatch[1].trim() : raw,
+    notes:     notesMatch   ? notesMatch[1].trim()   : '',
+    questions: questMatch   ? questMatch[1].trim()   : '',
+  };
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^[-•] (.+)$/gm, '<li style="margin:.2rem 0">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li style="margin:.2rem 0">$2</li>')
+    .replace(/(<li[^>]*>.*<\/li>\n?)+/g, m => `<ul style="padding-left:1.1rem;margin:.3rem 0">${m}</ul>`)
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+async function runLectureLab(input) {
+  const file = input.files[0];
+  if (!file || !S.sid) return;
+  await _processLabFile(file, 'mobile');
+  input.value = '';
+}
+
+async function runLectureLabD(input) {
+  const file = input.files[0];
+  if (!file || !S.sid) return;
+  await _processLabFile(file, 'desktop');
+  input.value = '';
+}
+
+function handleLabDrop(e) {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) _processLabFile(file, 'mobile');
+}
+
+function handleLabDropD(e) {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) _processLabFile(file, 'desktop');
+}
+
+async function _processLabFile(file, target) {
+  const isMobile  = target === 'mobile';
+  const dropZone  = isMobile ? $('lab-drop-zone') : null;
+  const resultDiv = $(`lab-result${isMobile ? '' : '-d'}`);
+  const fnameEl   = $(`lab-filename${isMobile ? '' : '-d'}`);
+
+  if (dropZone) dropZone.innerHTML = `
+    <div style="font-size:1.5rem;margin-bottom:.4rem">⏳</div>
+    <div style="font-size:.82rem;color:var(--muted)">Processing "${esc(file.name)}"...</div>
+    <div style="font-size:.72rem;color:var(--muted2);margin-top:3px">Takes 10-20 seconds</div>`;
+  if (resultDiv) resultDiv.style.display = 'none';
+
+  try {
+    const fd = new FormData();
+    fd.append('sid', S.sid);
+    fd.append('file', file);
+    const r = await fetch('/api/lecture-lab', { method: 'POST', body: fd });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Processing failed'); }
+    const d = await r.json();
+
+    LAB_RESULT_TEXT  = d.result;
+    const sections   = parseLabResult(d.result);
+    const sfx        = isMobile ? '' : '-d';
+
+    const sum = $(`lab-summary${sfx}`);
+    const nts = $(`lab-notes${sfx}`);
+    const qst = $(`lab-questions${sfx}`);
+
+    if (sum) sum.innerHTML = renderMarkdown(sections.summary);
+    if (nts) nts.innerHTML = renderMarkdown(sections.notes);
+    if (qst) qst.innerHTML = renderMarkdown(sections.questions);
+    if (fnameEl) fnameEl.textContent = `📄 ${file.name}`;
+    if (resultDiv) resultDiv.style.display = 'block';
+
+    if (dropZone) dropZone.innerHTML = `
+      <div style="font-size:1.75rem;margin-bottom:.4rem">✅</div>
+      <div style="font-size:.82rem;color:var(--muted)">Done! Upload another file</div>
+      <div style="font-size:.72rem;color:var(--muted2);margin-top:3px">.txt · .pdf · .md</div>`;
+
+    // Activate first tab
+    const firstTab = document.querySelector(`.lab-tab`);
+    if (firstTab) switchLabTab('summary', firstTab);
+
+    toast(`Study pack ready! ✓`);
+  } catch(e) {
+    toast('Lecture Lab: ' + e.message);
+    if (dropZone) dropZone.innerHTML = `
+      <div style="font-size:1.75rem;margin-bottom:.4rem">📄</div>
+      <div style="font-size:.82rem;color:var(--muted)">Drop file or tap to upload</div>
+      <div style="font-size:.72rem;color:var(--muted2);margin-top:3px">.txt · .pdf · .md</div>`;
+  }
+}
+
+function switchLabTab(tab, btn) {
+  ['summary','notes','questions'].forEach(t => {
+    const el = $(`lab-${t}`); if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.lab-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function switchLabTabD(tab, btn) {
+  ['summary','notes','questions'].forEach(t => {
+    const el = $(`lab-${t}-d`); if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('[onclick*="switchLabTabD"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function saveLabAsNote()  { _saveLabNote(); }
+function saveLabAsNoteD() { _saveLabNote(); }
+function _saveLabNote() {
+  if (!LAB_RESULT_TEXT || !S.sid) { toast('No study pack to save.'); return; }
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  notes.unshift({ text: LAB_RESULT_TEXT, date: new Date().toLocaleString() + ' (Lecture Lab)' });
+  localStorage.setItem(`sivarr_notes_${S.sid}`, JSON.stringify(notes.slice(0,50)));
+  toast('Saved to My Notes ✓');
+}
+
+function downloadLabResult()  { _downloadLab(); }
+function downloadLabResultD() { _downloadLab(); }
+function _downloadLab() {
+  if (!LAB_RESULT_TEXT) { toast('No study pack yet.'); return; }
+  const blob = new Blob([`SIVARR AI — LECTURE LAB\n${'─'.repeat(40)}\n\n${LAB_RESULT_TEXT}`], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `sivarr_study_pack_${Date.now()}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 // ═══════════════════════════ CLASSES ════════════════════════════
 let CURRENT_CLASS = null;
 
