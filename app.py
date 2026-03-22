@@ -1755,6 +1755,100 @@ async def get_class_discuss(code: str):
     return {"messages": classes[code].get("discussions",[])[-50:]}
 
 
+
+# ── Lecture Lab ───────────────────────────────────────────────
+
+LECTURE_LAB_PROMPT = """You are Sivarr's Lecture Lab — an expert at turning raw lecture content into clean, structured study material.
+
+A student uploaded the following lecture content:
+
+{text}
+
+Generate a comprehensive study pack with exactly these three sections:
+
+---
+## 📋 SUMMARY
+Write a concise 4-6 sentence overview of the entire lecture. Capture the main argument, key theme, and why this topic matters.
+
+---
+## 📚 STRUCTURED NOTES
+
+### [Main Topic 1]
+- **Key Concept:** definition or explanation
+- **Key Concept:** definition or explanation
+
+### [Main Topic 2]
+- **Key Concept:** definition or explanation
+- **Key Concept:** definition or explanation
+
+(continue for all major topics — use actual topic names from the content)
+
+---
+## ❓ PRACTICE QUESTIONS
+Generate exactly 5 practice questions based on the content. Mix question types:
+1. [Question]
+2. [Question]
+3. [Question]
+4. [Question]
+5. [Question]
+
+Keep everything concise, clear and student-friendly. Use the actual content — don't make things up.
+"""
+
+
+@app.post("/api/lecture-lab")
+async def lecture_lab(request: Request, sid: str = Form(...), file: UploadFile = File(...)):
+    """Process uploaded lecture content and generate structured study material."""
+    sid = sanitize_text(sid, 100)
+    key = get_client_key(request, sid)
+    check_rate_limit(key, 3, "lecture_lab")  # Strict limit — expensive operation
+
+    allowed = [".txt", ".pdf", ".md"]
+    ext     = Path(file.filename).suffix.lower()
+    if ext not in allowed:
+        raise HTTPException(400, "Use .txt, .pdf, or .md files only.")
+
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(400, "File too large. Maximum 5MB.")
+
+    # Extract text
+    if ext == ".pdf":
+        try:
+            import io
+            try:
+                import pypdf
+                reader = pypdf.PdfReader(io.BytesIO(content))
+                text   = "\n".join(page.extract_text() or "" for page in reader.pages)
+            except ImportError:
+                text = content.decode("utf-8", errors="ignore")
+        except Exception:
+            text = content.decode("utf-8", errors="ignore")
+    else:
+        text = content.decode("utf-8", errors="ignore")
+
+    text = sanitize_text(text, 8000)
+    if not text.strip():
+        raise HTTPException(400, "Could not extract text from file.")
+
+    log.info(f"Lecture Lab processing: {file.filename} for {sid[:20]}")
+
+    # Generate study pack
+    result = gemini_once(
+        LECTURE_LAB_PROMPT.format(text=text[:6000]),
+        temp=0.4,
+        tokens=2000,
+    )
+
+    if not result:
+        raise HTTPException(503, "AI is busy right now — try again in a moment.")
+
+    return {
+        "filename": file.filename,
+        "result":   result,
+        "chars":    len(text),
+    }
+
 # ── Health check ──────────────────────────────────────────────
 
 @app.get("/health")
