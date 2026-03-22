@@ -1608,6 +1608,9 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
     <button class="tab-pill" id="tab-notes" onclick="navTab('notes', this)">
       <span class="tp-icon">📓</span> Notes
     </button>
+    <button class="tab-pill" id="tab-lab" onclick="navTab('lab', this)">
+      <span class="tp-icon">🧪</span> Lab
+    </button>
     <button class="tab-pill" id="tab-more" onclick="navTab('more', this)">
       <span class="tp-icon">💡</span> More
     </button>
@@ -1626,6 +1629,7 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
         <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
         <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
+        <button class="nav-btn" onclick="nav('lab',this)"><span class="ni">🧪</span> Lecture Lab</button>
       </div>
       <div class="stat-mini" id="sb-stats">
         <div class="stat-mini-title">Quick Stats</div>
@@ -1688,6 +1692,51 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
           </div>
           <div id="classes-list-area">
             <div class="empty-state"><div class="es-icon">🏫</div><div class="es-text">Loading your classes...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lecture Lab Panel -->
+      <div class="panel" id="panel-lab">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+          <div style="margin-bottom:1.25rem">
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em;color:var(--accent2)">🧪 Lecture Lab</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:3px">Upload lecture notes or slides — get a full study pack instantly.</p>
+          </div>
+
+          <!-- Upload zone -->
+          <div id="lab-drop-zone-p"
+            style="border:2px dashed var(--border2);border-radius:12px;padding:2rem 1rem;
+                   text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1rem;
+                   background:linear-gradient(135deg,#7c3aed08,transparent)"
+            onclick="$('lab-file-input-p').click()"
+            ondragover="event.preventDefault();this.style.borderColor='var(--accent2)';this.style.background='#7c3aed15'"
+            ondragleave="this.style.borderColor='var(--border2)';this.style.background='linear-gradient(135deg,#7c3aed08,transparent)'"
+            ondrop="handleLabDropP(event)">
+            <div style="font-size:2.5rem;margin-bottom:.5rem">📄</div>
+            <div style="font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.3rem">Drop your lecture file here</div>
+            <div style="font-size:.78rem;color:var(--muted)">or tap to browse · .txt .pdf .md supported</div>
+          </div>
+          <input type="file" id="lab-file-input-p" style="display:none"
+            accept=".txt,.pdf,.md" onchange="runLectureLabP(this)">
+
+          <!-- Result -->
+          <div id="lab-result-p" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:6px">
+              <span style="font-size:.82rem;font-weight:700;color:var(--accent2)" id="lab-filename-p"></span>
+              <div style="display:flex;gap:6px">
+                <button onclick="saveLabAsNoteP()" class="action-btn">📓 Save</button>
+                <button onclick="downloadLabResultP()" class="action-btn">⬇ Download</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:.75rem">
+              <button class="lab-tab active" onclick="switchLabTabP('summary',this)">📋 Summary</button>
+              <button class="lab-tab" onclick="switchLabTabP('notes',this)">📚 Notes</button>
+              <button class="lab-tab" onclick="switchLabTabP('questions',this)">❓ Questions</button>
+            </div>
+            <div id="lab-summary-p" class="lab-content"></div>
+            <div id="lab-notes-p"   class="lab-content" style="display:none"></div>
+            <div id="lab-questions-p" class="lab-content" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -2537,6 +2586,31 @@ function toast(msg, ms=2500) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), ms);
 }
+
+async function runLectureLabP(input) {
+  const file = input.files[0];
+  if (!file || !S.sid) return;
+  await _processLabFile(file, 'panel');
+  input.value = '';
+}
+
+function handleLabDropP(e) {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) _processLabFile(file, 'panel');
+}
+
+function switchLabTabP(tab, btn) {
+  ['summary','notes','questions'].forEach(t => {
+    const el = $(`lab-${t}-p`); if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('[onclick*="switchLabTabP"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function saveLabAsNoteP()  { _saveLabNote(); }
+function downloadLabResultP() { _downloadLab(); }
+
 // ═══════════════════════════ LECTURE LAB ════════════════════════
 
 let LAB_RESULT_TEXT = '';
@@ -2592,9 +2666,12 @@ function handleLabDropD(e) {
 
 async function _processLabFile(file, target) {
   const isMobile  = target === 'mobile';
-  const dropZone  = isMobile ? $('lab-drop-zone') : null;
-  const resultDiv = $(`lab-result${isMobile ? '' : '-d'}`);
-  const fnameEl   = $(`lab-filename${isMobile ? '' : '-d'}`);
+  const isPanel   = target === 'panel';
+  const sfxMap    = { mobile: '', desktop: '-d', panel: '-p' };
+  const sfx       = sfxMap[target] || '';
+  const dropZone  = isMobile ? $('lab-drop-zone') : (isPanel ? $('lab-drop-zone-p') : null);
+  const resultDiv = $(`lab-result${sfx}`);
+  const fnameEl   = $(`lab-filename${sfx}`);
 
   if (dropZone) dropZone.innerHTML = `
     <div style="font-size:1.5rem;margin-bottom:.4rem">⏳</div>
@@ -2629,9 +2706,10 @@ async function _processLabFile(file, target) {
       <div style="font-size:.82rem;color:var(--muted)">Done! Upload another file</div>
       <div style="font-size:.72rem;color:var(--muted2);margin-top:3px">.txt · .pdf · .md</div>`;
 
-    // Activate first tab
-    const firstTab = document.querySelector(`.lab-tab`);
-    if (firstTab) switchLabTab('summary', firstTab);
+    // Activate first tab for correct context
+    if (isPanel) switchLabTabP('summary', document.querySelector('[onclick*="switchLabTabP"]'));
+    else if (isMobile) switchLabTab('summary', document.querySelector('.lab-tab'));
+    else switchLabTabD('summary', document.querySelector('[onclick*="switchLabTabD"]'));
 
     toast(`Study pack ready! ✓`);
   } catch(e) {
