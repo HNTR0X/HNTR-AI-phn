@@ -1320,8 +1320,8 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 body.light .quick-action { background: #fff; border-color: #e2e4eb; }
 body.light .quick-action:hover { background: #4f6ef710; border-color: var(--accent); }
 
-/* ── Study Haven──────────────────────────────────────────── */
-.study-tab {
+/* ── Study Haven ──────────────────────────────────────────── */
+.lab-tab {
   background: none;
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -1664,7 +1664,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
         <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
-        <button class="nav-btn" onclick="nav('lab',this)"><span class="ni">🧪</span> Lecture Lab</button>
+        <button class="nav-btn" onclick="nav('lab',this)"><span class="ni">🧪</span> Study Haven</button>
       </div>
       <div class="stat-mini" id="sb-stats">
         <div class="stat-mini-title">Quick Stats</div>
@@ -1784,11 +1784,11 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         </div>
       </div>
 
-      <!-- Lecture Lab Panel -->
+      <!-- Study Haven Panel -->
       <div class="panel" id="panel-lab">
         <div style="flex:1;overflow-y:auto;padding:1.25rem">
           <div style="margin-bottom:1.25rem">
-            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em;color:var(--accent2)">🧪 Lecture Lab</h2>
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em;color:var(--accent2)">🧪 Study Haven</h2>
             <p style="font-size:.78rem;color:var(--muted);margin-top:3px">Upload lecture notes or slides — get a full study pack instantly.</p>
           </div>
 
@@ -1806,7 +1806,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             <div style="font-size:.78rem;color:var(--muted)">or tap to browse · .txt .pdf .md supported</div>
           </div>
           <input type="file" id="lab-file-input-p" style="display:none"
-            accept=".txt,.pdf,.md" onchange="runLectureLabP(this)">
+            accept=".txt,.pdf,.md" onchange="runStudyHavenP(this)">
 
           <!-- Result -->
           <div id="lab-result-p" style="display:none">
@@ -1865,7 +1865,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
     <!-- Right Panel -->
     <aside class="right">
       <div class="r-card" style="border-color:#7c3aed40;background:linear-gradient(135deg,#7c3aed08,transparent)">
-        <div class="r-title" style="color:var(--accent2)">🧪 Lecture Lab</div>
+        <div class="r-title" style="color:var(--accent2)">🧪 Study Haven</div>
         <p style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">Upload lecture notes → get a full study pack.</p>
         <div style="border:2px dashed var(--border2);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s"
           onclick="$('lab-file-input-d').click()"
@@ -1877,7 +1877,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
           <div style="font-size:.68rem;color:var(--muted2);margin-top:2px">.txt · .pdf · .md</div>
         </div>
         <input type="file" id="lab-file-input-d" style="display:none"
-          accept=".txt,.pdf,.md" onchange="runLectureLabD(this)">
+          accept=".txt,.pdf,.md" onchange="runStudyHavenD(this)">
         <div id="lab-result-d" style="display:none;margin-top:.75rem">
           <div style="font-size:.75rem;font-weight:700;color:var(--accent2);margin-bottom:.5rem" id="lab-filename-d"></div>
           <div style="display:flex;gap:4px;margin-bottom:.5rem">
@@ -1930,9 +1930,9 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
       <div class="panel" id="panel-more">
         <div style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem">
 
-          <!-- Lecture Lab -->
+          <!-- Study Haven -->
           <div class="r-card" style="border-color:#7c3aed40;background:linear-gradient(135deg,#7c3aed08,transparent)">
-            <div class="r-title" style="color:var(--accent2)">🧪 Lecture Lab</div>
+            <div class="r-title" style="color:var(--accent2)">🧪 Study Haven</div>
             <p style="font-size:.78rem;color:var(--muted);margin-bottom:.875rem">
               Upload your lecture notes or slides — Sivarr generates a full study pack instantly.
             </p>
@@ -1950,7 +1950,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
               <div style="font-size:.72rem;color:var(--muted2);margin-top:3px">.txt · .pdf · .md</div>
             </div>
             <input type="file" id="lab-file-input" style="display:none"
-              accept=".txt,.pdf,.md" onchange="runLectureLab(this)">
+              accept=".txt,.pdf,.md" onchange="runStudyHaven(this)">
 
             <!-- Result area -->
             <div id="lab-result" style="display:none">
@@ -2691,7 +2691,7 @@ function toast(msg, ms=2500) {
   setTimeout(() => el.classList.remove('show'), ms);
 }
 
-async function runLectureLabP(input) {
+async function runStudyHavenP(input) {
   const file = input.files[0];
   if (!file || !S.sid) return;
   await _processLabFile(file, 'panel');
@@ -2742,14 +2742,14 @@ function renderMarkdown(text) {
     .replace(/\n/g, '<br>');
 }
 
-async function runLectureLab(input) {
+async function runStudyHaven(input) {
   const file = input.files[0];
   if (!file || !S.sid) return;
   await _processLabFile(file, 'mobile');
   input.value = '';
 }
 
-async function runLectureLabD(input) {
+async function runStudyHavenD(input) {
   const file = input.files[0];
   if (!file || !S.sid) return;
   await _processLabFile(file, 'desktop');
@@ -2787,7 +2787,7 @@ async function _processLabFile(file, target) {
     const fd = new FormData();
     fd.append('sid', S.sid);
     fd.append('file', file);
-    const r = await fetch('/api/lecture-lab', { method: 'POST', body: fd });
+    const r = await fetch('/api/study-haven', { method: 'POST', body: fd });
     if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Processing failed'); }
     const d = await r.json();
 
@@ -2817,7 +2817,7 @@ async function _processLabFile(file, target) {
 
     toast(`Study pack ready! ✓`);
   } catch(e) {
-    toast('Lecture Lab: ' + e.message);
+    toast('Study Haven: ' + e.message);
     if (dropZone) dropZone.innerHTML = `
       <div style="font-size:1.75rem;margin-bottom:.4rem">📄</div>
       <div style="font-size:.82rem;color:var(--muted)">Drop file or tap to upload</div>
@@ -2846,7 +2846,7 @@ function saveLabAsNoteD() { _saveLabNote(); }
 function _saveLabNote() {
   if (!LAB_RESULT_TEXT || !S.sid) { toast('No study pack to save.'); return; }
   const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
-  notes.unshift({ text: LAB_RESULT_TEXT, date: new Date().toLocaleString() + ' (Lecture Lab)' });
+  notes.unshift({ text: LAB_RESULT_TEXT, date: new Date().toLocaleString() + ' (Study Haven)' });
   localStorage.setItem(`sivarr_notes_${S.sid}`, JSON.stringify(notes.slice(0,50)));
   toast('Saved to My Notes ✓');
 }
