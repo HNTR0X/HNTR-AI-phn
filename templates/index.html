@@ -1285,6 +1285,41 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 .ann-card-meta { font-size: .72rem; color: var(--muted); margin-top: 5px; }
 
 
+/* ── Chat Welcome Screen ─────────────────────────────────── */
+@keyframes orb-pulse {
+  0%, 100% { box-shadow: 0 0 40px #4f6ef740, 0 0 80px #7c3aed20; transform: scale(1); }
+  50%       { box-shadow: 0 0 60px #4f6ef760, 0 0 100px #7c3aed35; transform: scale(1.04); }
+}
+
+.quick-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 9px 16px;
+  font-family: var(--font-body);
+  font-size: .84rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.quick-action:hover {
+  border-color: var(--accent);
+  background: #4f6ef710;
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px #4f6ef720;
+}
+
+.quick-action span { font-size: 1rem; }
+
+body.light .quick-action { background: #fff; border-color: #e2e4eb; }
+body.light .quick-action:hover { background: #4f6ef710; border-color: var(--accent); }
+
 /* ── Lecture Lab ──────────────────────────────────────────── */
 .lab-tab {
   background: none;
@@ -1645,7 +1680,56 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 
       <!-- Chat -->
       <div class="panel active" id="panel-chat">
-        <div class="chat-msgs" id="msgs"></div>
+        <div class="chat-msgs" id="msgs">
+          <!-- Welcome home screen — shown when no messages yet -->
+          <div id="chat-welcome" style="
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            min-height:100%;padding:2rem 1.5rem;text-align:center;animation:fadeUp .5s ease">
+
+            <!-- Orb -->
+            <div style="
+              width:80px;height:80px;
+              background:radial-gradient(circle at 35% 35%, #818cf8, #4f6ef7 40%, #7c3aed 80%);
+              border-radius:50%;margin-bottom:1.75rem;
+              box-shadow:0 0 40px #4f6ef740, 0 0 80px #7c3aed20;
+              animation:orb-pulse 3s ease-in-out infinite">
+            </div>
+
+            <!-- Greeting -->
+            <div id="welcome-greeting" style="
+              font-family:var(--font);font-size:1.75rem;font-weight:800;
+              letter-spacing:-.03em;margin-bottom:.4rem">
+              Good morning
+            </div>
+            <p style="color:var(--muted);font-size:.92rem;margin-bottom:2rem">
+              What would you like to explore?
+            </p>
+
+            <!-- Quick action pills -->
+            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:420px;margin-bottom:2rem">
+              <button class="quick-action" onclick="quickPrompt('Explain a topic to me')">
+                <span>💡</span> Explain a topic
+              </button>
+              <button class="quick-action" onclick="quickPrompt('Help me solve a maths problem')">
+                <span>📐</span> Solve maths
+              </button>
+              <button class="quick-action" onclick="quickPrompt('Help me write an essay')">
+                <span>✍️</span> Write an essay
+              </button>
+              <button class="quick-action" onclick="quickPrompt('Give me career advice')">
+                <span>🎯</span> Career advice
+              </button>
+              <button class="quick-action" onclick="quickPrompt('Help me study for my exams')">
+                <span>📚</span> Exam prep
+              </button>
+              <button class="quick-action" onclick="quickPrompt('Summarise a topic for me')">
+                <span>⚡</span> Quick summary
+              </button>
+            </div>
+
+            <p style="font-size:.72rem;color:var(--muted2)">Ask anything — I'm here 24/7</p>
+          </div>
+        </div>
         <div class="chat-bar">
           <textarea class="chat-input" id="ci" placeholder="Ask anything — maths, science, essays, careers..." rows="1"
             onkeydown="ckd(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
@@ -2170,6 +2254,14 @@ async function doLogin(name, matric) {
       ? `Welcome back, ${r.name}! 👋 You've had ${r.sessions} sessions. Ready to keep growing?`
       : `Hey ${r.name}! 👋 Welcome to Sivarr AI — your personal learning companion. Ask me anything to get started! 🚀`
     );
+
+    // Personalise the welcome greeting
+    const greet = $('welcome-greeting');
+    if (greet) {
+      const hr = new Date().getHours();
+      const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+      greet.textContent = `${tod}, ${r.name.split(' ')[0]}`;
+    }
     loadAnnouncements();
 
     // Check for lecturer announcements
@@ -2237,7 +2329,20 @@ async function send() {
   scrollMsgs();
 }
 
+function quickPrompt(text) {
+  // Hide welcome screen, set input, and send
+  const welcome = $('chat-welcome');
+  if (welcome) welcome.style.display = 'none';
+  const ci = $('ci');
+  if (ci) { ci.value = text; ci.style.height = 'auto'; }
+  send();
+}
+
 function addMsg(role, text, uncertain = false) {
+  // Hide welcome screen on first real message
+  const welcome = $('chat-welcome');
+  if (welcome) welcome.style.display = 'none';
+
   const w = $('msgs'), d = document.createElement('div');
   d.className = `msg ${role}`;
   const av = role === 'sivarr' ? 'Sr' : S.name[0]?.toUpperCase() || 'U';
@@ -3505,3 +3610,4 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
+
