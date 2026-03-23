@@ -1756,9 +1756,9 @@ async def get_class_discuss(code: str):
 
 
 
-# ── Lecture Lab ───────────────────────────────────────────────
+# ── Study Haven ───────────────────────────────────────────────
 
-LECTURE_LAB_PROMPT = """You are Sivarr's Lecture Lab — an expert at turning raw lecture content into clean, structured study material.
+STUDY_HAVEN_PROMPT = """You are Sivarr's Study Haven — an expert at turning raw lecture content into clean, structured study material.
 
 A student uploaded the following lecture content:
 
@@ -1796,12 +1796,12 @@ Keep everything concise, clear and student-friendly. Use the actual content — 
 """
 
 
-@app.post("/api/lecture-lab")
-async def lecture_lab(request: Request, sid: str = Form(...), file: UploadFile = File(...)):
+@app.post("/api/study-haven")
+async def study_haven(request: Request, sid: str = Form(...), file: UploadFile = File(...)):
     """Process uploaded lecture content and generate structured study material."""
     sid = sanitize_text(sid, 100)
     key = get_client_key(request, sid)
-    check_rate_limit(key, 3, "lecture_lab")  # Strict limit — expensive operation
+    check_rate_limit(key, 3, "study_haven")  # Strict limit — expensive operation
 
     allowed = [".txt", ".pdf", ".md"]
     ext     = Path(file.filename).suffix.lower()
@@ -1831,11 +1831,11 @@ async def lecture_lab(request: Request, sid: str = Form(...), file: UploadFile =
     if not text.strip():
         raise HTTPException(400, "Could not extract text from file.")
 
-    log.info(f"Lecture Lab processing: {file.filename} for {sid[:20]}")
+    log.info(f"Study Haven processing: {file.filename} for {sid[:20]}")
 
     # Generate study pack
     result = gemini_once(
-        LECTURE_LAB_PROMPT.format(text=text[:6000]),
+        STUDY_HAVEN_PROMPT.format(text=text[:6000]),
         temp=0.4,
         tokens=2000,
     )
@@ -1861,3 +1861,4 @@ async def health():
         "gemini":  GEMINI_AVAILABLE,
         "model":   _model_name or "not initialized",
     }
+
