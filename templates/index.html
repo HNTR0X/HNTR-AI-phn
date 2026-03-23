@@ -1686,13 +1686,17 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             display:flex;flex-direction:column;align-items:center;justify-content:center;
             min-height:100%;padding:2rem 1.5rem;text-align:center;animation:fadeUp .5s ease">
 
-            <!-- Orb -->
+            <!-- Sr orb -->
             <div style="
-              width:80px;height:80px;
-              background:radial-gradient(circle at 35% 35%, #818cf8, #4f6ef7 40%, #7c3aed 80%);
+              width:84px;height:84px;
+              background:radial-gradient(circle at 35% 30%, #818cf8, #4f6ef7 45%, #7c3aed 85%);
               border-radius:50%;margin-bottom:1.75rem;
-              box-shadow:0 0 40px #4f6ef740, 0 0 80px #7c3aed20;
+              box-shadow:0 0 40px #4f6ef750, 0 0 80px #7c3aed25;
+              display:flex;align-items:center;justify-content:center;
+              font-family:var(--font);font-weight:800;font-size:1.4rem;color:#fff;
+              letter-spacing:-.02em;
               animation:orb-pulse 3s ease-in-out infinite">
+              Sr
             </div>
 
             <!-- Greeting -->
@@ -1702,7 +1706,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
               Good morning
             </div>
             <p style="color:var(--muted);font-size:.92rem;margin-bottom:2rem">
-              What would you like to explore?
+              What's on your mind?
             </p>
 
             <!-- Quick action pills -->
@@ -2250,15 +2254,10 @@ async function doLogin(name, matric) {
     const dash = $('dashboard');
     dash.style.display = 'flex';
 
-    addMsg('sivarr', r.returning
-      ? `Welcome back, ${r.name}! 👋 You've had ${r.sessions} sessions. Ready to keep growing?`
-      : `Hey ${r.name}! 👋 Welcome to Sivarr AI — your personal learning companion. Ask me anything to get started! 🚀`
-    );
-
-    // Personalise the welcome greeting
+    // Personalise the welcome greeting — no addMsg so the home screen shows
     const greet = $('welcome-greeting');
     if (greet) {
-      const hr = new Date().getHours();
+      const hr  = new Date().getHours();
       const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
       greet.textContent = `${tod}, ${r.name.split(' ')[0]}`;
     }
