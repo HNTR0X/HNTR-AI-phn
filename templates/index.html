@@ -1320,6 +1320,55 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 body.light .quick-action { background: #fff; border-color: #e2e4eb; }
 body.light .quick-action:hover { background: #4f6ef710; border-color: var(--accent); }
 
+/* ── Study Help ───────────────────────────────────────────── */
+.sh-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.sh-section:hover { border-color: var(--accent); }
+.sh-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; cursor: pointer; user-select: none;
+}
+.sh-title { font-family: var(--font); font-weight: 700; font-size: .88rem; }
+.sh-badge {
+  background: var(--accent); color: #fff; font-size: .65rem;
+  font-weight: 700; border-radius: 99px; padding: 1px 7px; min-width: 18px; text-align: center;
+}
+.sh-arrow { font-size: .65rem; color: var(--muted); }
+.sh-body { padding: 0 14px 14px; border-top: 1px solid var(--border); padding-top: 10px; }
+.sh-input {
+  width: 100%; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 11px; color: var(--text);
+  font-family: var(--font-body); font-size: .84rem; outline: none; transition: border-color .15s;
+}
+.sh-input:focus { border-color: var(--accent); }
+.sh-add-btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 8px;
+  padding: 8px 13px; font-family: var(--font); font-size: .78rem;
+  font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.sh-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.sh-item {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 10px; font-size: .83rem;
+}
+.sh-item.done { opacity: .5; }
+.sh-item.done .sh-item-text { text-decoration: line-through; }
+.sh-item-text { flex: 1; word-break: break-word; }
+.sh-item-date { font-size: .68rem; color: var(--accent); font-weight: 600; flex-shrink: 0; }
+.sh-check {
+  width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px;
+  cursor: pointer; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; font-size: .6rem; transition: all .15s;
+}
+.sh-check.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 /* ── Study Deck ──────────────────────────────────────────── */
 .lab-tab {
   background: none;
@@ -1643,8 +1692,11 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
     <button class="tab-pill" id="tab-notes" onclick="navTab('notes', this)">
       <span class="tp-icon">📓</span> Notes
     </button>
+    <button class="tab-pill" id="tab-studyhelp" onclick="navTab('studyhelp', this)">
+      <span class="tp-icon">🗂️</span> Study Help
+    </button>
     <button class="tab-pill" id="tab-lab" onclick="navTab('lab', this)">
-      <span class="tp-icon">🧪</span> Lab
+      <span class="tp-icon">🧪</span> Study Deck
     </button>
     <button class="tab-pill" id="tab-more" onclick="navTab('more', this)">
       <span class="tp-icon">💡</span> More
@@ -1664,8 +1716,8 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
         <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
+        <button class="nav-btn" onclick="nav('studyhelp',this)"><span class="ni">🗂️</span> Study Help</button>
         <button class="nav-btn" onclick="nav('lab',this)"><span class="ni">🧪</span> Study Deck</button>
-         <button class="nav-btn" onclick="nav('tool',this)"><span class="ni">📇</span> Study Help</button>
       </div>
       <div class="stat-mini" id="sb-stats">
         <div class="stat-mini-title">Quick Stats</div>
@@ -1807,7 +1859,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             <div style="font-size:.78rem;color:var(--muted)">or tap to browse · .txt .pdf .md supported</div>
           </div>
           <input type="file" id="lab-file-input-p" style="display:none"
-            accept=".txt,.pdf,.md" onchange="runStudyDeckP(this)">
+            accept=".txt,.pdf,.md" onchange="runStudyHavenP(this)">
 
           <!-- Result -->
           <div id="lab-result-p" style="display:none">
@@ -1827,6 +1879,132 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             <div id="lab-notes-p"   class="lab-content" style="display:none"></div>
             <div id="lab-questions-p" class="lab-content" style="display:none"></div>
           </div>
+        </div>
+      </div>
+
+
+      <!-- Study Help Panel -->
+      <div class="panel" id="panel-studyhelp">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+
+          <div style="margin-bottom:1.5rem">
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🗂️ Study Help</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:3px">Manage your tasks, deadlines and study structure.</p>
+          </div>
+
+          <!-- ── SECTION 1: Tasks Due ── -->
+          <div class="sh-section" id="sh-due">
+            <div class="sh-header" onclick="toggleSH('due')">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:1.1rem">📅</span>
+                <span class="sh-title">Tasks Due</span>
+                <span class="sh-badge" id="sh-due-count">0</span>
+              </div>
+              <span class="sh-arrow" id="sh-due-arrow">▼</span>
+            </div>
+            <div class="sh-body" id="sh-due-body">
+              <div style="display:flex;gap:8px;margin-bottom:.75rem">
+                <input id="sh-due-input" class="sh-input" placeholder="Add a task due soon..." 
+                  onkeydown="if(event.key==='Enter') addSHTask('due')">
+                <input id="sh-due-date" type="date" class="sh-input" style="max-width:130px">
+                <button class="sh-add-btn" onclick="addSHTask('due')">+ Add</button>
+              </div>
+              <div id="sh-due-list" class="sh-list"></div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 2: Upcoming Reminders ── -->
+          <div class="sh-section" id="sh-upcoming">
+            <div class="sh-header" onclick="toggleSH('upcoming')">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:1.1rem">⏰</span>
+                <span class="sh-title">Upcoming Reminders</span>
+                <span class="sh-badge" id="sh-upcoming-count">0</span>
+              </div>
+              <span class="sh-arrow" id="sh-upcoming-arrow">▼</span>
+            </div>
+            <div class="sh-body" id="sh-upcoming-body">
+              <div style="display:flex;gap:8px;margin-bottom:.75rem">
+                <input id="sh-upcoming-input" class="sh-input" placeholder="Add a reminder..."
+                  onkeydown="if(event.key==='Enter') addSHTask('upcoming')">
+                <input id="sh-upcoming-date" type="date" class="sh-input" style="max-width:130px">
+                <button class="sh-add-btn" onclick="addSHTask('upcoming')">+ Add</button>
+              </div>
+              <div id="sh-upcoming-list" class="sh-list"></div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 3: Task Completion ── -->
+          <div class="sh-section" id="sh-completed">
+            <div class="sh-header" onclick="toggleSH('completed')">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:1.1rem">✅</span>
+                <span class="sh-title">Task Completion</span>
+                <span class="sh-badge" id="sh-completed-count">0</span>
+              </div>
+              <span class="sh-arrow" id="sh-completed-arrow">▼</span>
+            </div>
+            <div class="sh-body" id="sh-completed-body">
+              <div style="display:flex;gap:8px;margin-bottom:.75rem">
+                <input id="sh-completed-input" class="sh-input" placeholder="Add completed task..."
+                  onkeydown="if(event.key==='Enter') addSHTask('completed')">
+                <button class="sh-add-btn" onclick="addSHTask('completed')">+ Add</button>
+              </div>
+              <div id="sh-completed-list" class="sh-list"></div>
+              <!-- Progress bar -->
+              <div style="margin-top:.75rem">
+                <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:4px">
+                  <span>Completion rate</span>
+                  <span id="sh-pct">0%</span>
+                </div>
+                <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
+                  <div id="sh-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .4s ease"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 4: Task Structure (AI-powered) ── -->
+          <div class="sh-section" id="sh-structure">
+            <div class="sh-header" onclick="toggleSH('structure')">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:1.1rem">🧠</span>
+                <span class="sh-title">Task Structure</span>
+                <span style="font-size:.65rem;background:#4f6ef720;color:var(--accent);border-radius:6px;padding:1px 6px;font-weight:700">AI</span>
+              </div>
+              <span class="sh-arrow" id="sh-structure-arrow">▼</span>
+            </div>
+            <div class="sh-body" id="sh-structure-body">
+              <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Describe a task — Sivarr breaks it into clear steps for you.</p>
+              <textarea id="sh-structure-input" class="sh-input" rows="3"
+                placeholder="e.g. Write a 2000 word essay on climate change due Friday..."
+                style="resize:none;width:100%;box-sizing:border-box"></textarea>
+              <button class="btn-start" style="width:100%;margin-top:.5rem;padding:10px"
+                onclick="generateTaskStructure()">🧠 Break It Down</button>
+              <div id="sh-structure-result" style="margin-top:.75rem;display:none" class="lab-content"></div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 5: PDF Creation ── -->
+          <div class="sh-section" id="sh-pdf">
+            <div class="sh-header" onclick="toggleSH('pdf')">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:1.1rem">📄</span>
+                <span class="sh-title">Create PDF</span>
+              </div>
+              <span class="sh-arrow" id="sh-pdf-arrow">▼</span>
+            </div>
+            <div class="sh-body" id="sh-pdf-body">
+              <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Turn your notes or tasks into a downloadable PDF.</p>
+              <input id="sh-pdf-title" class="sh-input" placeholder="PDF title e.g. Study Plan Week 3" style="margin-bottom:6px">
+              <textarea id="sh-pdf-content" class="sh-input" rows="5"
+                placeholder="Paste your notes, tasks or plan here..."
+                style="resize:none;width:100%;box-sizing:border-box"></textarea>
+              <button class="btn-start" style="width:100%;margin-top:.5rem;padding:10px"
+                onclick="createStudyPDF()">📄 Download PDF</button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -1866,7 +2044,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
     <!-- Right Panel -->
     <aside class="right">
       <div class="r-card" style="border-color:#7c3aed40;background:linear-gradient(135deg,#7c3aed08,transparent)">
-        <div class="r-title" style="color:var(--accent2)">🧪 Study Haven</div>
+        <div class="r-title" style="color:var(--accent2)">🧪 Study Deck</div>
         <p style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">Upload lecture notes → get a full study pack.</p>
         <div style="border:2px dashed var(--border2);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s"
           onclick="$('lab-file-input-d').click()"
@@ -1931,9 +2109,9 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
       <div class="panel" id="panel-more">
         <div style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem">
 
-          <!-- Study Haven -->
+          <!-- Study Deck -->
           <div class="r-card" style="border-color:#7c3aed40;background:linear-gradient(135deg,#7c3aed08,transparent)">
-            <div class="r-title" style="color:var(--accent2)">🧪 Study Haven</div>
+            <div class="r-title" style="color:var(--accent2)">🧪 Study Deck</div>
             <p style="font-size:.78rem;color:var(--muted);margin-bottom:.875rem">
               Upload your lecture notes or slides — Sivarr generates a full study pack instantly.
             </p>
@@ -1974,6 +2152,11 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
               <div id="lab-notes"   class="lab-content" style="display:none"></div>
               <div id="lab-questions" class="lab-content" style="display:none"></div>
             </div>
+          </div>
+
+          <div class="r-card" style="cursor:pointer" onclick="navTab('studyhelp', $('tab-studyhelp'))">
+            <div class="r-title">🗂️ Study Help</div>
+            <p style="font-size:.75rem;color:var(--muted);margin-top:2px">Tasks, reminders, structure & PDF creation.</p>
           </div>
 
           <div class="r-card">
@@ -2242,7 +2425,6 @@ async function doLogin(name, matric) {
 
     $('tb-av').textContent   = r.name[0].toUpperCase();
     $('tb-name').textContent = r.name;
-    // Update dropdown header
     const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
     const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
     updateDiff(r.difficulty);
@@ -2255,7 +2437,7 @@ async function doLogin(name, matric) {
     const dash = $('dashboard');
     dash.style.display = 'flex';
 
-    // Personalise the welcome greeting — no addMsg so the home screen shows
+    // Personalise the welcome greeting
     const greet = $('welcome-greeting');
     if (greet) {
       const hr  = new Date().getHours();
@@ -2301,7 +2483,8 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 ['ln','lm'].forEach((id,i) => {
-  $(id).addEventListener('keydown', e => {
+  const el = $(id);
+  if (el) el.addEventListener('keydown', e => {
     if (e.key === 'Enter') i === 0 ? $('lm').focus() : doLogin();
   });
 });
@@ -2611,6 +2794,7 @@ function nav(name, btn) {
   if (name === 'more')          syncMore();
   if (name === 'leaderboard')   loadLeaderboard();
   if (name === 'notes')         loadNotes();
+  if (name === 'studyhelp')     loadStudyHelp();
   if (name === 'classes')       loadClasses();
   if (name === 'announcements') loadAllAnnouncements();
   if (name === 'quiz' && !S.quizActive) {
@@ -2638,6 +2822,7 @@ function navTab(name, btn) {
   if (name === 'more')          syncMore();
   if (name === 'leaderboard')   loadLeaderboard();
   if (name === 'notes')         loadNotes();
+  if (name === 'studyhelp')     loadStudyHelp();
   if (name === 'classes')       loadClasses();
   if (name === 'announcements') loadAllAnnouncements();
   if (name === 'quiz' && !S.quizActive) {
@@ -2716,6 +2901,178 @@ function switchLabTabP(tab, btn) {
 function saveLabAsNoteP()  { _saveLabNote(); }
 function downloadLabResultP() { _downloadLab(); }
 
+// ═══════════════════════════ STUDY HELP ═════════════════════════
+
+const SH_KEY = () => `sivarr_studyhelp_${S.sid || 'guest'}`;
+
+function loadStudyHelp() {
+  const data = getSHData();
+  renderSHList('due', data.due || []);
+  renderSHList('upcoming', data.upcoming || []);
+  renderSHList('completed', data.completed || []);
+  updateSHProgress(data);
+}
+
+function getSHData() {
+  try { return JSON.parse(localStorage.getItem(SH_KEY()) || '{}'); } catch { return {}; }
+}
+
+function saveSHData(data) {
+  localStorage.setItem(SH_KEY(), JSON.stringify(data));
+}
+
+function toggleSH(section) {
+  const body  = $(`sh-${section}-body`);
+  const arrow = $(`sh-${section}-arrow`);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+}
+
+function addSHTask(section) {
+  const inp     = $(`sh-${section}-input`);
+  const dateInp = $(`sh-${section}-date`);
+  const text    = inp?.value.trim();
+  if (!text) { toast('Enter a task first.'); return; }
+
+  const data = getSHData();
+  if (!data[section]) data[section] = [];
+  data[section].unshift({
+    id:   Date.now(),
+    text,
+    date: dateInp?.value || '',
+    done: false,
+  });
+  saveSHData(data);
+  inp.value = '';
+  if (dateInp) dateInp.value = '';
+  renderSHList(section, data[section]);
+  updateSHProgress(data);
+  toast('Task added ✓');
+}
+
+function toggleSHDone(section, id) {
+  const data = getSHData();
+  const item = (data[section] || []).find(t => t.id === id);
+  if (!item) return;
+  item.done = !item.done;
+
+  // If marked done and not in completed, move to completed
+  if (item.done && section !== 'completed') {
+    data.completed = data.completed || [];
+    data.completed.unshift({ ...item, movedFrom: section });
+    data[section] = data[section].filter(t => t.id !== id);
+    renderSHList(section, data[section]);
+    renderSHList('completed', data.completed);
+    toast('Marked complete ✓');
+  } else {
+    saveSHData(data);
+    renderSHList(section, data[section]);
+  }
+  saveSHData(data);
+  updateSHProgress(data);
+}
+
+function deleteSHTask(section, id) {
+  const data = getSHData();
+  data[section] = (data[section] || []).filter(t => t.id !== id);
+  saveSHData(data);
+  renderSHList(section, data[section]);
+  updateSHProgress(data);
+}
+
+function renderSHList(section, items) {
+  const list  = $(`sh-${section}-list`);
+  const badge = $(`sh-${section}-count`);
+  if (!list) return;
+  if (badge) badge.textContent = items.length;
+
+  if (!items.length) {
+    list.innerHTML = `<div style="font-size:.78rem;color:var(--muted);padding:6px 0">No tasks yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(item => `
+    <div class="sh-item ${item.done ? 'done' : ''}" id="shi-${item.id}">
+      <div class="sh-check ${item.done ? 'checked' : ''}"
+        onclick="toggleSHDone('${section}', ${item.id})">${item.done ? '✓' : ''}</div>
+      <div class="sh-item-text">${esc(item.text)}</div>
+      ${item.date ? `<div class="sh-item-date">📅 ${item.date}</div>` : ''}
+      <button onclick="deleteSHTask('${section}', ${item.id})"
+        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;
+               padding:0 2px;flex-shrink:0" title="Delete">✕</button>
+    </div>`).join('');
+}
+
+function updateSHProgress(data) {
+  const due       = (data.due || []).length;
+  const upcoming  = (data.upcoming || []).length;
+  const completed = (data.completed || []).length;
+  const total     = due + upcoming + completed;
+  const pct       = total ? Math.round((completed / total) * 100) : 0;
+  const bar       = $('sh-progress-bar');
+  const pctEl     = $('sh-pct');
+  if (bar) bar.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = pct + '%';
+}
+
+async function generateTaskStructure() {
+  const inp = $('sh-structure-input');
+  const res = $('sh-structure-result');
+  const btn = document.querySelector('[onclick="generateTaskStructure()"]');
+  const text = inp?.value.trim();
+  if (!text) { toast('Describe your task first.'); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Breaking it down...'; }
+  if (res) { res.style.display = 'none'; }
+
+  try {
+    const r = await API('/api/chat', {
+      sid: S.sid,
+      message: `Break down this task into clear, numbered steps a student can follow. Be concise and practical. Task: "${text}"`
+    });
+    if (res) {
+      res.innerHTML = renderMarkdown(r.response || r.reply || r.message || 'Could not generate steps.');
+      res.style.display = 'block';
+    }
+  } catch(e) {
+    toast('Could not generate steps — try again.');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🧠 Break It Down'; }
+}
+
+function createStudyPDF() {
+  const title   = $('sh-pdf-title')?.value.trim() || 'Study Plan';
+  const body    = $('sh-pdf-content')?.value.trim();
+  if (!body) { toast('Add some content first.'); return; }
+
+  // Build a clean HTML document and trigger print-to-PDF
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 700px; margin: 40px auto; color: #1a1a2e; line-height: 1.7; }
+  h1 { font-size: 1.6rem; color: #4f6ef7; border-bottom: 2px solid #4f6ef7; padding-bottom: 8px; }
+  pre { white-space: pre-wrap; font-family: inherit; font-size: .95rem; }
+  .meta { font-size: .8rem; color: #888; margin-bottom: 2rem; }
+</style>
+</head>
+<body>
+  <h1>${title}</h1>
+  <div class="meta">Generated by Sivarr AI · ${new Date().toLocaleDateString()}</div>
+  <pre>${body}</pre>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 300);
+}
+
 // ═══════════════════════════ LECTURE LAB ════════════════════════
 
 let LAB_RESULT_TEXT = '';
@@ -2788,7 +3145,7 @@ async function _processLabFile(file, target) {
     const fd = new FormData();
     fd.append('sid', S.sid);
     fd.append('file', file);
-    const r = await fetch('/api/study-haven', { method: 'POST', body: fd });
+    const r = await fetch('/api/study-deck', { method: 'POST', body: fd });
     if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Processing failed'); }
     const d = await r.json();
 
@@ -2818,7 +3175,7 @@ async function _processLabFile(file, target) {
 
     toast(`Study pack ready! ✓`);
   } catch(e) {
-    toast('Study Haven: ' + e.message);
+    toast('Study Deck: ' + e.message);
     if (dropZone) dropZone.innerHTML = `
       <div style="font-size:1.75rem;margin-bottom:.4rem">📄</div>
       <div style="font-size:.82rem;color:var(--muted)">Drop file or tap to upload</div>
@@ -2847,7 +3204,7 @@ function saveLabAsNoteD() { _saveLabNote(); }
 function _saveLabNote() {
   if (!LAB_RESULT_TEXT || !S.sid) { toast('No study pack to save.'); return; }
   const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
-  notes.unshift({ text: LAB_RESULT_TEXT, date: new Date().toLocaleString() + ' (Study Haven)' });
+  notes.unshift({ text: LAB_RESULT_TEXT, date: new Date().toLocaleString() + ' (Study Deck)' });
   localStorage.setItem(`sivarr_notes_${S.sid}`, JSON.stringify(notes.slice(0,50)));
   toast('Saved to My Notes ✓');
 }
