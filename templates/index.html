@@ -2497,7 +2497,17 @@ async function doLogin(name, matric) {
       }
     } catch(e) {}
   } catch(e) {
-    toast('Login failed — check your connection');
+    const msg = e.message || '';
+    if (msg.includes('429')) {
+      toast('Too many attempts — wait a moment and try again.');
+    } else if (msg.includes('422')) {
+      toast('Invalid name or matric number format.');
+    } else if (msg.includes('500')) {
+      toast('Server error — try again in a moment.');
+    } else {
+      toast('Login failed — ' + (msg || 'check your connection'));
+    }
+    console.error('Login error:', e);
     if (btn) { btn.disabled = false; btn.textContent = 'Continue to Sivarr AI'; }
     clearSession();
   }
@@ -4076,4 +4086,3 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
-
