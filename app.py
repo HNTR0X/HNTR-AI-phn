@@ -6,11 +6,14 @@ Added: Rate limiting, Input validation, Error logging
 import ast
 import collections
 import datetime
+import hashlib
+import hmac
 import json
 import logging
 import os
 import random
 import re
+import secrets
 import shutil
 import time
 import traceback
@@ -63,8 +66,8 @@ LOG_DIR     = _BASE / "logs"
 for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR, LOG_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
-ADMIN_PASSWORD     = os.environ.get("ADMIN_PASSWORD", "sivarr_admin")
-LECTURER_PASSWORD  = os.environ.get("LECTURER_PASSWORD", "sivarr_lecturer")
+ADMIN_PASSWORD     = os.environ.get("ADMIN_PASSWORD", "sivarr_admin_2024")
+LECTURER_PASSWORD  = os.environ.get("LECTURER_PASSWORD", "sivarr_lecturer_2024")
 
 # ── Shared file paths (defined early so all functions can use them) ──
 ANN_PATH    = DATA_DIR / "announcements.json"
@@ -183,28 +186,62 @@ Reply ONLY with valid JSON:
 
 class RateLimiter:
     """
-    Simple in-memory rate limiter using a sliding window.
-    Tracks request counts per key (IP or student ID) per endpoint.
+    Persistent rate limiter using sliding window.
+    Backed by a JSON file so limits survive server restarts.
+    In-memory cache for speed, flushed to disk periodically.
     """
     def __init__(self):
-        self._counts = collections.defaultdict(list)
+        self._counts   = collections.defaultdict(list)
+        self._dirty    = False
+        self._path     = None   # set after DATA_DIR is defined
+        self._last_save = time.time()
+        self._save_interval = 30  # seconds between disk flushes
+
+    def _set_path(self, path: Path):
+        self._path = path
+        self._load()
+
+    def _load(self):
+        """Load persisted rate limit state from disk."""
+        if self._path and self._path.exists():
+            try:
+                data = json.loads(self._path.read_text())
+                now  = time.time()
+                # Only load recent entries — discard old ones
+                self._counts = collections.defaultdict(list, {
+                    k: [t for t in v if now - t < RATE_LIMIT_WINDOW * 2]
+                    for k, v in data.items()
+                })
+            except Exception:
+                self._counts = collections.defaultdict(list)
+
+    def _save(self):
+        """Flush rate limit state to disk."""
+        if self._path and self._dirty:
+            try:
+                tmp = str(self._path) + ".tmp"
+                with open(tmp, "w") as f:
+                    json.dump(dict(self._counts), f)
+                shutil.move(tmp, str(self._path))
+                self._dirty = False
+                self._last_save = time.time()
+            except Exception:
+                pass
 
     def is_allowed(self, key: str, limit: int, window: int = RATE_LIMIT_WINDOW) -> bool:
-        """Return True if request is allowed, False if rate limit exceeded."""
         now   = time.time()
         calls = self._counts[key]
-
-        # Remove calls outside the window
         self._counts[key] = [t for t in calls if now - t < window]
-
         if len(self._counts[key]) >= limit:
             return False
-
         self._counts[key].append(now)
+        self._dirty = True
+        # Periodic save
+        if now - self._last_save > self._save_interval:
+            self._save()
         return True
 
     def remaining(self, key: str, limit: int, window: int = RATE_LIMIT_WINDOW) -> int:
-        """Return how many requests are remaining in current window."""
         now = time.time()
         self._counts[key] = [t for t in self._counts[key] if now - t < window]
         return max(0, limit - len(self._counts[key]))
@@ -242,6 +279,7 @@ def sanitize_text(text: str, max_len: int = MAX_MESSAGE_LEN) -> str:
     - Strips whitespace
     - Removes null bytes and control characters
     - Enforces max length
+    - Prevents path traversal sequences
     """
     if not text:
         return ""
@@ -252,6 +290,41 @@ def sanitize_text(text: str, max_len: int = MAX_MESSAGE_LEN) -> str:
         text = text[:max_len]
         log.info(f"Input truncated to {max_len} chars")
     return text
+
+
+def validate_sid(sid: str) -> str:
+    """
+    Validate and sanitize student session ID.
+    - Must be alphanumeric + underscores only
+    - Max 100 chars
+    - Prevents path traversal (no dots, slashes)
+    """
+    sid = sanitize_text(sid, 100)
+    # Remove any path traversal characters
+    sid = re.sub(r"[^a-z0-9_]", "_", sid.lower())
+    if not sid or len(sid) < 3:
+        raise HTTPException(400, "Invalid session ID.")
+    # Block traversal patterns
+    if ".." in sid or "/" in sid or "\\" in sid:
+        raise HTTPException(400, "Invalid session ID.")
+    return sid
+
+
+def safe_path(base_dir: Path, filename: str) -> Path:
+    """
+    Return a safe path within base_dir, preventing path traversal.
+    Raises HTTPException if the resolved path escapes base_dir.
+    """
+    # Sanitise filename
+    safe_name = re.sub(r"[^a-zA-Z0-9_\-.]", "_", filename)
+    full_path  = (base_dir / safe_name).resolve()
+    # Ensure it stays within base_dir
+    try:
+        full_path.relative_to(base_dir.resolve())
+    except ValueError:
+        log.warning(f"Path traversal attempt: {filename}")
+        raise HTTPException(400, "Invalid file path.")
+    return full_path
 
 
 def validate_name(name: str) -> str:
@@ -931,7 +1004,7 @@ async def set_difficulty(req: DifficultyRequest):
 
 @app.get("/api/wrong")
 async def get_wrong(sid: str):
-    sid = sanitize_text(sid, 100)
+    sid = validate_sid(sid)
     p   = load_progress(sid)
     return {"wrong": p.get("wrong_answers",[])}
 
@@ -1076,12 +1149,16 @@ async def admin_login(req: AdminLoginRequest, request: Request):
         log.warning(f"Failed admin login attempt from {key}")
         raise HTTPException(401, "Invalid password")
     log.info(f"Admin login successful from {key}")
-    return {"ok": True, "token": "admin_" + ADMIN_PASSWORD[:6]}
+    # Generate cryptographic token — HMAC of password + secret
+    token = "admin_" + hmac.new(
+        ADMIN_PASSWORD.encode(), b"sivarr_admin", hashlib.sha256
+    ).hexdigest()[:16]
+    return {"ok": True, "token": token}
 
 
 @app.get("/api/admin/students")
 async def admin_students(token: str):
-    if not token.startswith("admin_"):
+    if not hmac.compare_digest(token, _expected_admin_token()):
         raise HTTPException(401, "Unauthorized")
     students = get_all_students()
     total_q  = sum(s["questions"] for s in students)
@@ -1110,9 +1187,20 @@ class LecturerLoginRequest(BaseModel):
     password: str
 
 
+def _expected_lecturer_token() -> str:
+    return "lecturer_" + hmac.new(
+        LECTURER_PASSWORD.encode(), b"sivarr_lecturer", hashlib.sha256
+    ).hexdigest()[:16]
+
+def _expected_admin_token() -> str:
+    return "admin_" + hmac.new(
+        ADMIN_PASSWORD.encode(), b"sivarr_admin", hashlib.sha256
+    ).hexdigest()[:16]
+
 def verify_lecturer(token: str):
-    """Verify lecturer token — accepts both token formats."""
-    if not (token.startswith("lecturer_") or token.startswith("lect_")):
+    """Verify lecturer token using constant-time comparison."""
+    expected = _expected_lecturer_token()
+    if not hmac.compare_digest(token, expected):
         raise HTTPException(401, "Unauthorized")
 
 
@@ -1124,7 +1212,11 @@ async def lecturer_login(req: LecturerLoginRequest, request: Request):
         log.warning(f"Failed lecturer login: {req.name}")
         raise HTTPException(401, "Invalid password")
     log.info(f"Lecturer login: {req.name}")
-    return {"ok": True, "token": "lecturer_" + LECTURER_PASSWORD[:6]}
+    # Generate cryptographic token — HMAC of password + secret
+    token = "lecturer_" + hmac.new(
+        LECTURER_PASSWORD.encode(), b"sivarr_lecturer", hashlib.sha256
+    ).hexdigest()[:16]
+    return {"ok": True, "token": token}
 
 
 @app.get("/api/lecturer/students")
@@ -1542,7 +1634,7 @@ async def leave_class(data: dict):
 
 @app.get("/api/class/student")
 async def student_classes(sid: str):
-    sid = sanitize_text(sid, 100)
+    sid = validate_sid(sid)
     return {"classes": get_student_classes(sid)}
 
 # ── Student/All: Get class detail ────────────────────────────
@@ -1758,7 +1850,7 @@ async def get_class_discuss(code: str):
 
 # ── Study Haven ───────────────────────────────────────────────
 
-STUDY_HAVEN_PROMPT = """You are Sivarr's Study Haven — an expert at turning raw lecture content into clean, structured study material.
+STUDY_DECK_PROMPT = """You are Sivarr's Study Haven — an expert at turning raw lecture content into clean, structured study material.
 
 A student uploaded the following lecture content:
 
@@ -1796,12 +1888,12 @@ Keep everything concise, clear and student-friendly. Use the actual content — 
 """
 
 
-@app.post("/api/study-haven")
-async def study_haven(request: Request, sid: str = Form(...), file: UploadFile = File(...)):
+@app.post("/api/study-deck")
+async def study_deck(request: Request, sid: str = Form(...), file: UploadFile = File(...)):
     """Process uploaded lecture content and generate structured study material."""
     sid = sanitize_text(sid, 100)
     key = get_client_key(request, sid)
-    check_rate_limit(key, 3, "study_haven")  # Strict limit — expensive operation
+    check_rate_limit(key, 3, "study_deck")  # Strict limit — expensive operation
 
     allowed = [".txt", ".pdf", ".md"]
     ext     = Path(file.filename).suffix.lower()
@@ -1835,7 +1927,7 @@ async def study_haven(request: Request, sid: str = Form(...), file: UploadFile =
 
     # Generate study pack
     result = gemini_once(
-        STUDY_HAVEN_PROMPT.format(text=text[:6000]),
+        STUDY_DECK_PROMPT.format(text=text[:6000]),
         temp=0.4,
         tokens=2000,
     )
