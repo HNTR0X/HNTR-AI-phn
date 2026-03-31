@@ -2742,33 +2742,37 @@ function resetQuiz() {
 
 // ═══════════════════════════ SUGGESTIONS ═══════════════════════
 async function getSuggestions() {
-  $('sug-txt').textContent = 'Thinking...';
+  const _st = $('sug-txt'); if (_st) _st.textContent = 'Thinking...';
   try {
     const r = await fetch(`/api/suggest?sid=${S.sid}`);
     const d = await r.json();
-    $('sug-txt').textContent = d.suggestion;
-  } catch { $('sug-txt').textContent = 'Couldn\'t load suggestions — try again.'; }
+    if (_st) _st.textContent = d.suggestion;
+  } catch { const _stc = $('sug-txt'); if (_stc) _stc.textContent = 'Couldn\'t load suggestions — try again.'; }
 }
 
 // ═══════════════════════════ WRONG ANSWERS ══════════════════════
 async function loadWrong() {
-  const r = await fetch(`/api/wrong?sid=${S.sid}`);
-  const d = await r.json();
-  S.wrongAnswers = d.wrong;
-  $('wc').textContent = d.wrong.length;
-  $('sq-w').textContent = d.wrong.length;
-  const list = $('wrong-list');
-  if (!d.wrong.length) {
-    list.innerHTML = `<span style="color:var(--muted);font-size:.78rem">No wrong answers yet — keep quizzing!</span>`;
-    return;
-  }
-  list.innerHTML = d.wrong.map((w,i) => `
-    <div class="wrong-item">
-      <div class="wrong-q">${esc(w.question)}</div>
-      <div class="wrong-ans">You: ${w.your_answer} · Correct: <span>${w.correct}</span></div>
-      <div style="color:var(--muted);font-size:.7rem;margin-top:2px">${esc(w.explanation)}</div>
-      <button class="btn-clear" onclick="clearWrong(${i})">✓ Got it</button>
-    </div>`).join('');
+  try {
+    const r = await fetch(`/api/wrong?sid=${S.sid}`);
+    const d = await r.json();
+    S.wrongAnswers = d.wrong;
+    const wc   = $('wc');   if (wc)   wc.textContent   = d.wrong.length;
+    const wcm  = $('wc-m'); if (wcm)  wcm.textContent  = d.wrong.length;
+    const sqw  = $('sq-w'); if (sqw)  sqw.textContent  = d.wrong.length;
+    const list = $('wrong-list');
+    const listm = $('wrong-list-m');
+    const html = !d.wrong.length
+      ? `<span style="color:var(--muted);font-size:.78rem">No wrong answers yet — keep quizzing!</span>`
+      : d.wrong.map((w,i) => `
+          <div class="wrong-item">
+            <div class="wrong-q">${esc(w.question)}</div>
+            <div class="wrong-ans">You: ${w.your_answer} · Correct: <span>${w.correct}</span></div>
+            <div style="color:var(--muted);font-size:.7rem;margin-top:2px">${esc(w.explanation)}</div>
+            <button class="btn-clear" onclick="clearWrong(${i})">✓ Got it</button>
+          </div>`).join('');
+    if (list)  list.innerHTML  = html;
+    if (listm) listm.innerHTML = html;
+  } catch(e) { console.error('loadWrong error:', e); }
 }
 
 async function clearWrong(idx) {
@@ -2910,9 +2914,11 @@ function updateSBStats() {
 }
 
 function renderTopics(topics, weak) {
-  const el = $('topics-list');
-  if (!topics.length) { el.innerHTML = `<span style="color:var(--muted);font-size:.78rem">Ask questions to build your topic list</span>`; return; }
-  el.innerHTML = topics.map(t => `<span class="topic-tag ${weak.includes(t)?'weak':''}">${esc(t)}</span>`).join('');
+  const html = !topics.length
+    ? `<span style="color:var(--muted);font-size:.78rem">Ask questions to build your topic list</span>`
+    : topics.map(t => `<span class="topic-tag ${weak.includes(t)?'weak':''}">${esc(t)}</span>`).join('');
+  const el  = $('topics-list');   if (el)  el.innerHTML  = html;
+  const elm = $('topics-list-m'); if (elm) elm.innerHTML = html;
 }
 
 async function refreshTopics() {
@@ -3804,9 +3810,9 @@ async function loadLeaderboard() {
     if (myRank !== -1) {
       const me = students[myRank];
       $('my-rank-card').style.display = 'block';
-      $('my-rank-num').textContent    = `#${myRank + 1}`;
-      $('my-rank-name').textContent   = me.name;
-      $('my-rank-score').textContent  = `${me.avg_score}% avg · ${me.quizzes} quizzes taken`;
+      { const _e = $('my-rank-num'); if (_e) _e.textContent = `#${myRank + 1}`; }
+      { const _e = $('my-rank-name'); if (_e) _e.textContent = me.name; }
+      { const _e = $('my-rank-score'); if (_e) _e.textContent = `${me.avg_score}% avg · ${me.quizzes} quizzes`; }
     }
 
   } catch(e) {
