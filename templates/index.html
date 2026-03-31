@@ -1320,6 +1320,23 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 body.light .quick-action { background: #fff; border-color: #e2e4eb; }
 body.light .quick-action:hover { background: #4f6ef710; border-color: var(--accent); }
 
+.sh-right-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 8px; font-size: .82rem;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); cursor: pointer; transition: all .15s;
+  font-family: var(--font-body); width: 100%; text-align: left;
+}
+.sh-right-item:hover:not(.sh-coming-soon) {
+  border-color: var(--accent); color: var(--accent); background: #4f6ef710;
+}
+.sh-coming-soon { opacity: .6; cursor: default; }
+.sh-cs-badge {
+  margin-left: auto; font-size: .62rem; font-weight: 700;
+  background: #f59e0b20; color: #f59e0b; border-radius: 5px;
+  padding: 1px 6px; border: 1px solid #f59e0b30; white-space: nowrap;
+}
+
 /* ── Study Help — Notion Board ───────────────────────────── */
 .sh-col {
   min-width: 200px; max-width: 220px; flex-shrink: 0;
@@ -2119,33 +2136,32 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 
     <!-- Right Panel -->
     <aside class="right">
-      <div class="r-card" style="border-color:#7c3aed40;background:linear-gradient(135deg,#7c3aed08,transparent)">
-        <div class="r-title" style="color:var(--accent2)">🧪 Study Deck</div>
-        <p style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">Upload lecture notes → get a full study pack.</p>
-        <div style="border:2px dashed var(--border2);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s"
-          onclick="$('lab-file-input-d').click()"
-          ondragover="event.preventDefault();this.style.borderColor='var(--accent2)'"
-          ondragleave="this.style.borderColor='var(--border2)'"
-          ondrop="handleLabDropD(event)">
-          <div style="font-size:1.5rem;margin-bottom:.3rem">📄</div>
-          <div style="font-size:.78rem;color:var(--muted)">Drop file or tap to upload</div>
-          <div style="font-size:.68rem;color:var(--muted2);margin-top:2px">.txt · .pdf · .md</div>
+      <!-- Study Help dropdown -->
+      <div class="r-card" id="sh-right-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer"
+          onclick="toggleSHRightDropdown()">
+          <div class="r-title" style="margin:0">🗂️ Study Help</div>
+          <span id="sh-right-arrow" style="font-size:.65rem;color:var(--muted)">▼</span>
         </div>
-        <input type="file" id="lab-file-input-d" style="display:none"
-          accept=".txt,.pdf,.md" onchange="runStudyHavenD(this)">
-        <div id="lab-result-d" style="display:none;margin-top:.75rem">
-          <div style="font-size:.75rem;font-weight:700;color:var(--accent2);margin-bottom:.5rem" id="lab-filename-d"></div>
-          <div style="display:flex;gap:4px;margin-bottom:.5rem">
-            <button class="lab-tab active" onclick="switchLabTabD('summary',this)" style="font-size:.7rem;padding:3px 8px">📋</button>
-            <button class="lab-tab" onclick="switchLabTabD('notes',this)" style="font-size:.7rem;padding:3px 8px">📚</button>
-            <button class="lab-tab" onclick="switchLabTabD('questions',this)" style="font-size:.7rem;padding:3px 8px">❓</button>
+        <div id="sh-right-body" style="display:none;margin-top:.75rem;display:flex;flex-direction:column;gap:6px">
+          <button onclick="nav('studyhelp',null)" class="sh-right-item">
+            <span>📋</span> Task Board
+          </button>
+          <div class="sh-right-item sh-coming-soon">
+            <span>🔔</span> Smart Reminders
+            <span class="sh-cs-badge">Coming Soon</span>
           </div>
-          <div id="lab-summary-d" class="lab-content-d"></div>
-          <div id="lab-notes-d" class="lab-content-d" style="display:none"></div>
-          <div id="lab-questions-d" class="lab-content-d" style="display:none"></div>
-          <div style="display:flex;gap:6px;margin-top:.5rem">
-            <button onclick="saveLabAsNoteD()" class="action-btn" style="font-size:.7rem">📓 Save</button>
-            <button onclick="downloadLabResultD()" class="action-btn" style="font-size:.7rem">⬇ Download</button>
+          <div class="sh-right-item sh-coming-soon">
+            <span>📊</span> Study Analytics
+            <span class="sh-cs-badge">Coming Soon</span>
+          </div>
+          <div class="sh-right-item sh-coming-soon">
+            <span>🤝</span> Group Study
+            <span class="sh-cs-badge">Coming Soon</span>
+          </div>
+          <div class="sh-right-item sh-coming-soon">
+            <span>🎯</span> Goal Tracker
+            <span class="sh-cs-badge">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -2976,6 +2992,15 @@ function switchLabTabP(tab, btn) {
 
 function saveLabAsNoteP()  { _saveLabNote(); }
 function downloadLabResultP() { _downloadLab(); }
+
+function toggleSHRightDropdown() {
+  const body  = $('sh-right-body');
+  const arrow = $('sh-right-arrow');
+  if (!body) return;
+  const open = body.style.display === 'flex';
+  body.style.display = open ? 'none' : 'flex';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+}
 
 // ═══════════════════════════ STUDY HELP ═════════════════════════
 
@@ -4100,3 +4125,4 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
+
