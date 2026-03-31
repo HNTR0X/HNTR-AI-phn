@@ -656,7 +656,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .stat-card .sc-val { font-family: var(--font); font-size: 2rem; font-weight: 800; color: var(--accent); }
 
 /* Right Panel */
-.right {
+.right { display: none !important;
   background: var(--surface);
   border-left: 1px solid var(--border);
   overflow-y: auto;
@@ -1782,7 +1782,15 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
         <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
-        <button class="nav-btn" onclick="nav('studyhelp',this)"><span class="ni">🗂️</span> Study Help</button>
+        <button class="nav-btn" onclick="toggleSHSidebar(this)"><span class="ni">🗂️</span> Study Help <span id="sh-sidebar-arrow" style="margin-left:auto;font-size:.6rem;color:var(--muted)">▼</span></button>
+        <!-- Study Help sub-menu -->
+        <div id="sh-sidebar-menu" style="display:none;flex-direction:column;gap:2px;padding:2px 0 4px 18px">
+          <button class="nav-btn" style="font-size:.78rem;padding:6px 10px" onclick="nav('studyhelp',this)"><span class="ni">📋</span> Task Board</button>
+          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🔔</span> Smart Reminders <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
+          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">📊</span> Study Analytics <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
+          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🤝</span> Group Study <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
+          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🎯</span> Goal Tracker <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
+        </div>
         <button class="nav-btn" onclick="nav('lab',this)"><span class="ni">🧪</span> Study Deck</button>
       </div>
       <div class="stat-mini" id="sb-stats">
@@ -2135,65 +2143,6 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
     </main>
 
     <!-- Right Panel -->
-    <aside class="right">
-      <!-- Study Help dropdown -->
-      <div class="r-card" id="sh-right-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer"
-          onclick="toggleSHRightDropdown()">
-          <div class="r-title" style="margin:0">🗂️ Study Help</div>
-          <span id="sh-right-arrow" style="font-size:.65rem;color:var(--muted)">▼</span>
-        </div>
-        <div id="sh-right-body" style="display:none;margin-top:.75rem;display:flex;flex-direction:column;gap:6px">
-          <button onclick="nav('studyhelp',null)" class="sh-right-item">
-            <span>📋</span> Task Board
-          </button>
-          <div class="sh-right-item sh-coming-soon">
-            <span>🔔</span> Smart Reminders
-            <span class="sh-cs-badge">Coming Soon</span>
-          </div>
-          <div class="sh-right-item sh-coming-soon">
-            <span>📊</span> Study Analytics
-            <span class="sh-cs-badge">Coming Soon</span>
-          </div>
-          <div class="sh-right-item sh-coming-soon">
-            <span>🤝</span> Group Study
-            <span class="sh-cs-badge">Coming Soon</span>
-          </div>
-          <div class="sh-right-item sh-coming-soon">
-            <span>🎯</span> Goal Tracker
-            <span class="sh-cs-badge">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="r-card">
-        <div class="r-title">📎 Upload Document</div>
-        <div class="upload-zone" id="upload-zone" onclick="$('file-input').click()"
-          ondragover="event.preventDefault();this.classList.add('drag')"
-          ondragleave="this.classList.remove('drag')"
-          ondrop="handleDrop(event)">
-          <div class="uz-icon">📄</div>
-          <div class="uz-text">Drop a file or tap to upload</div>
-          <div class="uz-sub">.txt · .pdf · .md supported</div>
-        </div>
-        <input type="file" id="file-input" style="display:none" accept=".txt,.pdf,.md" onchange="uploadFile(this)">
-        <div id="file-list"></div>
-      </div>
-
-      <div class="r-card">
-        <div class="r-title">📚 Topics Studied</div>
-        <div id="topics-list"><span style="color:var(--muted);font-size:.78rem">Start chatting to build your topic list</span></div>
-      </div>
-      <div class="r-card">
-        <div class="r-title">💡 Study Suggestions</div>
-        <div class="suggest-txt" id="sug-txt">Click below for personalised recommendations.</div>
-        <button class="btn-suggest" onclick="getSuggestions()">Get Suggestions</button>
-      </div>
-      <div class="r-card">
-        <div class="r-title">📖 Revision (<span id="wc">0</span>)</div>
-        <div id="wrong-list"><span style="color:var(--muted);font-size:.78rem">No wrong answers yet — keep quizzing!</span></div>
-      </div>
-    </aside>
 
   </div>
 
@@ -2993,13 +2942,15 @@ function switchLabTabP(tab, btn) {
 function saveLabAsNoteP()  { _saveLabNote(); }
 function downloadLabResultP() { _downloadLab(); }
 
-function toggleSHRightDropdown() {
-  const body  = $('sh-right-body');
-  const arrow = $('sh-right-arrow');
-  if (!body) return;
-  const open = body.style.display === 'flex';
-  body.style.display = open ? 'none' : 'flex';
+function toggleSHSidebar(btn) {
+  const menu  = $('sh-sidebar-menu');
+  const arrow = $('sh-sidebar-arrow');
+  if (!menu) return;
+  const open = menu.style.display === 'flex';
+  menu.style.display = open ? 'none' : 'flex';
   if (arrow) arrow.textContent = open ? '▼' : '▲';
+  // Also navigate to studyhelp panel on first open
+  if (!open) nav('studyhelp', btn);
 }
 
 // ═══════════════════════════ STUDY HELP ═════════════════════════
