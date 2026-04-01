@@ -48,6 +48,31 @@ html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:va
 .signout{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 10px;
   color:var(--muted);font-size:.72rem;cursor:pointer;font-family:var(--body)}
 
+
+/* ── Lecturer AI Chat ── */
+.lec-ai-pill {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 8px 14px; font-family: var(--body);
+  font-size: .82rem; color: var(--text); cursor: pointer; transition: all .2s;
+}
+.lec-ai-pill:hover { border-color: var(--accent); color: var(--accent); background: #4f6ef710; }
+.lec-msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeIn .2s ease; }
+.lec-msg.user { flex-direction: row-reverse; }
+.lec-av {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-weight: 700; font-size: .75rem;
+}
+.lec-av.sr { background: linear-gradient(135deg,var(--accent),var(--accent2)); color: #fff; }
+.lec-av.lec { background: var(--accent2); color: #fff; }
+.lec-bubble {
+  max-width: 80%; background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 10px 14px; font-size: .85rem; line-height: 1.65;
+  white-space: pre-wrap; word-break: break-word;
+}
+.lec-msg.user .lec-bubble { background: #4f6ef718; border-color: #4f6ef730; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
 /* Tab nav */
 .tab-nav{background:var(--surface);border-bottom:1px solid var(--border);
   display:flex;gap:4px;padding:0 1.5rem;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
@@ -223,6 +248,7 @@ textarea.form-input{min-height:100px;resize:vertical}
     <button class="tnav-btn" onclick="switchTab('announcements',this)">📢 Announcements</button>
     <button class="tnav-btn" onclick="switchTab('topics',this)">📚 Quiz Topics</button>
     <button class="tnav-btn" onclick="switchTab('exams',this)">📝 Exams</button>
+    <button class="tnav-btn" onclick="switchTab('ai',this)">💬 AI Chat</button>
   </nav>
 
   <div class="content">
@@ -446,6 +472,57 @@ textarea.form-input{min-height:100px;resize:vertical}
       </div>
     </div>
 
+    </div>
+
+    <!-- AI Chat Tab -->
+    <div class="tab-panel" id="tab-ai">
+      <div style="display:flex;flex-direction:column;height:calc(100vh - 110px)">
+
+        <!-- Welcome / quick actions (hidden once chat starts) -->
+        <div id="lec-ai-welcome" style="flex:1;display:flex;flex-direction:column;align-items:center;
+             justify-content:center;padding:2rem;text-align:center">
+          <div style="width:64px;height:64px;border-radius:50%;margin-bottom:1.25rem;flex-shrink:0;
+                      background:radial-gradient(circle at 35% 30%,#818cf8,#4f6ef7 45%,#7c3aed 85%);
+                      display:flex;align-items:center;justify-content:center;
+                      font-family:var(--font);font-weight:800;font-size:1.1rem;color:#fff;
+                      box-shadow:0 0 30px #4f6ef740">Sr</div>
+          <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;margin-bottom:.3rem">Sivarr AI</div>
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.75rem">Your teaching assistant — ask anything</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:500px">
+            <button class="lec-ai-pill" onclick="lecAIQuick('Generate 10 multiple choice questions on ')">📝 Generate exam questions</button>
+            <button class="lec-ai-pill" onclick="lecAIQuick('Write an assignment brief for ')">📋 Write assignment brief</button>
+            <button class="lec-ai-pill" onclick="lecAIQuick('Suggest 5 creative ways to teach ')">💡 Teaching ideas</button>
+            <button class="lec-ai-pill" onclick="lecAIQuick('Write a clear announcement for my students about ')">📢 Draft announcement</button>
+            <button class="lec-ai-pill" onclick="lecAIQuick('Create a marking rubric for ')">✅ Create rubric</button>
+            <button class="lec-ai-pill" onclick="lecAIQuick('Summarise this topic for a university student: ')">📚 Summarise topic</button>
+          </div>
+        </div>
+
+        <!-- Chat messages -->
+        <div id="lec-ai-msgs" style="flex:1;overflow-y:auto;padding:1.25rem;display:none;
+             display:flex;flex-direction:column;gap:12px"></div>
+
+        <!-- Input bar -->
+        <div style="padding:.875rem 1.25rem;border-top:1px solid var(--border);
+                    display:flex;gap:10px;align-items:flex-end;flex-shrink:0;background:var(--surface)">
+          <textarea id="lec-ai-input"
+            style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;
+                   padding:10px 14px;color:var(--text);font-family:var(--body);font-size:.88rem;
+                   outline:none;resize:none;max-height:120px;transition:border-color .2s;line-height:1.5"
+            placeholder="Ask Sivarr AI anything — exam questions, lesson plans, announcements..."
+            rows="1"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLecAI()}"></textarea>
+          <button id="lec-ai-send"
+            style="width:38px;height:38px;border-radius:10px;flex-shrink:0;border:none;cursor:pointer;
+                   background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.95rem"
+            onclick="sendLecAI()">➤</button>
+        </div>
+      </div>
+    </div>
+
   </div><!-- end content -->
 </div><!-- end dash -->
 
@@ -534,7 +611,87 @@ function switchTab(name, btn) {
   if (btn) btn.classList.add('active');
 }
 
-// ═══════════════════ DATA ═══════════════════
+// ═══════════════════ LECTURER AI CHAT ═══════════════════
+
+let LEC_AI_SID = '';
+
+function getLecAISid() {
+  if (!LEC_AI_SID) LEC_AI_SID = `lec_${NAME.toLowerCase().replace(/\s+/g,'_')}_ai`;
+  return LEC_AI_SID;
+}
+
+function lecAIQuick(prompt) {
+  const inp = $('lec-ai-input');
+  if (inp) { inp.value = prompt; inp.focus(); inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; }
+}
+
+function lecAddMsg(role, text) {
+  // Hide welcome screen
+  const welcome = $('lec-ai-welcome');
+  if (welcome) welcome.style.display = 'none';
+  const msgs = $('lec-ai-msgs');
+  if (!msgs) return;
+  msgs.style.display = 'flex';
+
+  const div = document.createElement('div');
+  div.className = `lec-msg ${role === 'user' ? 'user' : ''}`;
+  div.innerHTML = `
+    <div class="lec-av ${role === 'user' ? 'lec' : 'sr'}">${role === 'user' ? NAME[0]?.toUpperCase() || 'L' : 'Sr'}</div>
+    <div class="lec-bubble">${esc(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function lecAddTyping() {
+  const welcome = $('lec-ai-welcome');
+  if (welcome) welcome.style.display = 'none';
+  const msgs = $('lec-ai-msgs');
+  if (!msgs) return;
+  msgs.style.display = 'flex';
+  const div = document.createElement('div');
+  div.className = 'lec-msg';
+  div.id = 'lec-typing';
+  div.innerHTML = `<div class="lec-av sr">Sr</div><div class="lec-bubble" style="color:var(--muted)">Thinking...</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+async function sendLecAI() {
+  const inp  = $('lec-ai-input');
+  const btn  = $('lec-ai-send');
+  const msg  = inp?.value.trim();
+  if (!msg) return;
+
+  inp.value = '';
+  inp.style.height = 'auto';
+  btn.disabled = true;
+
+  lecAddMsg('user', msg);
+  const typing = lecAddTyping();
+
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        sid: getLecAISid(),
+        message: `[Lecturer context — respond as a university teaching assistant] ${msg}`
+      })
+    });
+    if (typing) typing.remove();
+    if (!r.ok) throw new Error(`${r.status}`);
+    const d = await r.json();
+    lecAddMsg('sivarr', d.reply || d.response || 'Could not get a response — try again.');
+  } catch(e) {
+    if (typing) typing.remove();
+    lecAddMsg('sivarr', `Error: ${e.message || 'Could not connect to AI — check your connection.'}`);
+  }
+  btn.disabled = false;
+}
+
+
 async function refreshAll() {
   $('last-refresh').textContent = 'Loading...';
   try {
@@ -1201,7 +1358,67 @@ function toast(msg, ms=2500) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), ms);
 }
+
+// ═══════════════════ LECTURER AI CHAT ═══════════════════
+
+let LEC_AI_HISTORY = [];
+
+function lecAIPrompt(text) {
+  const inp = $('lec-ai-input');
+  if (inp) { inp.value = text; inp.focus(); inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 120) + 'px'; }
+}
+
+function lecAIAddMsg(role, text) {
+  const welcome = $('lec-ai-welcome');
+  const msgs    = $('lec-ai-msgs');
+  if (welcome) welcome.style.display = 'none';
+  if (msgs)    msgs.style.display    = 'flex';
+
+  const div = document.createElement('div');
+  div.className = `lec-msg ${role}`;
+  const initials = role === 'sr' ? 'Sr' : NAME ? NAME[0].toUpperCase() : 'L';
+  div.innerHTML = `
+    <div class="lec-av ${role === 'sr' ? 'sr' : 'lec'}">${initials}</div>
+    <div class="lec-bubble">${esc(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+async function lecAISend() {
+  const inp  = $('lec-ai-input');
+  const btn  = $('lec-ai-send');
+  const msg  = inp?.value.trim();
+  if (!msg) return;
+
+  inp.value = ''; inp.style.height = 'auto';
+  btn.disabled = true;
+  lecAIAddMsg('lec', msg);
+  LEC_AI_HISTORY.push({ role: 'user', content: msg });
+
+  // Typing indicator
+  const typing = lecAIAddMsg('sr', '...');
+  typing.querySelector('.lec-bubble').style.color = 'var(--muted)';
+
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sid:     'lecturer_' + (NAME || 'default').toLowerCase().replace(/\s+/g,'_'),
+        message: msg,
+      }),
+    });
+    const d = await r.json();
+    typing.remove();
+    lecAIAddMsg('sr', d.reply || d.response || 'Could not get a response — try again.');
+  } catch(e) {
+    typing.remove();
+    lecAIAddMsg('sr', 'Connection error — check your internet and try again.');
+  }
+  btn.disabled = false;
+}
+
 </script>
 </body>
 </html>
-
