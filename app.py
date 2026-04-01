@@ -66,8 +66,8 @@ LOG_DIR     = _BASE / "logs"
 for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR, LOG_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
-ADMIN_PASSWORD     = os.environ.get("ADMIN_PASSWORD", "sivarr_admin_2024")
-LECTURER_PASSWORD  = os.environ.get("LECTURER_PASSWORD", "sivarr_lecturer_2024")
+ADMIN_PASSWORD     = os.environ.get("ADMIN_PASSWORD", "123456789")
+LECTURER_PASSWORD  = os.environ.get("LECTURER_PASSWORD", "123456789")
 
 # ── Shared file paths (defined early so all functions can use them) ──
 ANN_PATH    = DATA_DIR / "announcements.json"
