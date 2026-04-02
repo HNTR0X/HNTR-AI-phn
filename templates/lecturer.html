@@ -244,7 +244,7 @@ textarea.form-input{min-height:100px;resize:vertical}
   <nav class="tab-nav">
     <button class="tnav-btn active" onclick="switchTab('overview',this)">📊 Overview</button>
     <button class="tnav-btn" onclick="switchTab('students',this)">👥 Students</button>
-    <button class="tnav-btn" onclick="switchTab('classes',this)">🏫 My Classes</button>
+    <button class="tnav-btn" onclick="switchTab('classes',this)">🏫 Courses</button>
     <button class="tnav-btn" onclick="switchTab('announcements',this)">📢 Announcements</button>
     <button class="tnav-btn" onclick="switchTab('topics',this)">📚 Quiz Topics</button>
     <button class="tnav-btn" onclick="switchTab('exams',this)">📝 Exams</button>
@@ -318,7 +318,7 @@ textarea.form-input{min-height:100px;resize:vertical}
     </div>
 
     <!-- ══ CLASSES ══ -->
-    <div class="tab-panel" id="tab-classes">
+    <div class="tab-panel" id="tab-courses">
       <!-- Create class -->
       <div class="card">
         <h3>🏫 Create a New Class</h3>
@@ -337,7 +337,7 @@ textarea.form-input{min-height:100px;resize:vertical}
       <!-- My classes list -->
       <div class="card">
         <div class="card-head">
-          <h3>My Classes</h3>
+          <h3>Courses</h3>
           <button class="btn-outline" onclick="loadLecturerClasses()">↻ Refresh</button>
         </div>
         <div id="lec-classes-list"><div style="color:var(--muted);font-size:.82rem">Loading...</div></div>
@@ -422,14 +422,64 @@ textarea.form-input{min-height:100px;resize:vertical}
 
     <!-- ══ EXAMS ══ -->
     <div class="tab-panel" id="tab-exams">
-      <div class="card">
-        <h3>📝 Create Class Exam</h3>
+
+      <!-- AI Question Generator -->
+      <div class="card" style="border-color:#4f6ef740;background:linear-gradient(135deg,#4f6ef708,transparent)">
+        <h3>🤖 AI Question Generator</h3>
         <p style="color:var(--muted);font-size:.82rem;margin-bottom:1rem">
-          Add up to 100 questions. Sivarr will shuffle a unique set for each student when they take the exam.
+          Describe a topic — Sivarr generates professional exam questions instantly.
         </p>
-        <div class="form-group">
-          <label>Exam Title</label>
-          <input class="form-input" id="exam-title" placeholder="e.g. Biology Mid-Semester Exam">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>Topic</label>
+            <input class="form-input" id="ai-exam-topic" placeholder="e.g. Cell Division, Newton's Laws">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Number of Questions</label>
+            <select class="form-input" id="ai-exam-count">
+              <option value="10">10 questions</option>
+              <option value="20" selected>20 questions</option>
+              <option value="30">30 questions</option>
+              <option value="50">50 questions</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>Difficulty</label>
+            <select class="form-input" id="ai-exam-diff">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Question Type</label>
+            <select class="form-input" id="ai-exam-type">
+              <option value="mcq">Multiple Choice</option>
+              <option value="mixed">Mixed Types</option>
+              <option value="truefalse">True / False</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-sm" id="ai-gen-btn" onclick="generateAIQuestions()" style="width:100%">
+          ✨ Generate Questions with AI
+        </button>
+        <div id="ai-gen-status" style="font-size:.78rem;color:var(--muted);margin-top:6px;min-height:18px"></div>
+      </div>
+
+      <!-- Create Exam -->
+      <div class="card">
+        <h3>📝 Build Exam</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>Exam Title</label>
+            <input class="form-input" id="exam-title" placeholder="e.g. Biology Mid-Semester Exam">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Duration (minutes)</label>
+            <input class="form-input" id="exam-duration" type="number" placeholder="60" value="60">
+          </div>
         </div>
         <div class="form-group">
           <label>Questions Per Student</label>
@@ -442,34 +492,41 @@ textarea.form-input{min-height:100px;resize:vertical}
           </select>
         </div>
         <div class="form-group">
-          <label>Duration (minutes)</label>
-          <input class="form-input" id="exam-duration" type="number" placeholder="60" value="60">
-        </div>
-        <div class="form-group">
-          <label>Add Questions</label>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input class="form-input" id="exam-q-input" placeholder="Type a question and press Enter or Add"
+          <label>Add Questions Manually</label>
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <input class="form-input" id="exam-q-input" placeholder="Type a question and press Enter"
               onkeydown="if(event.key==='Enter') addExamQuestion()" style="flex:1">
             <button class="btn-sm" onclick="addExamQuestion()">Add</button>
           </div>
-          <p style="font-size:.72rem;color:var(--muted)">Or paste multiple questions (one per line):</p>
-          <textarea class="form-input" id="exam-bulk" placeholder="Question 1&#10;Question 2&#10;Question 3..." style="margin-top:6px;min-height:80px"></textarea>
+          <textarea class="form-input" id="exam-bulk"
+            placeholder="Or paste multiple questions (one per line)..." style="min-height:70px"></textarea>
           <button class="btn-outline" style="margin-top:6px" onclick="bulkAddQuestions()">Bulk Add</button>
         </div>
-
-        <div id="exam-q-list" style="margin-bottom:1rem;max-height:300px;overflow-y:auto"></div>
+        <div id="exam-q-list" style="margin-bottom:1rem;max-height:280px;overflow-y:auto"></div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <span style="color:var(--muted);font-size:.82rem"><span id="exam-q-count">0</span> questions added</span>
           <button class="btn-sm" onclick="saveExam()">💾 Save Exam</button>
         </div>
       </div>
 
+      <!-- Saved Exams -->
       <div class="card">
         <div class="card-head">
           <h3>Saved Exams</h3>
+          <button class="btn-outline" onclick="loadExams()">↻ Refresh</button>
         </div>
         <div id="exams-list"><div style="color:var(--muted);font-size:.82rem">No exams created yet.</div></div>
       </div>
+
+      <!-- Analytics -->
+      <div class="card" id="exam-analytics-card" style="display:none">
+        <div class="card-head">
+          <h3>📊 Exam Analytics</h3>
+          <button class="btn-outline" onclick="$('exam-analytics-card').style.display='none'">✕ Close</button>
+        </div>
+        <div id="exam-analytics-body"></div>
+      </div>
+
     </div>
 
     </div>
@@ -993,20 +1050,56 @@ function renderExamQuestions() {
     : '<p style="color:var(--muted);font-size:.82rem">No questions added yet.</p>';
 }
 
+async function generateAIQuestions() {
+  const topic  = $('ai-exam-topic')?.value.trim();
+  const count  = parseInt($('ai-exam-count')?.value || '20');
+  const diff   = $('ai-exam-diff')?.value || 'medium';
+  const type   = $('ai-exam-type')?.value || 'mcq';
+  const btn    = $('ai-gen-btn');
+  const status = $('ai-gen-status');
+
+  if (!topic) { toast('Enter a topic first.'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Generating...';
+  status.textContent = `Generating ${count} ${diff} questions on "${topic}"...`;
+
+  try {
+    const r = await fetch('/api/exam/generate', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ token: TOKEN, topic, count, difficulty: diff, types: [type] })
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
+    const d = await r.json();
+    // Add AI questions to EXAM_QUESTIONS as rich objects
+    EXAM_QUESTIONS = [...EXAM_QUESTIONS, ...d.questions];
+    renderExamQuestions();
+    status.textContent = `✅ ${d.questions.length} questions generated and added!`;
+    toast(`${d.questions.length} questions generated ✓`);
+  } catch(e) {
+    status.textContent = `❌ ${e.message}`;
+    toast('Generation failed — try again.');
+  }
+  btn.disabled = false; btn.textContent = '✨ Generate Questions with AI';
+}
+
 async function saveExam() {
   const title    = $('exam-title').value.trim();
   const qcount   = parseInt($('exam-qcount').value);
   const duration = parseInt($('exam-duration').value) || 60;
 
-  if (!title)                        { toast('Enter an exam title.'); return; }
-  if (EXAM_QUESTIONS.length < qcount){ toast(`Add at least ${qcount} questions first.`); return; }
+  if (!title)                         { toast('Enter an exam title.'); return; }
+  if (EXAM_QUESTIONS.length < qcount) { toast(`Add at least ${qcount} questions first.`); return; }
 
   try {
+    // Save both full rich questions and legacy string questions
+    const questionsStr = EXAM_QUESTIONS.map(q =>
+      typeof q === 'object' ? q.question : q
+    );
     const r = await fetch('/api/lecturer/exam', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        token: TOKEN, title, questions: EXAM_QUESTIONS,
+        token: TOKEN, title,
+        questions: questionsStr,
+        questions_full: EXAM_QUESTIONS,
         questions_per_student: qcount, duration, lecturer: NAME,
         created: new Date().toLocaleString()
       })
@@ -1014,7 +1107,8 @@ async function saveExam() {
     if (!r.ok) throw new Error();
     toast(`Exam "${title}" saved ✓`);
     EXAM_QUESTIONS = [];
-    $('exam-title').value = '';
+    $('exam-title').value    = '';
+    $('exam-duration').value = '60';
     renderExamQuestions();
     loadExams();
   } catch { toast('Failed to save exam.'); }
@@ -1028,31 +1122,110 @@ async function loadExams() {
     $('exams-list').innerHTML = exams.length
       ? exams.map((e,i) => `
           <div class="ann-item">
-            <div>
+            <div style="flex:1;min-width:0">
               <div class="ann-text" style="font-weight:600">📝 ${esc(e.title)}</div>
               <div class="ann-meta">
-                ${e.questions.length} questions · ${e.questions_per_student} per student ·
+                ${(e.questions_full || e.questions || []).length} questions ·
+                ${e.questions_per_student} per student ·
                 ${e.duration} mins · ${e.created}
               </div>
             </div>
-            <div style="display:flex;gap:6px">
-              <button class="btn-outline" onclick="copyExamLink(${i})">🔗 Link</button>
+            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+              <button class="btn-outline" onclick="viewExamAnalytics('${e.id}')">📊 Results</button>
+              <button class="btn-outline" onclick="copyExamId('${e.id}')">🔗 ID</button>
               <button class="btn-danger" onclick="deleteExam(${i})">Delete</button>
             </div>
           </div>`).join('')
       : '<div style="color:var(--muted);font-size:.82rem">No exams created yet.</div>';
-  } catch {}
+  } catch(e) { $('exams-list').innerHTML = '<div style="color:var(--muted);font-size:.82rem">Error loading — try refreshing.</div>'; }
 }
 
-async function copyExamLink(idx) {
+async function viewExamAnalytics(examId) {
+  const card = $('exam-analytics-card');
+  const body = $('exam-analytics-body');
+  card.style.display = 'block';
+  body.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:.5rem 0">Loading analytics...</div>';
+  card.scrollIntoView({ behavior: 'smooth' });
+
   try {
-    const r = await fetch(`/api/lecturer/exams?token=${TOKEN}`);
+    const r = await fetch(`/api/exam/results?exam_id=${examId}&token=${TOKEN}`);
     const d = await r.json();
-    const exam = d.exams[idx];
-    const url  = `${window.location.origin}/exam/${exam.id}`;
-    await navigator.clipboard.writeText(url);
-    toast('Exam link copied! Share with students 🔗');
-  } catch { toast('Could not copy link.'); }
+    const a = d.analytics;
+    const results = d.results || [];
+
+    if (!results.length) {
+      body.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:.5rem 0">No submissions yet.</div>';
+      return;
+    }
+
+    body.innerHTML = `
+      <!-- Stats grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1rem">
+        <div class="stat-box"><div class="stat-box-val">${a.total_submissions}</div><div class="stat-box-lbl">Submissions</div></div>
+        <div class="stat-box"><div class="stat-box-val">${a.average_score}%</div><div class="stat-box-lbl">Average</div></div>
+        <div class="stat-box"><div class="stat-box-val">${a.highest_score}%</div><div class="stat-box-lbl">Highest</div></div>
+        <div class="stat-box"><div class="stat-box-val">${a.pass_rate}%</div><div class="stat-box-lbl">Pass Rate</div></div>
+      </div>
+
+      <!-- Grade distribution -->
+      <div style="margin-bottom:1rem">
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Grade Distribution</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${['A','B','C','F'].map(g => `
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center">
+              <div style="font-family:var(--font);font-weight:800;font-size:1.1rem;color:${g==='A'?'#22c55e':g==='B'?'#4f6ef7':g==='C'?'#f59e0b':'#ef4444'}">${a.grade_distribution[g]}</div>
+              <div style="font-size:.7rem;color:var(--muted)">Grade ${g}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Hardest questions -->
+      ${a.hardest_questions.length ? `
+      <div style="margin-bottom:1rem">
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Hardest Questions</div>
+        ${a.hardest_questions.map(([q,c]) => `
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:.82rem">
+            <span style="color:var(--red);font-weight:600">${c} wrong</span> — ${esc(q)}
+          </div>`).join('')}
+      </div>` : ''}
+
+      <!-- Student results table -->
+      <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Student Results</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+          <thead>
+            <tr style="background:var(--surface)">
+              <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)">Student</th>
+              <th style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border)">Score</th>
+              <th style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border)">Grade</th>
+              <th style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border)">Time</th>
+              <th style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border)">Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.map(r => `
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:7px 10px">${esc(r.sid.split('_').slice(0,-1).join(' '))}</td>
+              <td style="padding:7px 10px;text-align:center">
+                <span style="font-weight:700;color:${r.score>=70?'#22c55e':r.score>=50?'#f59e0b':'#ef4444'}">${r.score}%</span>
+                <span style="color:var(--muted);font-size:.72rem"> (${r.correct}/${r.total})</span>
+              </td>
+              <td style="padding:7px 10px;text-align:center">
+                <span style="font-weight:800;color:${r.grade==='A'?'#22c55e':r.grade==='B'?'#4f6ef7':r.grade==='C'?'#f59e0b':'#ef4444'}">${r.grade}</span>
+              </td>
+              <td style="padding:7px 10px;text-align:center;color:var(--muted)">${r.time_taken || '—'}</td>
+              <td style="padding:7px 10px;text-align:center;color:var(--muted);font-size:.72rem">${r.submitted_at}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    body.innerHTML = `<div style="color:var(--red);font-size:.82rem">Failed to load analytics: ${e.message}</div>`;
+  }
+}
+
+function copyExamId(id) {
+  navigator.clipboard.writeText(id).then(() => toast(`Exam ID copied: ${id} 📋`));
 }
 
 async function deleteExam(idx) {
@@ -1422,3 +1595,4 @@ async function lecAISend() {
 </script>
 </body>
 </html>
+
