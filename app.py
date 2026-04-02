@@ -1941,6 +1941,294 @@ async def study_deck(request: Request, sid: str = Form(...), file: UploadFile = 
         "chars":    len(text),
     }
 
+
+
+# ══════════════════════════════════════════════════════════════════
+#  ENHANCED EXAM SYSTEM
+# ══════════════════════════════════════════════════════════════════
+
+EXAM_RESULTS_PATH = DATA_DIR / "exam_results.json"
+EXAM_SESSIONS_PATH = DATA_DIR / "exam_sessions.json"
+
+def load_exam_results() -> list:
+    if EXAM_RESULTS_PATH.exists():
+        try: return json.loads(EXAM_RESULTS_PATH.read_text())
+        except: return []
+    return []
+
+def save_exam_results(results: list):
+    tmp = str(EXAM_RESULTS_PATH) + ".tmp"
+    with open(tmp, "w") as f: json.dump(results, f, indent=2)
+    shutil.move(tmp, str(EXAM_RESULTS_PATH))
+
+def load_exam_sessions() -> dict:
+    if EXAM_SESSIONS_PATH.exists():
+        try: return json.loads(EXAM_SESSIONS_PATH.read_text())
+        except: return {}
+    return {}
+
+def save_exam_sessions(sessions: dict):
+    tmp = str(EXAM_SESSIONS_PATH) + ".tmp"
+    with open(tmp, "w") as f: json.dump(sessions, f, indent=2)
+    shutil.move(tmp, str(EXAM_SESSIONS_PATH))
+
+
+AI_EXAM_PROMPT = """You are an expert university exam question generator.
+Generate exactly {count} high-quality multiple choice questions on the topic: "{topic}"
+Difficulty level: {difficulty}
+Question types to mix: {types}
+
+Return ONLY a valid JSON array with no extra text. Each object must have:
+{{
+  "question": "Question text here",
+  "options": {{"A": "option", "B": "option", "C": "option", "D": "option"}},
+  "answer": "A",
+  "explanation": "Why this is correct",
+  "type": "mcq",
+  "difficulty": "{difficulty}"
+}}"""
+
+
+@app.post("/api/exam/generate")
+async def generate_exam_questions(data: dict, request: Request):
+    """AI generates exam questions from a topic."""
+    verify_lecturer(data.get("token", ""))
+    topic      = sanitize_text(str(data.get("topic", "")), 200)
+    count      = min(int(data.get("count", 20)), 50)
+    difficulty = data.get("difficulty", "medium")
+    qtypes     = data.get("types", ["mcq"])
+
+    if not topic:
+        raise HTTPException(400, "Topic is required")
+
+    prompt = AI_EXAM_PROMPT.format(
+        count=count, topic=topic, difficulty=difficulty,
+        types=", ".join(qtypes)
+    )
+
+    result = gemini_once(prompt, temp=0.7, tokens=4000)
+    if not result:
+        raise HTTPException(503, "AI unavailable — try again")
+
+    # Parse JSON from AI response
+    try:
+        # Strip markdown fences if present
+        clean = re.sub(r"```json|```", "", result).strip()
+        questions = json.loads(clean)
+        if not isinstance(questions, list):
+            raise ValueError("Not a list")
+    except Exception:
+        raise HTTPException(500, "AI returned invalid format — try again")
+
+    return {"ok": True, "questions": questions, "count": len(questions)}
+
+
+@app.post("/api/exam/start")
+async def start_exam(data: dict, request: Request):
+    """Student starts an exam — returns shuffled unique question set."""
+    sid     = sanitize_text(str(data.get("sid", "")), 100)
+    exam_id = sanitize_text(str(data.get("exam_id", "")), 20)
+    code    = sanitize_text(str(data.get("code", "")), 10).upper()
+
+    if not sid or not exam_id:
+        raise HTTPException(400, "Missing sid or exam_id")
+
+    # Load exam
+    exams = json.loads(EXAMS_PATH.read_text()) if EXAMS_PATH.exists() else []
+    exam  = next((e for e in exams if e["id"] == exam_id), None)
+    if not exam:
+        raise HTTPException(404, "Exam not found")
+
+    # Check if already submitted
+    results = load_exam_results()
+    if any(r["sid"] == sid and r["exam_id"] == exam_id for r in results):
+        raise HTTPException(409, "You have already submitted this exam")
+
+    # Build shuffled question set for this student
+    questions = exam.get("questions_full", exam.get("questions", []))
+    qps       = min(exam.get("questions_per_student", 30), len(questions))
+
+    # Shuffle and pick unique set seeded by sid for reproducibility
+    import hashlib
+    seed = int(hashlib.md5(f"{sid}{exam_id}".encode()).hexdigest(), 16) % (2**31)
+    rng  = random.Random(seed)
+
+    if questions and isinstance(questions[0], dict):
+        selected = rng.sample(questions, min(qps, len(questions)))
+        # Shuffle answer options for each question
+        shuffled = []
+        for q in selected:
+            opts  = list(q.get("options", {}).items())
+            rng.shuffle(opts)
+            letter_map = {old: new for new, (old, _) in zip("ABCD", opts)}
+            new_opts   = {new: val for new, (_, val) in zip("ABCD", opts)}
+            new_ans    = letter_map.get(q.get("answer", "A"), "A")
+            shuffled.append({**q, "options": new_opts, "answer": new_ans})
+    else:
+        # Legacy plain string questions
+        selected  = rng.sample(questions, min(qps, len(questions)))
+        shuffled  = [{"question": q, "options": {"A":"True","B":"False","C":"Maybe","D":"None"},
+                      "answer":"A", "explanation":"", "type":"mcq"} for q in selected]
+
+    # Store session
+    sessions = load_exam_sessions()
+    sessions[f"{sid}_{exam_id}"] = {
+        "sid": sid, "exam_id": exam_id, "code": code,
+        "started_at": datetime.datetime.now().isoformat(),
+        "duration":   exam.get("duration", 60),
+        "questions":  shuffled,
+        "answers":    {},
+    }
+    save_exam_sessions(sessions)
+
+    # Return questions WITHOUT answers
+    safe_q = [{k: v for k, v in q.items() if k != "answer" and k != "explanation"}
+              for q in shuffled]
+
+    return {
+        "ok":        True,
+        "exam_id":   exam_id,
+        "title":     exam.get("title", ""),
+        "duration":  exam.get("duration", 60),
+        "total":     len(shuffled),
+        "questions": safe_q,
+    }
+
+
+@app.post("/api/exam/submit")
+async def submit_exam(data: dict, request: Request):
+    """Student submits completed exam — returns score + analysis."""
+    sid     = sanitize_text(str(data.get("sid", "")), 100)
+    exam_id = sanitize_text(str(data.get("exam_id", "")), 20)
+    answers = data.get("answers", {})  # {question_index: "A"}
+
+    session_key = f"{sid}_{exam_id}"
+    sessions    = load_exam_sessions()
+    session     = sessions.get(session_key)
+
+    if not session:
+        raise HTTPException(404, "Exam session not found — may have expired")
+
+    questions   = session["questions"]
+    correct     = 0
+    breakdown   = []
+    wrong_list  = []
+
+    for i, q in enumerate(questions):
+        student_ans = answers.get(str(i), "")
+        is_correct  = student_ans == q.get("answer", "")
+        if is_correct:
+            correct += 1
+        else:
+            wrong_list.append({
+                "question":    q.get("question", ""),
+                "your_answer": student_ans,
+                "correct":     q.get("answer", ""),
+                "explanation": q.get("explanation", ""),
+            })
+        breakdown.append({
+            "question":    q.get("question", ""),
+            "your_answer": student_ans,
+            "correct":     q.get("answer", ""),
+            "is_correct":  is_correct,
+            "explanation": q.get("explanation", ""),
+        })
+
+    total   = len(questions)
+    score   = round((correct / total) * 100, 1) if total else 0
+    grade   = "A" if score >= 70 else "B" if score >= 60 else "C" if score >= 50 else "F"
+    time_taken = ""
+    try:
+        started = datetime.datetime.fromisoformat(session["started_at"])
+        elapsed = (datetime.datetime.now() - started).seconds
+        time_taken = f"{elapsed // 60}m {elapsed % 60}s"
+    except: pass
+
+    # Save result
+    results = load_exam_results()
+    results.append({
+        "sid":        sid,
+        "exam_id":    exam_id,
+        "code":       session.get("code", ""),
+        "score":      score,
+        "correct":    correct,
+        "total":      total,
+        "grade":      grade,
+        "time_taken": time_taken,
+        "submitted_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "breakdown":  breakdown,
+    })
+    save_exam_results(results)
+
+    # Clean up session
+    del sessions[session_key]
+    save_exam_sessions(sessions)
+
+    return {
+        "ok":        True,
+        "score":     score,
+        "correct":   correct,
+        "total":     total,
+        "grade":     grade,
+        "time_taken": time_taken,
+        "breakdown": breakdown,
+        "wrong":     wrong_list,
+    }
+
+
+@app.get("/api/exam/results")
+async def get_exam_results(exam_id: str, token: str):
+    """Lecturer gets all results for an exam with analytics."""
+    verify_lecturer(token)
+    results = [r for r in load_exam_results() if r["exam_id"] == exam_id]
+    if not results:
+        return {"results": [], "analytics": {}}
+
+    scores      = [r["score"] for r in results]
+    avg         = round(sum(scores) / len(scores), 1)
+    highest     = max(scores)
+    lowest      = min(scores)
+    pass_rate   = round(len([s for s in scores if s >= 50]) / len(scores) * 100, 1)
+
+    # Find hardest questions (most wrong answers)
+    wrong_counts = {}
+    for r in results:
+        for b in r.get("breakdown", []):
+            if not b.get("is_correct"):
+                q = b.get("question", "")[:80]
+                wrong_counts[q] = wrong_counts.get(q, 0) + 1
+
+    hardest = sorted(wrong_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+
+    return {
+        "results": results,
+        "analytics": {
+            "total_submissions": len(results),
+            "average_score":     avg,
+            "highest_score":     highest,
+            "lowest_score":      lowest,
+            "pass_rate":         pass_rate,
+            "hardest_questions": hardest,
+            "grade_distribution": {
+                "A": len([s for s in scores if s >= 70]),
+                "B": len([s for s in scores if 60 <= s < 70]),
+                "C": len([s for s in scores if 50 <= s < 60]),
+                "F": len([s for s in scores if s < 50]),
+            }
+        }
+    }
+
+
+@app.get("/api/exam/student-results")
+async def get_student_exam_results(sid: str, code: str = ""):
+    """Get all exam results for a student."""
+    sid     = sanitize_text(sid, 100)
+    results = load_exam_results()
+    student_results = [r for r in results if r["sid"] == sid]
+    if code:
+        student_results = [r for r in student_results if r.get("code") == code.upper()]
+    return {"results": student_results}
+
 # ── Health check ──────────────────────────────────────────────
 
 @app.get("/health")
