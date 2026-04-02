@@ -1808,7 +1808,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             <span class="pd-icon">📓</span> My Notes
           </button>
           <button class="pd-item" onclick="nav('classes', null); closeProfile()">
-            <span class="pd-icon">🏫</span> My Classes
+            <span class="pd-icon">🏫</span> Courses
           </button>
           <button class="pd-item" onclick="nav('announcements', null); closeProfile()">
             <span class="pd-icon">📢</span> Announcements
@@ -1876,11 +1876,11 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         <div class="nav-label">Menu</div>
         <button class="nav-btn active" onclick="nav('chat',this)"><span class="ni">💬</span> AI Chat</button>
         <button class="nav-btn" onclick="nav('quiz',this)"><span class="ni">📝</span> Quiz</button>
-        <button class="nav-btn" onclick="nav('classes',this)"><span class="ni">🏫</span> My Classes</button>
+        <button class="nav-btn" onclick="nav('classes',this)"><span class="ni">🏫</span> Courses</button>
         <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
         <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
-        <button class="nav-btn" onclick="toggleSHSidebar(this)"><span class="ni">🗂️</span> Study Help <span id="sh-sidebar-arrow" style="margin-left:auto;font-size:.6rem;color:var(--muted)">▼</span></button>
+        <button class="nav-btn" onclick="toggleSHSidebar(this)"><span class="ni">🗂️</span> Flux<span id="sh-sidebar-arrow" style="margin-left:auto;font-size:.6rem;color:var(--muted)">▼</span></button>
         <!-- Study Help sub-menu -->
         <div id="sh-sidebar-menu" style="display:none;flex-direction:column;gap:2px;padding:2px 0 4px 18px">
           <button class="nav-btn" style="font-size:.78rem;padding:6px 10px" onclick="nav('studyhelp',this)"><span class="ni">📋</span> Task Board</button>
@@ -2037,7 +2037,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         <div style="padding:1.25rem">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
             <div>
-              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 Courses</h2>
               <p style="font-size:.78rem;color:var(--muted);margin-top:2px" id="classes-subtitle">Tap to load</p>
             </div>
             <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
