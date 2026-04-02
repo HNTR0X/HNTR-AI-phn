@@ -1368,6 +1368,45 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   padding: 1px 6px; border: 1px solid #f59e0b30; white-space: nowrap;
 }
 
+.sh-th {
+  padding: 8px 16px;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-right: 1px solid var(--border);
+}
+.sh-th:last-child { border-right: none; }
+
+.sh-tr {
+  display: grid;
+  grid-template-columns: 2fr 120px 100px 110px 110px;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+  cursor: pointer;
+  min-width: 600px;
+}
+.sh-tr:hover { background: var(--surface); }
+
+.sh-td {
+  padding: 9px 16px;
+  font-size: .84rem;
+  color: var(--text);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+.sh-td:last-child { border-right: none; }
+.sh-td-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sh-status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 5px; padding: 2px 9px; font-size: .75rem; font-weight: 600;
+}
+
 /* ── Study Help — Notion Board ───────────────────────────── */
 .sh-col {
   min-width: 200px; max-width: 220px; flex-shrink: 0;
@@ -1385,7 +1424,8 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   padding: 0 6px; color: var(--muted);
 }
 .sh-col-body {
-  flex: 1; min-height: 80px; display: flex; flex-direction: column; gap: 6px;
+  flex: 1; min-height: 80px; max-height: calc(100vh - 280px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 6px;
   padding: 4px 0; border-radius: 8px; transition: background .15s;
 }
 .sh-col-body.drag-over { background: #4f6ef710; }
@@ -2028,12 +2068,12 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 
 
       <!-- Study Help Panel -->
-      <!-- Study Help Panel — Notion-style board -->
+      <!-- Study Help Panel — Notion-style -->
       <div class="panel" id="panel-studyhelp">
 
         <!-- Header bar -->
-        <div style="padding:.875rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0;
-                    display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0;
+                    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div>
             <div style="font-family:var(--font);font-weight:800;font-size:1rem;letter-spacing:-.02em">🗂️ Study Help</div>
             <div style="font-size:.72rem;color:var(--muted);margin-top:1px">
@@ -2041,25 +2081,53 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
               <span id="sh-done-count">0</span> completed
             </div>
           </div>
-          <div style="display:flex;gap:6px">
-            <button class="sh-view-btn active" id="sh-view-board" onclick="setSHView('board',this)">⊞ Board</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="sh-view-btn active" id="sh-view-overview" onclick="setSHView('overview',this)">★ Overview</button>
+            <button class="sh-view-btn" id="sh-view-board" onclick="setSHView('board',this)">⊞ Board</button>
             <button class="sh-view-btn" id="sh-view-list" onclick="setSHView('list',this)">☰ List</button>
             <button class="sh-add-task-btn" onclick="openAddTask()">+ New Task</button>
           </div>
         </div>
 
         <!-- Progress bar -->
-        <div style="padding:.5rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0;
+        <div style="padding:.4rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0;
                     display:flex;align-items:center;gap:10px">
-          <div style="flex:1;height:5px;background:var(--border);border-radius:99px;overflow:hidden">
+          <div style="flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden">
             <div id="sh-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:99px;transition:width .5s ease"></div>
           </div>
           <span style="font-size:.72rem;color:var(--muted);white-space:nowrap" id="sh-pct">0%</span>
         </div>
 
+        <!-- Overview view — Notion-style table -->
+        <div id="sh-overview-view" style="flex:1;overflow:auto;min-height:0">
+          <!-- Table header -->
+          <div style="display:grid;grid-template-columns:2fr 120px 100px 110px 110px;
+                      min-width:600px;border-bottom:1px solid var(--border);flex-shrink:0;
+                      background:var(--surface);position:sticky;top:0;z-index:2">
+            <div class="sh-th">Aa Task name</div>
+            <div class="sh-th">⊙ Status</div>
+            <div class="sh-th">⚡ Priority</div>
+            <div class="sh-th">📅 Due date</div>
+            <div class="sh-th">✓ Done</div>
+          </div>
+          <!-- Table rows -->
+          <div id="sh-overview-rows" style="min-width:600px"></div>
+          <!-- Add row -->
+          <div style="min-width:600px;border-top:1px dashed var(--border)">
+            <button onclick="openAddTask()"
+              style="width:100%;background:none;border:none;padding:9px 16px;
+                     color:var(--muted);font-size:.82rem;cursor:pointer;text-align:left;
+                     transition:background .15s;display:flex;align-items:center;gap:6px"
+              onmouseover="this.style.background='var(--surface)'"
+              onmouseout="this.style.background='none'">
+              + New task
+            </button>
+          </div>
+        </div>
+
         <!-- Board view -->
         <div id="sh-board-view" style="flex:1;overflow-x:auto;overflow-y:hidden;padding:1rem;
-             display:flex;gap:12px;align-items:flex-start;min-height:0">
+             display:none;gap:12px;align-items:flex-start;min-height:0">
 
           <!-- Column: Not Started -->
           <div class="sh-col">
@@ -2108,8 +2176,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
                 <span class="sh-col-title">AI Tools</span>
               </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0">
-              <!-- Task Structure -->
+            <div style="display:flex;flex-direction:column;gap:8px;padding:4px 0;overflow-y:auto;max-height:calc(100vh - 260px)">
               <div class="sh-ai-card">
                 <div class="sh-ai-title">🧠 Break Down a Task</div>
                 <textarea id="sh-structure-input" class="sh-input" rows="2"
@@ -2118,11 +2185,9 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
                 <button class="sh-add-btn" style="width:100%" onclick="generateTaskStructure()">Generate Steps</button>
                 <div id="sh-structure-result" style="display:none;margin-top:6px;font-size:.75rem;line-height:1.6;color:var(--text)" class="lab-content"></div>
               </div>
-              <!-- PDF Creation -->
               <div class="sh-ai-card">
                 <div class="sh-ai-title">📄 Create PDF</div>
-                <input id="sh-pdf-title" class="sh-input" placeholder="PDF title..."
-                  style="margin-bottom:5px;font-size:.78rem">
+                <input id="sh-pdf-title" class="sh-input" placeholder="PDF title..." style="margin-bottom:5px;font-size:.78rem">
                 <textarea id="sh-pdf-content" class="sh-input" rows="3"
                   placeholder="Paste content here..."
                   style="resize:none;width:100%;box-sizing:border-box;font-size:.78rem;margin-bottom:6px"></textarea>
@@ -2130,35 +2195,32 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
               </div>
             </div>
           </div>
-
         </div>
 
-        <!-- List view (hidden by default) -->
-        <div id="sh-list-view" style="flex:1;overflow-y:auto;padding:1rem;display:none">
+        <!-- List view -->
+        <div id="sh-list-view" style="flex:1;overflow:auto;padding:1rem;display:none;min-height:0">
           <div id="sh-list-container"></div>
         </div>
 
         <!-- Add task modal -->
         <div id="sh-modal-bg" style="display:none;position:fixed;inset:0;background:#00000070;
-             z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem">
+             z-index:1000;align-items:center;justify-content:center;padding:1rem">
           <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;
-                      padding:1.5rem;width:100%;max-width:380px;box-shadow:0 20px 60px #00000040">
-            <div style="font-family:var(--font);font-weight:700;font-size:1rem;margin-bottom:1rem">
-              New Task
-            </div>
+                      padding:1.5rem;width:100%;max-width:400px;box-shadow:0 20px 60px #00000040">
+            <div style="font-family:var(--font);font-weight:700;font-size:1rem;margin-bottom:1rem">New Task</div>
             <input id="sh-modal-title" class="sh-input" placeholder="Task name..."
               style="margin-bottom:8px;font-size:.9rem"
               onkeydown="if(event.key==='Enter') saveSHModal()">
             <textarea id="sh-modal-notes" class="sh-input" rows="2"
               placeholder="Notes (optional)..."
               style="resize:none;width:100%;box-sizing:border-box;margin-bottom:8px;font-size:.84rem"></textarea>
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-              <select id="sh-modal-status" class="sh-input" style="flex:1;font-size:.82rem">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <select id="sh-modal-status" class="sh-input" style="font-size:.82rem">
                 <option value="todo">Not Started</option>
                 <option value="inprogress">In Progress</option>
                 <option value="done">Done</option>
               </select>
-              <select id="sh-modal-priority" class="sh-input" style="flex:1;font-size:.82rem">
+              <select id="sh-modal-priority" class="sh-input" style="font-size:.82rem">
                 <option value="normal">Normal</option>
                 <option value="high">🔴 High</option>
                 <option value="medium">🟡 Medium</option>
@@ -3159,6 +3221,9 @@ function saveSHData(data) {
 }
 
 function loadStudyHelp() {
+  // Default to overview on first load
+  const overviewBtn = $('sh-view-overview');
+  setSHView('overview', overviewBtn);
   renderSHBoard();
 }
 
@@ -3166,21 +3231,98 @@ function setSHView(view, btn) {
   SH_VIEW = view;
   document.querySelectorAll('.sh-view-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  $('sh-board-view').style.display = view === 'board' ? 'flex'  : 'none';
-  $('sh-list-view').style.display  = view === 'list'  ? 'block' : 'none';
-  if (view === 'list') renderSHListView();
+  $('sh-overview-view').style.display = view === 'overview' ? 'flex'  : 'none';
+  $('sh-board-view').style.display    = view === 'board'    ? 'flex'  : 'none';
+  $('sh-list-view').style.display     = view === 'list'     ? 'block' : 'none';
+  if (view === 'overview') renderSHOverview();
+  if (view === 'list')     renderSHListView();
+}
+
+function renderSHOverview() {
+  const data    = getSHData();
+  const tasks   = data.tasks || [];
+  const rows    = $('sh-overview-rows');
+  if (!rows) return;
+
+  const statusConfig = {
+    todo:       { label: 'Not started', color: '#94a3b8', bg: '#94a3b815' },
+    inprogress: { label: 'In progress', color: '#4f6ef7', bg: '#4f6ef715' },
+    done:       { label: 'Done',        color: '#22c55e', bg: '#22c55e15' },
+  };
+  const priorityConfig = {
+    high:   { label: '🔴 High',   color: '#ef4444' },
+    medium: { label: '🟡 Medium', color: '#f59e0b' },
+    low:    { label: '🟢 Low',    color: '#22c55e' },
+    normal: { label: '—',         color: 'var(--muted)' },
+  };
+
+  if (!tasks.length) {
+    rows.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.84rem">
+      No tasks yet — click "+ New task" below to get started.</div>`;
+    return;
+  }
+
+  rows.innerHTML = tasks.map(t => {
+    const st = statusConfig[t.status] || statusConfig.todo;
+    const pr = priorityConfig[t.priority] || priorityConfig.normal;
+    return `
+    <div class="sh-tr" onclick="openEditTask(${t.id})">
+      <div class="sh-td">
+        <div class="sh-td-title">${esc(t.title)}</div>
+        ${t.notes ? `<div style="font-size:.72rem;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.notes)}</div>` : ''}
+      </div>
+      <div class="sh-td">
+        <span class="sh-status-pill" style="background:${st.bg};color:${st.color}">
+          <span style="width:7px;height:7px;border-radius:50%;background:${st.color};flex-shrink:0"></span>
+          ${st.label}
+        </span>
+      </div>
+      <div class="sh-td" style="color:${pr.color};font-size:.78rem;font-weight:600">${pr.label}</div>
+      <div class="sh-td" style="color:${t.date ? 'var(--accent)' : 'var(--muted)'};font-size:.78rem">
+        ${t.date || '—'}
+      </div>
+      <div class="sh-td">
+        <button onclick="event.stopPropagation();moveSHTask(${t.id},'${t.status === 'done' ? 'todo' : 'done'}')"
+          style="background:${t.status === 'done' ? '#22c55e20' : 'none'};
+                 border:1px solid ${t.status === 'done' ? '#22c55e' : 'var(--border)'};
+                 border-radius:5px;padding:2px 8px;cursor:pointer;
+                 color:${t.status === 'done' ? '#22c55e' : 'var(--muted)'};font-size:.75rem">
+          ${t.status === 'done' ? '✓ Done' : 'Mark done'}
+        </button>
+        <button onclick="event.stopPropagation();deleteSHTask(${t.id})"
+          style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;margin-left:auto">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openEditTask(id) {
+  const data = getSHData();
+  const task = (data.tasks || []).find(t => t.id === id);
+  if (!task) return;
+  // Pre-fill modal with task data for editing
+  $('sh-modal-title').value    = task.title;
+  $('sh-modal-notes').value    = task.notes || '';
+  $('sh-modal-status').value   = task.status;
+  $('sh-modal-priority').value = task.priority;
+  $('sh-modal-date').value     = task.date || '';
+  // Store edit id
+  $('sh-modal-bg')._editId = id;
+  $('sh-modal-bg').style.display = 'flex';
+  setTimeout(() => $('sh-modal-title')?.focus(), 100);
 }
 
 function openAddTask(col) {
   SH_ADD_COL = col || 'todo';
   const modal = $('sh-modal-bg');
   if (!modal) return;
-  $('sh-modal-title').value   = '';
-  $('sh-modal-notes').value   = '';
-  $('sh-modal-date').value    = '';
-  $('sh-modal-status').value  = SH_ADD_COL;
+  modal._editId = null;
+  $('sh-modal-title').value    = '';
+  $('sh-modal-notes').value    = '';
+  $('sh-modal-date').value     = '';
+  $('sh-modal-status').value   = SH_ADD_COL;
   $('sh-modal-priority').value = 'normal';
-  modal.style.display         = 'flex';
+  modal.style.display          = 'flex';
   setTimeout(() => $('sh-modal-title')?.focus(), 100);
 }
 
@@ -3193,21 +3335,38 @@ function saveSHModal() {
   const title = $('sh-modal-title')?.value.trim();
   if (!title) { toast('Enter a task name.'); return; }
 
-  const data = getSHData();
-  data.tasks = data.tasks || [];
-  data.tasks.push({
-    id:       Date.now(),
-    title,
-    notes:    $('sh-modal-notes')?.value.trim() || '',
-    status:   $('sh-modal-status')?.value || 'todo',
-    priority: $('sh-modal-priority')?.value || 'normal',
-    date:     $('sh-modal-date')?.value || '',
-    created:  new Date().toLocaleDateString(),
-  });
+  const data    = getSHData();
+  data.tasks    = data.tasks || [];
+  const editId  = $('sh-modal-bg')._editId;
+
+  if (editId) {
+    // Edit existing
+    const task = data.tasks.find(t => t.id === editId);
+    if (task) {
+      task.title    = title;
+      task.notes    = $('sh-modal-notes')?.value.trim() || '';
+      task.status   = $('sh-modal-status')?.value || 'todo';
+      task.priority = $('sh-modal-priority')?.value || 'normal';
+      task.date     = $('sh-modal-date')?.value || '';
+    }
+    $('sh-modal-bg')._editId = null;
+    toast('Task updated ✓');
+  } else {
+    data.tasks.push({
+      id:       Date.now(),
+      title,
+      notes:    $('sh-modal-notes')?.value.trim() || '',
+      status:   $('sh-modal-status')?.value || SH_ADD_COL,
+      priority: $('sh-modal-priority')?.value || 'normal',
+      date:     $('sh-modal-date')?.value || '',
+      created:  new Date().toLocaleDateString(),
+    });
+    toast('Task added ✓');
+  }
+
   saveSHData(data);
   closeSHModal();
   renderSHBoard();
-  toast('Task added ✓');
 }
 
 function deleteSHTask(id) {
@@ -3245,13 +3404,11 @@ function renderSHBoard() {
   const total = tasks.length;
   const pct   = total ? Math.round((done / total) * 100) : 0;
 
-  // Update header stats
   const tc = $('sh-total-count'); if (tc) tc.textContent = total;
   const dc = $('sh-done-count');  if (dc) dc.textContent = done;
   const pb = $('sh-progress-bar'); if (pb) pb.style.width = pct + '%';
   const pp = $('sh-pct');          if (pp) pp.textContent = pct + '%';
 
-  // Render each column
   Object.keys(SH_COLS).forEach(col => {
     const colTasks = tasks.filter(t => t.status === col);
     const body     = $(`sh-col-${col}`);
@@ -3283,6 +3440,10 @@ function renderSHBoard() {
       </div>`).join('')
       : `<div style="font-size:.75rem;color:var(--muted);padding:8px 4px;text-align:center">No tasks</div>`;
   });
+
+  // Refresh overview if visible
+  if (SH_VIEW === 'overview') renderSHOverview();
+  if (SH_VIEW === 'list') renderSHListView();
 }
 
 function renderSHListView() {
