@@ -2234,6 +2234,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
               </select>
             </div>
             <input id="sh-modal-date" type="date" class="sh-input" style="margin-bottom:1rem;font-size:.82rem">
+            <input id="sh-modal-time" type="time" class="sh-input" style="margin-bottom: 1rem; font-size: 0.82rem">
             <div style="display:flex;gap:8px">
               <button class="btn-start" style="flex:1;padding:10px" onclick="saveSHModal()">Add Task</button>
               <button onclick="closeSHModal()"
@@ -3365,6 +3366,8 @@ function saveSHModal() {
       status:   $('sh-modal-status')?.value || SH_ADD_COL,
       priority: $('sh-modal-priority')?.value || 'normal',
       date:     $('sh-modal-date')?.value || '',
+      task.time equals document.getElementById('sh-modal-time'),
+      data.tasks.push(task);
       created:  new Date().toLocaleDateString(),
     });
     toast('Task added ✓');
