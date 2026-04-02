@@ -1316,6 +1316,39 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
   cursor: pointer; font-size: .75rem; padding: 0 2px;
 }
 
+/* ── Exam taking UI ──────────────────────────────────────── */
+.exam-q-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1rem; transition: border-color .15s;
+}
+.exam-q-num {
+  font-size: .7rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem;
+}
+.exam-q-text {
+  font-size: .9rem; font-weight: 600; line-height: 1.55;
+  color: var(--text); margin-bottom: .875rem;
+}
+.exam-opts { display: flex; flex-direction: column; gap: 7px; }
+.exam-opt {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 9px; padding: 9px 13px; font-size: .85rem;
+  color: var(--text); cursor: pointer; transition: all .15s; text-align: left;
+  font-family: var(--font-body);
+}
+.exam-opt:hover { border-color: var(--accent); background: #4f6ef710; }
+.exam-opt.selected {
+  border-color: var(--accent); background: #4f6ef720;
+  color: var(--accent);
+}
+.exam-opt-letter {
+  width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--border2); font-weight: 700; font-size: .78rem;
+}
+.exam-opt.selected .exam-opt-letter { background: var(--accent); color: #fff; }
+
 /* ── Chat Welcome Screen ─────────────────────────────────── */
 @keyframes orb-pulse {
   0%, 100% { box-shadow: 0 0 40px #4f6ef740, 0 0 80px #7c3aed20; transform: scale(1); }
@@ -1434,7 +1467,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px;
 }
 
-/* ── Study Help — Notion Board ───────────────────────────── */
+/* ── Flux — Notion Board ───────────────────────────── */
 .sh-col {
   min-width: 200px; max-width: 220px; flex-shrink: 0;
   display: flex; flex-direction: column; gap: 0;
@@ -1807,7 +1840,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
           <button class="pd-item" onclick="nav('notes', null); closeProfile()">
             <span class="pd-icon">📓</span> My Notes
           </button>
-          <button class="pd-item" onclick="nav('classes', null); closeProfile()">
+          <button class="pd-item" onclick="nav('courses', null); closeProfile()">
             <span class="pd-icon">🏫</span> Courses
           </button>
           <button class="pd-item" onclick="nav('announcements', null); closeProfile()">
@@ -1844,8 +1877,8 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
     <button class="tab-pill" id="tab-quiz" onclick="navTab('quiz', this)">
       <span class="tp-icon">📝</span> Quiz
     </button>
-    <button class="tab-pill" id="tab-classes" onclick="navTab('classes', this)">
-      <span class="tp-icon">🏫</span> Courses
+    <button class="tab-pill" id="tab-courses" onclick="navTab('courses', this)">
+      <span class="tp-icon">🏫</span> Classes
     </button>
     <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements', this)">
       <span class="tp-icon">📢</span> Notices
@@ -1856,7 +1889,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
     <button class="tab-pill" id="tab-notes" onclick="navTab('notes', this)">
       <span class="tp-icon">📓</span> Notes
     </button>
-    <button class="tab-pill" id="tab-studyhelp" onclick="navTab('studyhelp', this)">
+    <button class="tab-pill" id="tab-flux" onclick="navTab('flux', this)">
       <span class="tp-icon">🗂️</span> Flux
     </button>
     <button class="tab-pill" id="tab-lab" onclick="navTab('lab', this)">
@@ -1876,14 +1909,14 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         <div class="nav-label">Menu</div>
         <button class="nav-btn active" onclick="nav('chat',this)"><span class="ni">💬</span> AI Chat</button>
         <button class="nav-btn" onclick="nav('quiz',this)"><span class="ni">📝</span> Quiz</button>
-        <button class="nav-btn" onclick="nav('classes',this)"><span class="ni">🏫</span> Courses</button>
+        <button class="nav-btn" onclick="nav('courses',this)"><span class="ni">🏫</span> Courses</button>
         <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
         <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
         <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
-        <button class="nav-btn" onclick="toggleSHSidebar(this)"><span class="ni">🗂️</span> Flux<span id="sh-sidebar-arrow" style="margin-left:auto;font-size:.6rem;color:var(--muted)">▼</span></button>
-        <!-- Study Help sub-menu -->
+        <button class="nav-btn" onclick="toggleSHSidebar(this)"><span class="ni">🗂️</span> Flux <span id="sh-sidebar-arrow" style="margin-left:auto;font-size:.6rem;color:var(--muted)">▼</span></button>
+        <!-- Flux sub-menu -->
         <div id="sh-sidebar-menu" style="display:none;flex-direction:column;gap:2px;padding:2px 0 4px 18px">
-          <button class="nav-btn" style="font-size:.78rem;padding:6px 10px" onclick="nav('studyhelp',this)"><span class="ni">📋</span> Task Board</button>
+          <button class="nav-btn" style="font-size:.78rem;padding:6px 10px" onclick="nav('flux',this)"><span class="ni">📋</span> Task Board</button>
           <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🔔</span> Smart Reminders <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
           <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">📊</span> Study Analytics <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
           <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🤝</span> Group Study <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
@@ -2033,7 +2066,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
       </div>
 
       <!-- Classes Panel -->
-      <div class="panel" id="panel-classes" style="overflow-y:auto;padding:0">
+      <div class="panel" id="panel-courses" style="overflow-y:auto;padding:0">
         <div style="padding:1.25rem">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
             <div>
@@ -2094,15 +2127,15 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
       </div>
 
 
-      <!-- Study Help Panel -->
-      <!-- Study Help Panel — Notion-style -->
-      <div class="panel" id="panel-studyhelp">
+      <!-- Flux Panel -->
+      <!-- Flux Panel — Notion-style -->
+      <div class="panel" id="panel-flux">
 
         <!-- Header bar -->
         <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0;
                     display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div>
-            <div style="font-family:var(--font);font-weight:800;font-size:1rem;letter-spacing:-.02em">🗂️ Study Help</div>
+            <div style="font-family:var(--font);font-weight:800;font-size:1rem;letter-spacing:-.02em">🗂️ Flux</div>
             <div style="font-size:.72rem;color:var(--muted);margin-top:1px">
               <span id="sh-total-count">0</span> tasks ·
               <span id="sh-done-count">0</span> completed
@@ -2450,8 +2483,8 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             </div>
           </div>
 
-          <div class="r-card" style="cursor:pointer" onclick="navTab('studyhelp', $('tab-studyhelp'))">
-            <div class="r-title">🗂️ Study Help</div>
+          <div class="r-card" style="cursor:pointer" onclick="navTab('flux', $('tab-flux'))">
+            <div class="r-title">🗂️ Flux</div>
             <p style="font-size:.75rem;color:var(--muted);margin-top:2px">Tasks, reminders, structure & PDF creation.</p>
           </div>
 
@@ -3201,8 +3234,8 @@ function nav(name, btn) {
   if (name === 'more')          syncMore();
   if (name === 'leaderboard')   loadLeaderboard();
   if (name === 'notes')         loadNotes();
-  if (name === 'studyhelp')     loadStudyHelp();
-  if (name === 'classes')       loadClasses();
+  if (name === 'flux')     loadStudyHelp();
+  if (name === 'courses')       loadClasses();
   if (name === 'announcements') loadAllAnnouncements();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
@@ -3229,8 +3262,8 @@ function navTab(name, btn) {
   if (name === 'more')          syncMore();
   if (name === 'leaderboard')   loadLeaderboard();
   if (name === 'notes')         loadNotes();
-  if (name === 'studyhelp')     loadStudyHelp();
-  if (name === 'classes')       loadClasses();
+  if (name === 'flux')     loadStudyHelp();
+  if (name === 'courses')       loadClasses();
   if (name === 'announcements') loadAllAnnouncements();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
@@ -3317,8 +3350,8 @@ function toggleSHSidebar(btn) {
   const open = menu.style.display === 'flex';
   menu.style.display = open ? 'none' : 'flex';
   if (arrow) arrow.textContent = open ? '▼' : '▲';
-  // Also navigate to studyhelp panel on first open
-  if (!open) nav('studyhelp', btn);
+  // Also navigate to flux panel on first open
+  if (!open) nav('flux', btn);
 }
 
 // ═══════════════════════════ STUDY HELP ═════════════════════════
@@ -3940,13 +3973,290 @@ function _downloadLab() {
   URL.revokeObjectURL(a.href);
 }
 
+// ═══════════════════════════ STUDENT EXAM SYSTEM ════════════════
+
+let EXAM_STATE = {
+  examId: null, code: null, questions: [], answers: {},
+  timerInterval: null, timeLeft: 0, tabSwitches: 0, title: ''
+};
+
+async function startStudentExam(examId, code) {
+  const takeView = $('exam-take-view');
+  const listView = $('exam-list-view');
+  if (!takeView) return;
+
+  listView.style.display = 'none';
+  takeView.style.display = 'block';
+  takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading exam...</div></div>`;
+
+  try {
+    const r = await fetch('/api/exam/start', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, exam_id: examId, code })
+    });
+    if (r.status === 409) {
+      takeView.innerHTML = `<div class="empty-state"><div class="es-icon">✅</div><div class="es-text">You have already submitted this exam.</div></div>`;
+      return;
+    }
+    if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
+    const d = await r.json();
+
+    EXAM_STATE = {
+      examId, code, questions: d.questions, answers: {},
+      timerInterval: null, timeLeft: d.duration * 60,
+      tabSwitches: 0, title: d.title
+    };
+
+    renderExamUI(takeView);
+    startExamTimer();
+    setupAntiCheat();
+  } catch(e) {
+    takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>
+      <div class="es-text">${esc(e.message)}</div>
+      <button class="btn-start" style="margin-top:1rem;padding:8px 20px" onclick="$('exam-take-view').style.display='none';$('exam-list-view').style.display='block'">← Back</button></div>`;
+  }
+}
+
+function renderExamUI(container) {
+  const q   = EXAM_STATE.questions;
+  const tot = q.length;
+
+  container.innerHTML = `
+    <!-- Exam header -->
+    <div style="position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);
+                padding:.875rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-family:var(--font);font-weight:700;font-size:.9rem">${esc(EXAM_STATE.title)}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${tot} questions · <span id="exam-answered">0</span> answered</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="exam-timer" style="font-family:var(--font);font-weight:800;font-size:1.1rem;color:var(--accent);
+             background:#4f6ef715;border:1px solid #4f6ef730;border-radius:8px;padding:4px 12px">
+          --:--
+        </div>
+        <button class="btn-start" style="padding:7px 16px;font-size:.8rem;background:#22c55e"
+          onclick="confirmSubmitExam()">Submit →</button>
+      </div>
+    </div>
+
+    <!-- Tab switch warning -->
+    <div id="exam-cheat-warn" style="display:none;background:#ef444415;border:1px solid #ef444430;
+         border-radius:8px;padding:8px 12px;margin:.75rem .75rem 0;font-size:.78rem;color:#ef4444">
+      ⚠️ Tab switch detected (<span id="cheat-count">0</span>x). This is logged.
+    </div>
+
+    <!-- Progress bar -->
+    <div style="padding:.5rem .75rem">
+      <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div id="exam-prog" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s"></div>
+      </div>
+    </div>
+
+    <!-- Questions -->
+    <div style="padding:.75rem;display:flex;flex-direction:column;gap:1rem" id="exam-questions-container">
+      ${q.map((question, i) => `
+        <div class="exam-q-card" id="eq-${i}">
+          <div class="exam-q-num">Question ${i+1} of ${tot}</div>
+          <div class="exam-q-text">${esc(question.question)}</div>
+          <div class="exam-opts">
+            ${Object.entries(question.options || {}).map(([letter, text]) => `
+              <button class="exam-opt" id="eq-${i}-${letter}"
+                onclick="selectExamAnswer(${i},'${letter}')">
+                <span class="exam-opt-letter">${letter}</span>
+                <span>${esc(text)}</span>
+              </button>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Submit button bottom -->
+    <div style="padding:1rem;text-align:center">
+      <button class="btn-start" style="padding:12px 40px" onclick="confirmSubmitExam()">
+        Submit Exam
+      </button>
+    </div>`;
+}
+
+function selectExamAnswer(qIdx, letter) {
+  EXAM_STATE.answers[qIdx] = letter;
+
+  // Update UI
+  const q = EXAM_STATE.questions[qIdx];
+  Object.keys(q.options || {}).forEach(l => {
+    const btn = $(`eq-${qIdx}-${l}`);
+    if (btn) btn.classList.toggle('selected', l === letter);
+  });
+
+  // Update progress
+  const answered = Object.keys(EXAM_STATE.answers).length;
+  const total    = EXAM_STATE.questions.length;
+  const pct      = (answered / total) * 100;
+  const prog = $('exam-prog'); if (prog) prog.style.width = pct + '%';
+  const ans  = $('exam-answered'); if (ans) ans.textContent = answered;
+}
+
+function startExamTimer() {
+  const update = () => {
+    const t   = EXAM_STATE.timeLeft;
+    const m   = Math.floor(t / 60);
+    const s   = t % 60;
+    const el  = $('exam-timer');
+    if (el) {
+      el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      el.style.color = t <= 300 ? '#ef4444' : t <= 600 ? '#f59e0b' : 'var(--accent)';
+      el.style.background = t <= 300 ? '#ef444415' : t <= 600 ? '#f59e0b15' : '#4f6ef715';
+    }
+    if (t <= 0) {
+      clearInterval(EXAM_STATE.timerInterval);
+      toast('⏰ Time is up! Auto-submitting...');
+      submitExam();
+      return;
+    }
+    if (t === 300) toast('⚠️ 5 minutes remaining!');
+    EXAM_STATE.timeLeft--;
+  };
+  update();
+  EXAM_STATE.timerInterval = setInterval(update, 1000);
+}
+
+function setupAntiCheat() {
+  document.addEventListener('visibilitychange', handleTabSwitch);
+}
+
+function handleTabSwitch() {
+  if (document.hidden && EXAM_STATE.examId) {
+    EXAM_STATE.tabSwitches++;
+    const warn = $('exam-cheat-warn');
+    const cnt  = $('cheat-count');
+    if (warn) warn.style.display = 'block';
+    if (cnt)  cnt.textContent    = EXAM_STATE.tabSwitches;
+  }
+}
+
+function confirmSubmitExam() {
+  const answered = Object.keys(EXAM_STATE.answers).length;
+  const total    = EXAM_STATE.questions.length;
+  const unanswered = total - answered;
+
+  if (unanswered > 0) {
+    const ok = confirm(`You have ${unanswered} unanswered question${unanswered>1?'s':''}. Submit anyway?`);
+    if (!ok) return;
+  }
+  submitExam();
+}
+
+async function submitExam() {
+  clearInterval(EXAM_STATE.timerInterval);
+  document.removeEventListener('visibilitychange', handleTabSwitch);
+
+  const takeView = $('exam-take-view');
+  if (takeView) takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Submitting exam...</div></div>`;
+
+  try {
+    const r = await fetch('/api/exam/submit', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        sid: S.sid, exam_id: EXAM_STATE.examId,
+        answers: EXAM_STATE.answers, tab_switches: EXAM_STATE.tabSwitches
+      })
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || 'Submit failed');
+    const d = await r.json();
+    renderExamResults(d);
+  } catch(e) {
+    if (takeView) takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>
+      <div class="es-text">Submission failed: ${esc(e.message)}</div></div>`;
+  }
+
+  EXAM_STATE.examId = null;
+}
+
+function renderExamResults(d) {
+  const takeView = $('exam-take-view');
+  if (!takeView) return;
+
+  const grade   = d.grade;
+  const emoji   = d.score >= 70 ? '🏆' : d.score >= 50 ? '👍' : '📚';
+  const msg     = d.score >= 70 ? 'Excellent work!' : d.score >= 50 ? 'Good effort!' : 'Keep practising!';
+  const gColor  = grade==='A'?'#22c55e':grade==='B'?'#4f6ef7':grade==='C'?'#f59e0b':'#ef4444';
+
+  takeView.innerHTML = `
+    <div style="padding:1.5rem">
+      <!-- Score card -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;
+                  padding:1.5rem;text-align:center;margin-bottom:1rem">
+        <div style="font-size:2.5rem;margin-bottom:.5rem">${emoji}</div>
+        <div style="font-family:var(--font);font-size:3rem;font-weight:800;
+                    background:linear-gradient(135deg,var(--accent),var(--accent2));
+                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+          ${d.score}%
+        </div>
+        <div style="font-size:1.1rem;font-weight:700;margin:.25rem 0;color:${gColor}">Grade ${grade}</div>
+        <div style="color:var(--muted);font-size:.85rem;margin-bottom:.75rem">${msg}</div>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+          <span style="font-size:.82rem;color:var(--muted)">✅ ${d.correct}/${d.total} correct</span>
+          ${d.time_taken ? `<span style="font-size:.82rem;color:var(--muted)">⏱ ${d.time_taken}</span>` : ''}
+        </div>
+      </div>
+
+      <!-- Question breakdown -->
+      <div style="font-family:var(--font);font-weight:700;font-size:.9rem;margin-bottom:.75rem">Question Breakdown</div>
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto">
+        ${d.breakdown.map((b, i) => `
+          <div style="background:${b.is_correct ? '#22c55e10' : '#ef444410'};
+                      border:1px solid ${b.is_correct ? '#22c55e30' : '#ef444430'};
+                      border-radius:10px;padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:.85rem">${b.is_correct ? '✅' : '❌'}</span>
+              <span style="font-size:.82rem;font-weight:600">Q${i+1}: ${esc(b.question)}</span>
+            </div>
+            ${!b.is_correct ? `
+              <div style="font-size:.75rem;color:var(--muted)">
+                Your answer: <span style="color:#ef4444;font-weight:600">${b.your_answer || 'Not answered'}</span> ·
+                Correct: <span style="color:#22c55e;font-weight:600">${b.correct}</span>
+              </div>
+              ${b.explanation ? `<div style="font-size:.75rem;color:var(--muted);margin-top:3px;font-style:italic">${esc(b.explanation)}</div>` : ''}
+            ` : ''}
+          </div>`).join('')}
+      </div>
+
+      <button class="btn-start" style="width:100%;margin-top:1rem;padding:11px"
+        onclick="$('exam-take-view').style.display='none';$('exam-list-view').style.display='block'">
+        ← Back to Exams
+      </button>
+    </div>`;
+}
+
+async function viewMyExamResult(examId) {
+  const takeView = $('exam-take-view');
+  const listView = $('exam-list-view');
+  if (!takeView) return;
+  listView.style.display = 'none';
+  takeView.style.display = 'block';
+  takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading results...</div></div>`;
+
+  try {
+    const r = await fetch(`/api/exam/student-results?sid=${encodeURIComponent(S.sid)}`);
+    const d = await r.json();
+    const result = (d.results || []).find(r => r.exam_id === examId);
+    if (!result) {
+      takeView.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div><div class="es-text">No submission found for this exam.</div>
+        <button class="btn-start" style="margin-top:1rem;padding:8px 20px" onclick="$('exam-take-view').style.display='none';$('exam-list-view').style.display='block'">← Back</button></div>`;
+      return;
+    }
+    renderExamResults(result);
+  } catch(e) {
+    takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-text">Could not load results.</div></div>`;
+  }
+}
+
 // ═══════════════════════════ CLASSES ════════════════════════════
 let CURRENT_CLASS = null;
 
 async function loadClasses() {
   clearInterval(DISCUSS_INTERVAL);
 
-  const panel = $('panel-classes');
+  const panel = $('panel-courses');
   if (!panel) return;
 
   // Always rebuild — safe no matter what was showing before
@@ -3954,7 +4264,7 @@ async function loadClasses() {
     <div style="padding:1.25rem">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
         <div>
-          <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+          <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 Courses</h2>
           <p style="font-size:.78rem;color:var(--muted);margin-top:2px" id="classes-subtitle">Loading...</p>
         </div>
         <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
@@ -4011,7 +4321,7 @@ function renderClassesList(classes) {
   root.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
       <div>
-        <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 My Classes</h2>
+        <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🏫 Courses</h2>
         <p style="font-size:.78rem;color:var(--muted);margin-top:2px">${classes.length} class${classes.length !== 1 ? 'es' : ''} joined</p>
       </div>
       <button class="btn-start" style="padding:8px 16px;font-size:.8rem" onclick="showJoinClass()">+ Join Class</button>
@@ -4032,7 +4342,7 @@ function renderClassesList(classes) {
 }
 
 function showJoinClass() {
-  const panel = $('panel-classes');
+  const panel = $('panel-courses');
   if (!panel) return;
   panel.innerHTML = `
     <div style="flex:1;overflow-y:auto;padding:1.25rem">
@@ -4114,7 +4424,7 @@ async function submitJoinClass() {
 }
 
 async function openClass(code) {
-  const panel = $('panel-classes');
+  const panel = $('panel-courses');
   if (!panel) return;
 
   // Show loading directly in the panel
@@ -4140,7 +4450,7 @@ async function openClass(code) {
 }
 
 function renderClassDetail(cls) {
-  const panel = $('panel-classes');
+  const panel = $('panel-courses');
   if (!panel) return;
 
   panel.innerHTML = `
@@ -4235,15 +4545,26 @@ function renderClassTab(tab) {
 
   else if (tab === 'exams') {
     const exams = cls.exams || [];
-    content.innerHTML = exams.length
-      ? exams.map(e => `
+    if (!exams.length) {
+      content.innerHTML = '<div class="empty-state"><div class="es-icon">📝</div><div class="es-text">No exams assigned yet.</div></div>';
+      return;
+    }
+    content.innerHTML = `
+      <div id="exam-list-view">
+        ${exams.map(e => `
           <div class="assign-item">
             <div class="assign-title">📝 ${esc(e.title)}</div>
-            <div class="assign-due">Assigned ${e.date}</div>
-            <button class="btn-start" style="padding:8px 16px;font-size:.8rem;margin-top:10px"
-              onclick="window.open('/exam/${e.id}?sid=${S.sid}','_blank')">Take Exam →</button>
-          </div>`).join('')
-      : '<div class="empty-state"><div class="es-icon">📝</div><div class="es-text">No exams assigned yet.</div></div>';
+            <div class="assign-due">Assigned ${e.date || ''}</div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+              <button class="btn-start" style="padding:8px 16px;font-size:.8rem"
+                onclick="startStudentExam('${e.id}','${cls.code}')">▶ Take Exam</button>
+              <button class="btn-outline" style="padding:8px 16px;font-size:.8rem"
+                onclick="viewMyExamResult('${e.id}')">📊 My Results</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div id="exam-take-view" style="display:none"></div>
+      <div id="exam-result-view" style="display:none"></div>`;
   }
 
   else if (tab === 'assignments') {
