@@ -4646,6 +4646,8 @@ function renderClassTab(tab) {
         <div id="exam-entry-view"></div>
       </div>`;
   }
+
+  else if (tab === 'assignments') {
     const assigns = cls.assignments || [];
     content.innerHTML = assigns.length
       ? assigns.map(a => `
