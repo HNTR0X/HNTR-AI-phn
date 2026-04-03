@@ -4250,6 +4250,56 @@ async function viewMyExamResult(examId) {
   }
 }
 
+async function enterExamById() {
+  const inp  = $('exam-id-input');
+  const err  = $('exam-entry-err');
+  const btn  = $('exam-entry-btn');
+  const view = $('exam-entry-view');
+  const id   = inp?.value.trim();
+
+  if (!id) { if (err) err.textContent = 'Enter an Exam ID.'; return; }
+  if (err) err.textContent = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+
+  try {
+    const r = await fetch('/api/exam/start', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, exam_id: id, code: CURRENT_CLASS?.code || '' })
+    });
+
+    if (r.status === 409) {
+      if (err) err.textContent = 'You have already submitted this exam.';
+      if (btn) { btn.disabled = false; btn.textContent = '▶ Start Exam'; }
+      return;
+    }
+    if (!r.ok) {
+      const e = await r.json();
+      if (err) err.textContent = e.detail || 'Exam not found. Check the ID.';
+      if (btn) { btn.disabled = false; btn.textContent = '▶ Start Exam'; }
+      return;
+    }
+
+    const d = await r.json();
+    EXAM_STATE = {
+      examId: id, code: CURRENT_CLASS?.code || '',
+      questions: d.questions, answers: {},
+      timerInterval: null, timeLeft: d.duration * 60,
+      tabSwitches: 0, title: d.title
+    };
+
+    // Hide the entry form, render exam in view div
+    inp.closest('div.r-card, div[style]').style.display = 'none';
+    if (!view) return;
+    view.style.display = 'block';
+    renderExamUI(view);
+    startExamTimer();
+    setupAntiCheat();
+  } catch(e) {
+    if (err) err.textContent = 'Connection error — try again.';
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Start Exam'; }
+  }
+}
+
 // ═══════════════════════════ CLASSES ════════════════════════════
 let CURRENT_CLASS = null;
 
@@ -4474,6 +4524,7 @@ function renderClassDetail(cls) {
       <button class="ctab" onclick="switchClassTab('announcements',this)">📢 Notices</button>
       <button class="ctab" onclick="switchClassTab('live',this)">🔴 Live</button>
       <button class="ctab" onclick="switchClassTab('exams',this)">📝 Exams</button>
+      <button class="ctab" onclick="switchClassTab('exam-entry',this)">🎯 Enter Exam</button>
       <button class="ctab" onclick="switchClassTab('assignments',this)">📋 Tasks</button>
       <button class="ctab" onclick="switchClassTab('discuss',this)">💬 Chat</button>
     </div>
@@ -4567,7 +4618,34 @@ function renderClassTab(tab) {
       <div id="exam-result-view" style="display:none"></div>`;
   }
 
-  else if (tab === 'assignments') {
+  else if (tab === 'exam-entry') {
+    content.innerHTML = `
+      <div style="padding:.5rem 0">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-family:var(--font);font-weight:700;font-size:.95rem;margin-bottom:.3rem">🎯 Enter Exam by ID</div>
+          <div style="font-size:.78rem;color:var(--muted)">Your lecturer will give you an Exam ID to enter here.</div>
+        </div>
+
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem">
+          <label style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px">
+            Exam ID
+          </label>
+          <input id="exam-id-input" type="text" placeholder="e.g. ab5f5573-b..."
+            autocomplete="off" spellcheck="false"
+            style="width:100%;background:var(--surface);border:2px solid var(--border);border-radius:10px;
+                   padding:12px;color:var(--text);font-family:var(--font);font-size:.95rem;outline:none;
+                   transition:border-color .2s;box-sizing:border-box;margin-bottom:8px"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'"
+            onkeydown="if(event.key==='Enter') enterExamById()">
+          <div id="exam-entry-err" style="color:var(--red);font-size:.78rem;min-height:16px;margin-bottom:8px"></div>
+          <button id="exam-entry-btn" class="btn-start" style="width:100%;padding:11px"
+            onclick="enterExamById()">▶ Start Exam</button>
+        </div>
+
+        <div id="exam-entry-view"></div>
+      </div>`;
+  }
     const assigns = cls.assignments || [];
     content.innerHTML = assigns.length
       ? assigns.map(a => `
