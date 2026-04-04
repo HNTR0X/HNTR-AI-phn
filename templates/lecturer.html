@@ -244,7 +244,7 @@ textarea.form-input{min-height:100px;resize:vertical}
   <nav class="tab-nav">
     <button class="tnav-btn active" onclick="switchTab('overview',this)">📊 Overview</button>
     <button class="tnav-btn" onclick="switchTab('students',this)">👥 Students</button>
-    <button class="tnav-btn" onclick="switchTab('classes',this)">🏫 Courses</button>
+    <button class="tnav-btn" onclick="switchTab('courses',this)">🏫 Courses</button>
     <button class="tnav-btn" onclick="switchTab('announcements',this)">📢 Announcements</button>
     <button class="tnav-btn" onclick="switchTab('topics',this)">📚 Quiz Topics</button>
     <button class="tnav-btn" onclick="switchTab('exams',this)">📝 Exams</button>
@@ -664,7 +664,8 @@ window.addEventListener('DOMContentLoaded', () => {
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tnav-btn').forEach(b => b.classList.remove('active'));
-  $(`tab-${name}`).classList.add('active');
+  const panel = $(`tab-${name}`);
+  if (panel) panel.classList.add('active');
   if (btn) btn.classList.add('active');
 }
 
