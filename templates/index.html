@@ -294,47 +294,130 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   min-height: 0;
 }
 
-/* Sidebar */
+/* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 1rem .75rem;
+  background: #0c0d10;
+  border-right: 1px solid rgba(255,255,255,0.06);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar { display: none; }
+
+/* Section header button */
+.snav-section-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: #9ca3af;
+  transition: background .12s, color .12s;
+  text-align: left;
+  margin-bottom: 1px;
+}
+.snav-section-btn:hover { background: rgba(255,255,255,0.05); color: #e5e7eb; }
+.snav-section-btn.open { color: #e5e7eb; }
+
+.snav-section-icon {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; flex-shrink: 0;
+  background: rgba(255,255,255,0.05);
+  transition: background .15s;
 }
 
-.nav-label {
-  font-size: 10px;
+.snav-section-label {
+  flex: 1;
+  font-size: 10.5px;
   font-weight: 700;
-  color: var(--muted);
+  letter-spacing: .07em;
   text-transform: uppercase;
-  letter-spacing: .08em;
-  padding: 0 .5rem;
-  margin-bottom: .4rem;
 }
 
-.nav-btn {
+.snav-chevron {
+  font-size: .55rem;
+  color: #4b5563;
+  transition: transform .2s ease;
+  flex-shrink: 0;
+}
+.snav-section-btn.open .snav-chevron { transform: rotate(180deg); color: #9ca3af; }
+
+/* Dropdown items container */
+.snav-items {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height .2s ease, opacity .15s ease;
+  padding-left: 10px;
+}
+.snav-items.open { opacity: 1; }
+
+/* Sub item */
+.snav-item {
   display: flex;
   align-items: center;
   gap: 9px;
   width: 100%;
-  background: none;
+  padding: 6px 10px 6px 11px;
   border: none;
-  border-radius: 9px;
-  padding: 9px 10px;
-  color: var(--muted);
+  border-radius: 7px;
+  background: none;
+  color: #6b7280;
   font-family: var(--font-body);
-  font-size: .85rem;
+  font-size: .8rem;
   cursor: pointer;
   text-align: left;
-  transition: all .15s;
-  margin-bottom: 2px;
+  transition: background .1s, color .1s;
+  position: relative;
+  margin-bottom: 1px;
+}
+.snav-item:hover { background: rgba(255,255,255,0.04); color: #d1d5db; }
+.snav-item.active { color: var(--item-accent, #818cf8); background: rgba(129,140,248,0.1); }
+.snav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 14px; border-radius: 0 3px 3px 0;
+  background: var(--item-accent, #818cf8);
+}
+.snav-item .snav-item-icon { font-size: .8rem; width: 14px; text-align: center; flex-shrink: 0; }
+.snav-item.coming-soon { opacity: .45; cursor: default; }
+.snav-item.coming-soon:hover { background: none; color: #6b7280; }
+.snav-soon-badge {
+  margin-left: auto; font-size: .58rem; font-weight: 700;
+  background: rgba(245,158,11,0.15); color: #f59e0b;
+  border-radius: 4px; padding: 1px 5px;
+  border: 1px solid rgba(245,158,11,0.25);
 }
 
+/* Dashboard shortcut */
+.snav-dash-btn {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 9px; background: rgba(255,255,255,0.03);
+  color: #6b7280; font-family: var(--font-body); font-size: .82rem;
+  cursor: pointer; transition: all .12s; margin-bottom: 1px;
+}
+.snav-dash-btn:hover { background: rgba(255,255,255,0.06); color: #d1d5db; border-color: rgba(255,255,255,0.1); }
+.snav-dash-btn.active { background: rgba(79,110,247,0.12); color: #818cf8; border-color: rgba(79,110,247,0.25); }
+
+/* Keep old .nav-btn for any remaining references */
+.nav-btn {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  background: none; border: none; border-radius: 9px; padding: 9px 10px;
+  color: var(--muted); font-family: var(--font-body); font-size: .85rem;
+  cursor: pointer; text-align: left; transition: all .15s; margin-bottom: 2px;
+}
 .nav-btn:hover { background: var(--card); color: var(--text); }
-.nav-btn.active { background: #4f6ef715; color: var(--accent); border: 1px solid #4f6ef725; }
+.nav-btn.active { background: #4f6ef715; color: var(--accent); }
 .nav-btn .ni { font-size: 1rem; width: 18px; text-align: center; }
 
 .stat-mini {
@@ -1903,34 +1986,176 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   <!-- Body -->
   <div class="body">
 
-    <!-- Sidebar -->
+    <!-- Sidebar — redesigned -->
     <aside class="sidebar">
-      <div>
-        <div class="nav-label">Menu</div>
-        <button class="nav-btn active" onclick="nav('chat',this)"><span class="ni">💬</span> AI Chat</button>
-        <button class="nav-btn" onclick="nav('quiz',this)"><span class="ni">📝</span> Quiz</button>
-        <button class="nav-btn" onclick="nav('courses',this)"><span class="ni">🏫</span> Courses</button>
-        <button class="nav-btn" onclick="nav('announcements',this)"><span class="ni">📢</span> Announcements</button>
-        <button class="nav-btn" onclick="nav('stats',this)"><span class="ni">📊</span> Progress</button>
-        <button class="nav-btn" onclick="nav('notes',this)"><span class="ni">📓</span> Notes</button>
-        <button class="nav-btn" onclick="toggleSHSidebar(this)"><span class="ni">🗂️</span> Flux <span id="sh-sidebar-arrow" style="margin-left:auto;font-size:.6rem;color:var(--muted)">▼</span></button>
-        <!-- Flux sub-menu -->
-        <div id="sh-sidebar-menu" style="display:none;flex-direction:column;gap:2px;padding:2px 0 4px 18px">
-          <button class="nav-btn" style="font-size:.78rem;padding:6px 10px" onclick="nav('flux',this)"><span class="ni">📋</span> Task Board</button>
-          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🔔</span> Smart Reminders <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
-          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">📊</span> Study Analytics <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
-          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🤝</span> Group Study <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
-          <div class="nav-btn sh-cs-item" style="font-size:.78rem;padding:6px 10px;opacity:.55;cursor:default"><span class="ni">🎯</span> Goal Tracker <span class="sh-cs-badge" style="margin-left:auto">Soon</span></div>
+
+      <!-- Logo -->
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+                    display:flex;align-items:center;justify-content:center;font-family:var(--font);
+                    font-weight:800;font-size:12px;color:#fff;letter-spacing:-.02em;flex-shrink:0;
+                    box-shadow:0 0 16px #4f6ef740">Sr</div>
+        <div>
+          <div style="font-family:var(--font);font-weight:800;font-size:13px;color:#e5e7eb;letter-spacing:-.02em;line-height:1">
+            Sivarr <span style="color:var(--accent)">AI</span>
+          </div>
+          <div style="font-size:9px;color:#4b5563;letter-spacing:.1em;text-transform:uppercase;margin-top:2px">Student</div>
         </div>
-        <button class="nav-btn" onclick="nav('lab',this)"><span class="ni">🧪</span> Study Deck</button>
       </div>
-      <div class="stat-mini" id="sb-stats">
-        <div class="stat-mini-title">Quick Stats</div>
-        <div class="stat-row"><span class="sl">Questions</span><span class="sv" id="sq-q">0</span></div>
-        <div class="stat-row"><span class="sl">Quizzes</span><span class="sv" id="sq-qz">0</span></div>
-        <div class="stat-row"><span class="sl">Sessions</span><span class="sv" id="sq-s">0</span></div>
-        <div class="stat-row"><span class="sl">To Revise</span><span class="sv" id="sq-w">0</span></div>
+
+      <!-- Nav content -->
+      <div style="flex:1;overflow-y:auto;padding:10px 8px;scrollbar-width:none">
+
+        <!-- Dashboard shortcut -->
+        <button class="snav-dash-btn" id="snav-dash" onclick="snavSelect('chat','ai',this)">
+          <span style="font-size:.82rem">⊞</span> Dashboard
+        </button>
+
+        <div style="height:1px;background:rgba(255,255,255,0.05);margin:8px 4px"></div>
+
+        <!-- ── AI ── -->
+        <button class="snav-section-btn open" id="snav-sec-ai" onclick="snavToggle('ai',this)"
+          style="--sec-color:#818cf8">
+          <span class="snav-section-icon" style="background:rgba(129,140,248,0.15)">🧠</span>
+          <span class="snav-section-label">AI</span>
+          <span class="snav-chevron">▼</span>
+        </button>
+        <div class="snav-items open" id="snav-items-ai" style="max-height:200px">
+          <button class="snav-item active" style="--item-accent:#818cf8" id="snav-chat"
+            onclick="snavSelect('chat','ai',this)">
+            <span class="snav-item-icon">💬</span> Chat
+          </button>
+          <button class="snav-item" style="--item-accent:#818cf8" id="snav-ask-notes"
+            onclick="snavSelect('ask-notes','ai',this)">
+            <span class="snav-item-icon">📄</span> Ask from Notes
+          </button>
+          <button class="snav-item" style="--item-accent:#818cf8" id="snav-generate-quiz"
+            onclick="snavSelect('generate-quiz','ai',this)">
+            <span class="snav-item-icon">✨</span> Generate Quiz
+          </button>
+          <button class="snav-item" style="--item-accent:#818cf8" id="snav-study-help-ai"
+            onclick="snavSelect('study-help-ai','ai',this)">
+            <span class="snav-item-icon">💡</span> Study Help
+          </button>
+        </div>
+
+        <!-- ── Academics ── -->
+        <button class="snav-section-btn" id="snav-sec-academics" onclick="snavToggle('academics',this)">
+          <span class="snav-section-icon">🎓</span>
+          <span class="snav-section-label">Academics</span>
+          <span class="snav-chevron">▼</span>
+        </button>
+        <div class="snav-items" id="snav-items-academics">
+          <button class="snav-item" style="--item-accent:#34d399" id="snav-courses"
+            onclick="snavSelect('courses','academics',this)">
+            <span class="snav-item-icon">📚</span> Courses
+          </button>
+          <button class="snav-item" style="--item-accent:#34d399" id="snav-materials"
+            onclick="snavSelect('materials','academics',this)">
+            <span class="snav-item-icon">📂</span> Materials
+          </button>
+          <button class="snav-item" style="--item-accent:#34d399" id="snav-announcements"
+            onclick="snavSelect('announcements','academics',this)">
+            <span class="snav-item-icon">📢</span> Announcements
+          </button>
+        </div>
+
+        <!-- ── Planner ── -->
+        <button class="snav-section-btn" id="snav-sec-planner" onclick="snavToggle('planner',this)">
+          <span class="snav-section-icon">📅</span>
+          <span class="snav-section-label">Planner</span>
+          <span class="snav-chevron">▼</span>
+        </button>
+        <div class="snav-items" id="snav-items-planner">
+          <button class="snav-item" style="--item-accent:#fb923c" id="snav-tasks"
+            onclick="snavSelect('tasks','planner',this)">
+            <span class="snav-item-icon">✅</span> Tasks
+          </button>
+          <button class="snav-item" style="--item-accent:#fb923c" id="snav-notes"
+            onclick="snavSelect('notes','planner',this)">
+            <span class="snav-item-icon">📓</span> Notes
+          </button>
+          <button class="snav-item" style="--item-accent:#fb923c" id="snav-study-deck"
+            onclick="snavSelect('study-deck','planner',this)">
+            <span class="snav-item-icon">🧪</span> Study Deck
+          </button>
+          <button class="snav-item" style="--item-accent:#fb923c" id="snav-study-plan"
+            onclick="snavSelect('study-plan','planner',this)">
+            <span class="snav-item-icon">🗺️</span> Study Plan
+          </button>
+        </div>
+
+        <!-- ── Assessments ── -->
+        <button class="snav-section-btn" id="snav-sec-assessments" onclick="snavToggle('assessments',this)">
+          <span class="snav-section-icon">🧪</span>
+          <span class="snav-section-label">Assessments</span>
+          <span class="snav-chevron">▼</span>
+        </button>
+        <div class="snav-items" id="snav-items-assessments">
+          <button class="snav-item" style="--item-accent:#f472b6" id="snav-quizzes"
+            onclick="snavSelect('quizzes','assessments',this)">
+            <span class="snav-item-icon">📝</span> Quizzes
+          </button>
+          <button class="snav-item" style="--item-accent:#f472b6" id="snav-exams"
+            onclick="snavSelect('exams','assessments',this)">
+            <span class="snav-item-icon">📋</span> Exams
+          </button>
+          <button class="snav-item" style="--item-accent:#f472b6" id="snav-results"
+            onclick="snavSelect('results','assessments',this)">
+            <span class="snav-item-icon">🏆</span> Results
+          </button>
+        </div>
+
+        <!-- ── Insights ── -->
+        <button class="snav-section-btn" id="snav-sec-insights" onclick="snavToggle('insights',this)">
+          <span class="snav-section-icon">📊</span>
+          <span class="snav-section-label">Insights</span>
+          <span class="snav-chevron">▼</span>
+        </button>
+        <div class="snav-items" id="snav-items-insights">
+          <button class="snav-item" style="--item-accent:#60a5fa" id="snav-progress"
+            onclick="snavSelect('progress','insights',this)">
+            <span class="snav-item-icon">📈</span> Progress
+          </button>
+          <button class="snav-item" style="--item-accent:#60a5fa" id="snav-weak-areas"
+            onclick="snavSelect('weak-areas','insights',this)">
+            <span class="snav-item-icon">🎯</span> Weak Areas
+          </button>
+          <button class="snav-item" style="--item-accent:#60a5fa" id="snav-recommendations"
+            onclick="snavSelect('recommendations','insights',this)">
+            <span class="snav-item-icon">💡</span> Recommendations
+          </button>
+        </div>
+
+        <!-- Flux (Planner tasks) kept for backward compat, hidden -->
+        <div style="height:1px;background:rgba(255,255,255,0.05);margin:8px 4px 4px"></div>
+
+        <!-- Quick Stats mini -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+                    border-radius:10px;padding:10px 12px;margin-top:4px" id="sb-stats">
+          <div style="font-size:9px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Quick Stats</div>
+          <div class="stat-row"><span class="sl">Questions</span><span class="sv" id="sq-q">0</span></div>
+          <div class="stat-row"><span class="sl">Quizzes</span><span class="sv" id="sq-qz">0</span></div>
+          <div class="stat-row"><span class="sl">Sessions</span><span class="sv" id="sq-s">0</span></div>
+          <div class="stat-row"><span class="sl">Revision</span><span class="sv" id="sq-w">0</span></div>
+        </div>
       </div>
+
+      <!-- User footer -->
+      <div style="padding:10px 8px;border-top:1px solid rgba(255,255,255,0.05);flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:9px;cursor:pointer;transition:background .12s"
+          onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+          onmouseout="this.style.background='transparent'">
+          <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+                      display:flex;align-items:center;justify-content:center;font-weight:700;
+                      font-size:11px;color:#fff;flex-shrink:0" id="snav-av">?</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:#d1d5db;truncate" id="snav-name">Student</div>
+            <div style="font-size:10px;color:#4b5563">Student</div>
+          </div>
+        </div>
+      </div>
+
     </aside>
 
     <!-- Main -->
@@ -2754,8 +2979,13 @@ async function doLogin(name, matric) {
 
     $('tb-av').textContent   = r.name[0].toUpperCase();
     $('tb-name').textContent = r.name;
+    // Sync new sidebar footer
+    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
+    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
     const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
     const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
+    // Init sidebar — open AI section, highlight Chat
+    snavToggle('ai', $('snav-sec-ai'));
     updateDiff(r.difficulty);
     updateSBStats();
     renderTopics(r.topics, r.weak);
@@ -3222,6 +3452,119 @@ function updateDiff(level) {
   if (qd) qd.textContent = level.charAt(0).toUpperCase()+level.slice(1);
 }
 
+// ═══════════════════════════ SNAV (New Sidebar) ═════════════════
+
+const SNAV_SECTION_HEIGHTS = {
+  ai: 4, academics: 3, planner: 4, assessments: 3, insights: 3
+};
+
+function snavToggle(sectionId, btn) {
+  const items = $(`snav-items-${sectionId}`);
+  const secBtn = $(`snav-sec-${sectionId}`) || btn;
+  if (!items) return;
+  const isOpen = items.classList.contains('open');
+  if (isOpen) {
+    items.style.maxHeight = '0px';
+    items.classList.remove('open');
+    if (secBtn) secBtn.classList.remove('open');
+  } else {
+    const count = SNAV_SECTION_HEIGHTS[sectionId] || 5;
+    items.style.maxHeight = (count * 34) + 'px';
+    items.classList.add('open');
+    if (secBtn) secBtn.classList.add('open');
+    // Update icon background
+    const icon = secBtn ? secBtn.querySelector('.snav-section-icon') : null;
+    if (icon) icon.style.background = getSectionColor(sectionId, true);
+  }
+}
+
+function getSectionColor(sectionId, bg) {
+  const map = {
+    ai: '#818cf8', academics: '#34d399', planner: '#fb923c',
+    assessments: '#f472b6', insights: '#60a5fa'
+  };
+  const c = map[sectionId] || '#818cf8';
+  return bg ? `${c}22` : c;
+}
+
+// Route map: snav item id → { panel, trigger }
+const SNAV_ROUTE = {
+  // AI
+  'chat':            () => nav('chat', null),
+  'ask-notes':       () => { nav('chat', null); setTimeout(() => $('attach-btn')?.click(), 300); },
+  'generate-quiz':   () => nav('quiz', null),
+  'study-help-ai':   () => { nav('chat', null); setTimeout(() => {
+    const ci = $('ci'); if (ci) { ci.value = 'Help me build a study plan and break down my tasks'; ci.focus(); }
+  }, 300); },
+  // Academics
+  'courses':         () => { nav('courses', null); },
+  'materials':       () => { nav('courses', null); setTimeout(() => {
+    const matBtn = document.querySelector('.ctab[onclick*="materials"]'); if (matBtn) matBtn.click();
+  }, 350); },
+  'announcements':   () => nav('announcements', null),
+  // Planner
+  'tasks':           () => nav('flux', null),
+  'notes':           () => nav('notes', null),
+  'study-deck':      () => nav('lab', null),
+  'study-plan':      () => { nav('chat', null); setTimeout(() => {
+    const ci = $('ci'); if (ci) { ci.value = 'Create a personalised weekly study plan for me based on my courses and weak areas'; ci.focus(); }
+  }, 300); },
+  // Assessments
+  'quizzes':         () => nav('quiz', null),
+  'exams':           () => { nav('courses', null); setTimeout(() => {
+    const examBtn = document.querySelector('.ctab[onclick*="exam-entry"]'); if (examBtn) examBtn.click();
+  }, 350); },
+  'results':         () => { nav('stats', null); },
+  // Insights
+  'progress':        () => nav('stats', null),
+  'weak-areas':      () => { nav('stats', null); setTimeout(() => {
+    const wa = $('weak-section'); if (wa) wa.scrollIntoView({ behavior: 'smooth' });
+  }, 400); },
+  'recommendations': () => { nav('chat', null); setTimeout(() => getSuggestions(), 400); },
+};
+
+let SNAV_ACTIVE = 'chat';
+
+function snavSelect(itemId, sectionId, btnEl) {
+  // Clear all active states
+  document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
+  const dash = $('snav-dash'); if (dash) dash.classList.remove('active');
+
+  // Set active
+  const el = $(`snav-${itemId}`) || btnEl;
+  if (el) el.classList.add('active');
+  SNAV_ACTIVE = itemId;
+
+  // Open the section if not already
+  const items = $(`snav-items-${sectionId}`);
+  if (items && !items.classList.contains('open')) snavToggle(sectionId, null);
+
+  // Update sidebar footer name (mirror from topbar)
+  const snavName = $('snav-name'); const tbName = $('tb-name');
+  if (snavName && tbName) snavName.textContent = tbName.textContent;
+  const snavAv = $('snav-av'); const tbAv = $('tb-av');
+  if (snavAv && tbAv) snavAv.textContent = tbAv.textContent;
+
+  // Execute route
+  const route = SNAV_ROUTE[itemId];
+  if (route) route();
+}
+
+// Keep old nav() active-state logic in sync with new sidebar
+function syncSnavFromPanel(name) {
+  // Map panel names back to snav item ids
+  const panelToSnav = {
+    chat: 'chat', quiz: 'quizzes', courses: 'courses',
+    announcements: 'announcements', stats: 'progress',
+    notes: 'notes', flux: 'tasks', lab: 'study-deck',
+  };
+  const snavId = panelToSnav[name];
+  if (snavId) {
+    document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
+    const el = $(`snav-${snavId}`); if (el) el.classList.add('active');
+  }
+}
+
 // ═══════════════════════════ NAV ════════════════════════════════
 function nav(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -3230,11 +3573,12 @@ function nav(name, btn) {
   if (p) p.classList.add('active');
   if (btn) btn.classList.add('active');
   const mob = document.getElementById(`mn-${name}`); if (mob) mob.classList.add('active');
+  syncSnavFromPanel(name);
   if (name === 'stats')         loadStats();
   if (name === 'more')          syncMore();
   if (name === 'leaderboard')   loadLeaderboard();
   if (name === 'notes')         loadNotes();
-  if (name === 'flux')     loadStudyHelp();
+  if (name === 'flux')          loadStudyHelp();
   if (name === 'courses')       loadClasses();
   if (name === 'announcements') loadAllAnnouncements();
   if (name === 'quiz' && !S.quizActive) {
@@ -3343,18 +3687,20 @@ function switchLabTabP(tab, btn) {
 function saveLabAsNoteP()  { _saveLabNote(); }
 function downloadLabResultP() { _downloadLab(); }
 
-function toggleSHSidebar(btn) {
-  const menu  = $('sh-sidebar-menu');
-  const arrow = $('sh-sidebar-arrow');
-  if (!menu) return;
-  const open = menu.style.display === 'flex';
-  menu.style.display = open ? 'none' : 'flex';
-  if (arrow) arrow.textContent = open ? '▼' : '▲';
-  // Also navigate to flux panel on first open
-  if (!open) nav('flux', btn);
-}
+// toggleSHSidebar kept as no-op — superseded by snavToggle
+function toggleSHSidebar(btn) { snavSelect('tasks','planner',null); }
 
-// ═══════════════════════════ STUDY HELP ═════════════════════════
+// Init sidebar section heights on load so CSS transitions work
+document.addEventListener('DOMContentLoaded', () => {
+  Object.entries(SNAV_SECTION_HEIGHTS).forEach(([id, count]) => {
+    const el = $(`snav-items-${id}`);
+    if (el && el.classList.contains('open')) {
+      el.style.maxHeight = (count * 34) + 'px';
+    }
+  });
+});
+
+
 
 const SH_KEY  = () => `sivarr_sh_${S.sid || 'guest'}`;
 let SH_DRAG   = null;
@@ -5087,5 +5433,3 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
-
-
