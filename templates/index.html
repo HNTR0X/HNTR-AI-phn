@@ -65,20 +65,24 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   z-index: 1;
 }
 
-.topbar-monogram {
-  width: 40px;
-  height: 40px;
+.sr-logo {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  margin-bottom: 2rem;
 }
 
-.topbar-monogram img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
+.sr-monogram {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+  letter-spacing: -.5px;
 }
-
 
 .sr-name {
   font-family: var(--font);
@@ -1281,34 +1285,99 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 
 .material-item:hover { border-color: var(--accent); }
 
-.discuss-msg {
-  display: flex;
-  gap: 9px;
-  margin-bottom: .875rem;
-  animation: msgIn .2s ease;
+/* ── WhatsApp-style Class Chat ───────────────────────────── */
+.wa-chat-wrap {
+  display: flex; flex-direction: column; height: 100%;
 }
+.wa-messages {
+  flex: 1; overflow-y: auto; padding: 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  background: var(--bg);
+}
+.wa-msg-row {
+  display: flex; align-items: flex-end; gap: 6px;
+  animation: msgIn .15s ease;
+}
+.wa-msg-row.mine { flex-direction: row-reverse; }
+.wa-msg-row.mine + .wa-msg-row.mine .wa-av,
+.wa-msg-row:not(.mine) + .wa-msg-row:not(.mine) .wa-av { visibility: hidden; }
 
-.discuss-av {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
+.wa-av {
+  width: 26px; height: 26px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font); font-weight: 700; font-size: .72rem;
+  font-family: var(--font); font-weight: 700; font-size: .7rem;
   color: #fff; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
 }
+.wa-av.mine { background: linear-gradient(135deg,#16a34a,#22c55e); }
 
-.discuss-bubble {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  border-top-left-radius: 3px;
-  padding: 8px 12px;
+.wa-bubble {
+  max-width: 75%;
+  padding: 8px 11px;
+  border-radius: 12px;
   font-size: .84rem;
   line-height: 1.5;
-  flex: 1;
+  word-break: break-word;
+  position: relative;
 }
+.wa-bubble.theirs {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+}
+.wa-bubble.mine {
+  background: #2563eb22;
+  border: 1px solid #3b82f630;
+  border-bottom-right-radius: 3px;
+  color: var(--text);
+}
+.wa-sender { font-size: .68rem; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+.wa-time   { font-size: .62rem; color: var(--muted); margin-top: 3px; text-align: right; }
+.wa-date-divider {
+  text-align: center; font-size: .68rem; color: var(--muted);
+  padding: 6px 0; margin: 4px 0;
+}
+.wa-date-divider span {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 2px 10px;
+}
+.wa-input-bar {
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.wa-input {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 9px 14px; color: var(--text);
+  font-family: var(--font-body); font-size: .85rem; outline: none;
+  resize: none; max-height: 100px; transition: border-color .2s;
+  line-height: 1.45;
+}
+.wa-input:focus { border-color: var(--accent); }
+.wa-send-btn {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent); color: #fff; border: none;
+  cursor: pointer; font-size: .9rem; display: flex;
+  align-items: center; justify-content: center;
+  transition: opacity .15s;
+}
+.wa-send-btn:hover { opacity: .85; }
 
-.discuss-name { font-weight: 600; font-size: .75rem; color: var(--accent); margin-bottom: 2px; }
-.discuss-date { font-size: .68rem; color: var(--muted); margin-top: 3px; }
+/* Group chat list */
+.group-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  transition: background .12s; border-bottom: 1px solid var(--border);
+}
+.group-item:hover { background: var(--surface); }
+.group-av {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg,#7c3aed,#4f6ef7);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-weight: 700; color: #fff; font-size: .85rem;
+}
 
 .assign-item {
   background: var(--surface);
@@ -1372,6 +1441,71 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
 
 .ann-card-text { font-size: .88rem; line-height: 1.55; }
 .ann-card-meta { font-size: .72rem; color: var(--muted); margin-top: 5px; }
+
+/* ── Exam.net-style focused exam mode ─────────────────────── */
+.exam-fullscreen {
+  position: fixed; inset: 0; z-index: 500;
+  background: #0a0a0f;
+  display: flex; flex-direction: column;
+  font-family: var(--font-body);
+}
+.exam-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem 1.25rem; flex-shrink: 0;
+  background: #0f1117; border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.exam-timer-pill {
+  font-family: var(--font); font-weight: 800; font-size: 1.1rem;
+  padding: 5px 14px; border-radius: 8px; letter-spacing: .02em;
+  transition: background .3s, color .3s;
+}
+.exam-body {
+  flex: 1; overflow-y: auto; padding: 1.5rem;
+  max-width: 720px; width: 100%; margin: 0 auto;
+}
+.exam-q-block {
+  background: #13151c; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem;
+}
+.exam-q-label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: #4b5563; margin-bottom: .625rem;
+}
+.exam-q-text {
+  font-size: .95rem; line-height: 1.6; color: #e5e7eb;
+  font-weight: 500; margin-bottom: 1rem;
+}
+.exam-option {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 10px 14px; margin-bottom: 6px;
+  background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px; color: #9ca3af; font-size: .875rem;
+  cursor: pointer; transition: all .15s; text-align: left;
+  font-family: var(--font-body);
+}
+.exam-option:hover { border-color: rgba(79,110,247,0.5); color: #e5e7eb; background: rgba(79,110,247,0.06); }
+.exam-option.chosen { border-color: var(--accent); background: rgba(79,110,247,0.12); color: #e5e7eb; }
+.exam-option.chosen .exam-opt-key { background: var(--accent); color: #fff; }
+.exam-opt-key {
+  width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.07); font-weight: 700; font-size: .78rem;
+  transition: background .15s;
+}
+.exam-progress-strip {
+  height: 3px; background: rgba(255,255,255,0.06); flex-shrink: 0;
+}
+.exam-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width .3s;
+}
+.exam-results-wrap {
+  position: fixed; inset: 0; z-index: 600; overflow-y: auto;
+  background: #0a0a0f; padding: 2rem 1rem;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+
 
 
 /* ── Attach menu ──────────────────────────────────────────── */
@@ -1889,9 +2023,12 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   <!-- Topbar -->
   <header class="topbar">
     <!-- Left: Logo -->
-   <div class="topbar-monogram">
-  <img src="/static/Sivarr_Ai.png" alt="Sivarr Logo">
-   </div>
+    <div class="topbar-left">
+      <a class="topbar-logo" href="https://sivarr.vercel.app" target="_blank">
+        <div class="topbar-monogram">Sr</div>
+        <span class="topbar-name">Sivarr <span style="color:var(--accent)">AI</span></span>
+      </a>
+    </div>
 
     <!-- Right: Profile dropdown -->
     <div class="topbar-right">
@@ -2056,13 +2193,13 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         <!-- ── Planner ── -->
         <button class="snav-section-btn" id="snav-sec-planner" onclick="snavToggle('planner',this)">
           <span class="snav-section-icon">📅</span>
-          <span class="snav-section-label">Plan</span>
+          <span class="snav-section-label">Planner</span>
           <span class="snav-chevron">▼</span>
         </button>
         <div class="snav-items" id="snav-items-planner">
           <button class="snav-item" style="--item-accent:#fb923c" id="snav-tasks"
             onclick="snavSelect('tasks','planner',this)">
-            <span class="snav-item-icon">✅</span> Flux
+            <span class="snav-item-icon">✅</span> Tasks
           </button>
           <button class="snav-item" style="--item-accent:#fb923c" id="snav-notes"
             onclick="snavSelect('notes','planner',this)">
@@ -2100,40 +2237,23 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         </div>
 
         <!-- ── Insights ── -->
-        <button class="snav-section-btn" id="snav-sec-reports" onclick="snavToggle('reports',this)">
+        <button class="snav-section-btn" id="snav-sec-insights" onclick="snavToggle('insights',this)">
           <span class="snav-section-icon">📊</span>
-          <span class="snav-section-label">Reports</span>
+          <span class="snav-section-label">Insights</span>
           <span class="snav-chevron">▼</span>
         </button>
-        <div class="snav-items" id="snav-items-reports">
+        <div class="snav-items" id="snav-items-insights">
           <button class="snav-item" style="--item-accent:#60a5fa" id="snav-progress"
-            onclick="snavSelect('progress','reports',this)">
+            onclick="snavSelect('progress','insights',this)">
             <span class="snav-item-icon">📈</span> Progress
           </button>
           <button class="snav-item" style="--item-accent:#60a5fa" id="snav-weak-areas"
-            onclick="snavSelect('weak-areas','reports',this)">
+            onclick="snavSelect('weak-areas','insights',this)">
             <span class="snav-item-icon">🎯</span> Weak Areas
           </button>
           <button class="snav-item" style="--item-accent:#60a5fa" id="snav-recommendations"
-            onclick="snavSelect('recommendations','reports',this)">
+            onclick="snavSelect('recommendations','insights',this)">
             <span class="snav-item-icon">💡</span> Recommendations
-          </button>
-        </div>
-
-        <!-- ── Spaces ── -->
-        <button class="snav-section-btn" id="snav-sec-spaces" onclick="snavToggle('Spaces',this)">
-          <span class="snav-section-icon">💠</span>
-          <span class="snav-section-label">Spaces</span>
-          <span class="snav-chevron">▼</span>
-        </button>
-        <div class="snav-items" id="snav-items-spaces">
-          <button class="snav-item" style="--item-accent:#fb923c" id="snav-personal-space"
-            onclick="snavSelect('tasks','planner',this)">
-            <span class="snav-item-icon"👤</span> Personal Space
-          </button>
-          <button class="snav-item" style="--item-accent:#fb923c" id="snav-organization-space"
-            onclick="snavSelect('notes','spaces',this)">
-            <span class="snav-item-icon">👥️</span> Organization Space
           </button>
         </div>
 
@@ -4337,130 +4457,55 @@ let EXAM_STATE = {
 };
 
 async function startStudentExam(examId, code) {
-  const takeView = $('exam-take-view');
-  const listView = $('exam-list-view');
-  if (!takeView) return;
-
-  listView.style.display = 'none';
-  takeView.style.display = 'block';
-  takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Loading exam...</div></div>`;
-
-  try {
-    const r = await fetch('/api/exam/start', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ sid: S.sid, exam_id: examId, code })
-    });
-    if (r.status === 409) {
-      takeView.innerHTML = `<div class="empty-state"><div class="es-icon">✅</div><div class="es-text">You have already submitted this exam.</div></div>`;
-      return;
-    }
-    if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
-    const d = await r.json();
-
-    EXAM_STATE = {
-      examId, code, questions: d.questions, answers: {},
-      timerInterval: null, timeLeft: d.duration * 60,
-      tabSwitches: 0, title: d.title
-    };
-
-    renderExamUI(takeView);
-    startExamTimer();
-    setupAntiCheat();
-  } catch(e) {
-    takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>
-      <div class="es-text">${esc(e.message)}</div>
-      <button class="btn-start" style="margin-top:1rem;padding:8px 20px" onclick="$('exam-take-view').style.display='none';$('exam-list-view').style.display='block'">← Back</button></div>`;
-  }
-}
-
-function renderExamUI(container) {
-  const q   = EXAM_STATE.questions;
-  const tot = q.length;
-
-  container.innerHTML = `
-    <!-- Exam header -->
-    <div style="position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);
-                padding:.875rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div>
-        <div style="font-family:var(--font);font-weight:700;font-size:.9rem">${esc(EXAM_STATE.title)}</div>
-        <div style="font-size:.72rem;color:var(--muted)">${tot} questions · <span id="exam-answered">0</span> answered</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div id="exam-timer" style="font-family:var(--font);font-weight:800;font-size:1.1rem;color:var(--accent);
-             background:#4f6ef715;border:1px solid #4f6ef730;border-radius:8px;padding:4px 12px">
-          --:--
-        </div>
-        <button class="btn-start" style="padding:7px 16px;font-size:.8rem;background:#22c55e"
-          onclick="confirmSubmitExam()">Submit →</button>
-      </div>
-    </div>
-
-    <!-- Tab switch warning -->
-    <div id="exam-cheat-warn" style="display:none;background:#ef444415;border:1px solid #ef444430;
-         border-radius:8px;padding:8px 12px;margin:.75rem .75rem 0;font-size:.78rem;color:#ef4444">
-      ⚠️ Tab switch detected (<span id="cheat-count">0</span>x). This is logged.
-    </div>
-
-    <!-- Progress bar -->
-    <div style="padding:.5rem .75rem">
-      <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden">
-        <div id="exam-prog" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s"></div>
-      </div>
-    </div>
-
-    <!-- Questions -->
-    <div style="padding:.75rem;display:flex;flex-direction:column;gap:1rem" id="exam-questions-container">
-      ${q.map((question, i) => `
-        <div class="exam-q-card" id="eq-${i}">
-          <div class="exam-q-num">Question ${i+1} of ${tot}</div>
-          <div class="exam-q-text">${esc(question.question)}</div>
-          <div class="exam-opts">
-            ${Object.entries(question.options || {}).map(([letter, text]) => `
-              <button class="exam-opt" id="eq-${i}-${letter}"
-                onclick="selectExamAnswer(${i},'${letter}')">
-                <span class="exam-opt-letter">${letter}</span>
-                <span>${esc(text)}</span>
-              </button>`).join('')}
-          </div>
-        </div>`).join('')}
-    </div>
-
-    <!-- Submit button bottom -->
-    <div style="padding:1rem;text-align:center">
-      <button class="btn-start" style="padding:12px 40px" onclick="confirmSubmitExam()">
-        Submit Exam
-      </button>
-    </div>`;
+  launchExamMode(examId, code);
 }
 
 function selectExamAnswer(qIdx, letter) {
   EXAM_STATE.answers[qIdx] = letter;
 
-  // Update UI
+  // Update UI — use new exam-option class
   const q = EXAM_STATE.questions[qIdx];
   Object.keys(q.options || {}).forEach(l => {
     const btn = $(`eq-${qIdx}-${l}`);
-    if (btn) btn.classList.toggle('selected', l === letter);
+    if (btn) {
+      btn.classList.toggle('exam-option', true);
+      btn.classList.toggle('chosen', l === letter);
+      // legacy class for old renderExamUI compatibility
+      btn.classList.toggle('selected', l === letter);
+    }
   });
 
-  // Update progress
+  // Update progress strip and counter
   const answered = Object.keys(EXAM_STATE.answers).length;
   const total    = EXAM_STATE.questions.length;
   const pct      = (answered / total) * 100;
-  const prog = $('exam-prog'); if (prog) prog.style.width = pct + '%';
-  const ans  = $('exam-answered'); if (ans) ans.textContent = answered;
+  const prog1 = $('exam-prog-fill'); if (prog1) prog1.style.width = pct + '%';
+  const prog2 = $('exam-prog');      if (prog2) prog2.style.width = pct + '%';
+  const ans1  = $('exam-answered-count'); if (ans1) ans1.textContent = answered;
+  const ans2  = $('exam-answered');       if (ans2) ans2.textContent = answered;
 }
 
 function startExamTimer() {
   const update = () => {
-    const t   = EXAM_STATE.timeLeft;
-    const m   = Math.floor(t / 60);
-    const s   = t % 60;
-    const el  = $('exam-timer');
+    const t  = EXAM_STATE.timeLeft;
+    const m  = Math.floor(t / 60);
+    const s  = t % 60;
+    const el = $('exam-timer');
     if (el) {
       el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      el.style.color = t <= 300 ? '#ef4444' : t <= 600 ? '#f59e0b' : 'var(--accent)';
-      el.style.background = t <= 300 ? '#ef444415' : t <= 600 ? '#f59e0b15' : '#4f6ef715';
+      if (t <= 300) {
+        el.style.color      = '#ef4444';
+        el.style.background = '#ef444415';
+        el.style.borderColor = '#ef444430';
+      } else if (t <= 600) {
+        el.style.color      = '#f59e0b';
+        el.style.background = '#f59e0b15';
+        el.style.borderColor = '#f59e0b30';
+      } else {
+        el.style.color      = '#818cf8';
+        el.style.background = '#4f6ef715';
+        el.style.borderColor = '#4f6ef730';
+      }
     }
     if (t <= 0) {
       clearInterval(EXAM_STATE.timerInterval);
@@ -4469,6 +4514,7 @@ function startExamTimer() {
       return;
     }
     if (t === 300) toast('⚠️ 5 minutes remaining!');
+    if (t === 600) toast('⏰ 10 minutes remaining!');
     EXAM_STATE.timeLeft--;
   };
   update();
@@ -4476,24 +4522,26 @@ function startExamTimer() {
 }
 
 function setupAntiCheat() {
+  document.removeEventListener('visibilitychange', handleTabSwitch);
   document.addEventListener('visibilitychange', handleTabSwitch);
 }
 
 function handleTabSwitch() {
   if (document.hidden && EXAM_STATE.examId) {
     EXAM_STATE.tabSwitches++;
-    const warn = $('exam-cheat-warn');
-    const cnt  = $('cheat-count');
-    if (warn) warn.style.display = 'block';
-    if (cnt)  cnt.textContent    = EXAM_STATE.tabSwitches;
+    // New fullscreen IDs
+    const warn1 = $('exam-tab-warn');  if (warn1) warn1.style.display = 'flex';
+    const cnt1  = $('exam-tab-count'); if (cnt1)  cnt1.textContent    = EXAM_STATE.tabSwitches;
+    // Legacy IDs
+    const warn2 = $('exam-cheat-warn'); if (warn2) warn2.style.display = 'block';
+    const cnt2  = $('cheat-count');     if (cnt2)  cnt2.textContent    = EXAM_STATE.tabSwitches;
   }
 }
 
 function confirmSubmitExam() {
-  const answered = Object.keys(EXAM_STATE.answers).length;
-  const total    = EXAM_STATE.questions.length;
+  const answered   = Object.keys(EXAM_STATE.answers).length;
+  const total      = EXAM_STATE.questions.length;
   const unanswered = total - answered;
-
   if (unanswered > 0) {
     const ok = confirm(`You have ${unanswered} unanswered question${unanswered>1?'s':''}. Submit anyway?`);
     if (!ok) return;
@@ -4505,8 +4553,11 @@ async function submitExam() {
   clearInterval(EXAM_STATE.timerInterval);
   document.removeEventListener('visibilitychange', handleTabSwitch);
 
-  const takeView = $('exam-take-view');
-  if (takeView) takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Submitting exam...</div></div>`;
+  const overlay = $('exam-fullscreen-overlay');
+  if (overlay) overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+    <div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div>
+    <div style="color:#9ca3af;font-size:.88rem">Submitting your exam...</div>
+  </div>`;
 
   try {
     const r = await fetch('/api/exam/submit', {
@@ -4518,13 +4569,148 @@ async function submitExam() {
     });
     if (!r.ok) throw new Error((await r.json()).detail || 'Submit failed');
     const d = await r.json();
-    renderExamResults(d);
+    renderExamResults(d, overlay);
   } catch(e) {
-    if (takeView) takeView.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div>
-      <div class="es-text">Submission failed: ${esc(e.message)}</div></div>`;
+    if (overlay) overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+      <div style="font-size:2rem;margin-bottom:.5rem">⚠️</div>
+      <div style="color:#9ca3af;margin-bottom:1.5rem;font-size:.88rem">Submission failed: ${esc(e.message)}</div>
+      <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
+    </div>`;
   }
-
   EXAM_STATE.examId = null;
+}
+
+function renderExamResults(d, container) {
+  const wrap = container || $('exam-fullscreen-overlay');
+  if (!wrap) return;
+  wrap.style.display = 'flex';
+
+  const grade  = d.grade || 'F';
+  const score  = d.score || 0;
+  const emoji  = score >= 70 ? '🏆' : score >= 50 ? '👍' : '📚';
+  const msg    = score >= 70 ? 'Excellent work!' : score >= 50 ? 'Good effort!' : 'Keep practising!';
+  const gColor = grade==='A'?'#22c55e':grade==='B'?'#4f6ef7':grade==='C'?'#f59e0b':'#ef4444';
+
+  wrap.innerHTML = `
+    <div class="exam-results-wrap">
+      <div style="width:100%;max-width:600px">
+
+        <!-- Score card -->
+        <div style="background:#13151c;border:1px solid rgba(255,255,255,0.08);border-radius:20px;
+                    padding:2rem;text-align:center;margin-bottom:1.25rem">
+          <div style="font-size:3rem;margin-bottom:.5rem">${emoji}</div>
+          <div style="font-family:var(--font);font-size:3.5rem;font-weight:800;line-height:1;
+                      background:linear-gradient(135deg,var(--accent),var(--accent2));
+                      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+            ${score}%
+          </div>
+          <div style="font-size:1.3rem;font-weight:800;margin:.4rem 0;color:${gColor}">Grade ${grade}</div>
+          <div style="color:#9ca3af;font-size:.88rem;margin-bottom:1rem">${msg}</div>
+          <div style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap">
+            <div style="text-align:center">
+              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#e5e7eb">${d.correct||0}/${d.total||0}</div>
+              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Correct</div>
+            </div>
+            ${d.time_taken ? `<div style="text-align:center">
+              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#e5e7eb">${d.time_taken}</div>
+              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Time</div>
+            </div>` : ''}
+            ${(d.tab_switches||EXAM_STATE?.tabSwitches||0) > 0 ? `<div style="text-align:center">
+              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#ef4444">${d.tab_switches||EXAM_STATE?.tabSwitches||0}</div>
+              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Tab switches</div>
+            </div>` : ''}
+          </div>
+        </div>
+
+        <!-- Question breakdown -->
+        <div style="font-family:var(--font);font-weight:700;font-size:.9rem;color:#e5e7eb;margin-bottom:.75rem">
+          Question Breakdown
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem">
+          ${(d.breakdown||[]).map((b, i) => `
+            <div style="background:${b.is_correct?'#22c55e0d':'#ef44440d'};
+                        border:1px solid ${b.is_correct?'#22c55e25':'#ef444425'};
+                        border-radius:12px;padding:12px 14px">
+              <div style="display:flex;align-items:flex-start;gap:8px">
+                <span style="font-size:.9rem;flex-shrink:0">${b.is_correct?'✅':'❌'}</span>
+                <div style="flex:1">
+                  <div style="font-size:.84rem;font-weight:600;color:#e5e7eb;margin-bottom:4px">
+                    Q${i+1}: ${esc(b.question)}
+                  </div>
+                  ${!b.is_correct ? `
+                    <div style="font-size:.75rem;color:#9ca3af">
+                      Your answer: <span style="color:#ef4444;font-weight:600">${b.your_answer||'Not answered'}</span>
+                      &nbsp;·&nbsp; Correct: <span style="color:#22c55e;font-weight:600">${b.correct}</span>
+                    </div>
+                    ${b.explanation ? `<div style="font-size:.75rem;color:#6b7280;margin-top:4px;font-style:italic">💡 ${esc(b.explanation)}</div>` : ''}
+                  ` : ''}
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>
+
+        <button onclick="closeExamMode()"
+          style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;
+                 border-radius:10px;font-family:var(--font);font-weight:700;font-size:.9rem;cursor:pointer">
+          ← Back to Courses
+        </button>
+      </div>
+    </div>`;
+}
+
+async function viewMyExamResult(examId) {
+  // Show results in the fullscreen overlay
+  let overlay = $('exam-fullscreen-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'exam-fullscreen-overlay';
+    overlay.className = 'exam-fullscreen';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+    <div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div>
+    <div style="color:#9ca3af;font-size:.88rem">Loading results...</div>
+  </div>`;
+  overlay.style.display = 'flex';
+
+  try {
+    const r = await fetch(`/api/exam/student-results?sid=${encodeURIComponent(S.sid)}`);
+    const d = await r.json();
+    const result = (d.results || []).find(res => res.exam_id === examId);
+    if (!result) {
+      overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">📝</div>
+        <div style="color:#9ca3af;margin-bottom:1.5rem">No submission found for this exam.</div>
+        <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
+      </div>`;
+      return;
+    }
+    renderExamResults(result, overlay);
+  } catch {
+    overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+      <div style="font-size:2rem;margin-bottom:.5rem">⚠️</div>
+      <div style="color:#9ca3af;margin-bottom:1.5rem">Could not load results.</div>
+      <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
+    </div>`;
+  }
+}
+
+async function enterExamById() {
+  const inp = $('exam-id-input');
+  const err = $('exam-entry-err');
+  const btn = $('exam-entry-btn');
+  const id  = inp?.value.trim();
+
+  if (!id) { if (err) err.textContent = 'Enter an Exam ID.'; return; }
+  if (err) err.textContent = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+
+  try {
+    await launchExamMode(id, CURRENT_CLASS?.code || '');
+  } catch(e) {
+    if (err) err.textContent = e.message || 'Could not start exam.';
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '▶ Start Exam'; }
 }
 
 function renderExamResults(d) {
@@ -4907,102 +5093,118 @@ function renderClassTab(tab) {
   if (!content || !CURRENT_CLASS) return;
   const cls = CURRENT_CLASS;
 
+  // ── Materials ──────────────────────────────────────────────
   if (tab === 'materials') {
     const mats = cls.materials || [];
-    const ICONS = {link:'🔗', note:'📝', file:'📄'};
-    content.innerHTML = mats.length
-      ? mats.map(m => `
-          <div class="material-item" onclick="openMaterial('${m.type}','${encodeURIComponent(m.content)}')">
-            <span style="font-size:1.2rem">${ICONS[m.type]||'📄'}</span>
-            <div>
-              <div style="font-weight:600;font-size:.88rem">${esc(m.title)}</div>
-              <div style="font-size:.72rem;color:var(--muted)">${m.type} · ${m.date}</div>
+    const ICONS = { link:'🔗', note:'📝', file:'📄' };
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
+        <div style="font-family:var(--font);font-weight:700;font-size:.9rem">📁 Materials <span style="color:var(--muted);font-weight:400;font-size:.78rem">${mats.length} item${mats.length !== 1 ? 's' : ''}</span></div>
+        <button onclick="openClass('${cls.code}')" style="background:none;border:none;color:var(--accent);font-size:.75rem;cursor:pointer">↻ Refresh</button>
+      </div>
+      ${mats.length ? mats.slice().reverse().map(m => `
+        <div class="material-item" onclick="openMaterial('${m.type}','${encodeURIComponent(m.url || m.content || '')}','${encodeURIComponent(m.title || '')}')">
+          <span style="font-size:1.2rem">${ICONS[m.type]||'📄'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.title)}</div>
+            <div style="font-size:.7rem;color:var(--muted);margin-top:2px">
+              ${m.type.toUpperCase()} · ${m.date || ''}
+              ${m.url ? `<span style="color:var(--accent)"> · ${esc(m.url.slice(0,40))}${m.url.length>40?'...':''}</span>` : ''}
             </div>
-            <span style="color:var(--muted);margin-left:auto">›</span>
-          </div>`).join('')
-      : '<div class="empty-state"><div class="es-icon">📁</div><div class="es-text">No materials uploaded yet.</div></div>';
+          </div>
+          <span style="color:var(--muted);font-size:1rem;flex-shrink:0">›</span>
+        </div>`).join('')
+      : '<div class="empty-state"><div class="es-icon">📁</div><div class="es-text">No materials uploaded yet.<br><span style="font-size:.8rem;opacity:.7">Your lecturer will post notes, links and files here.</span></div></div>'}`;
   }
 
+  // ── Announcements ──────────────────────────────────────────
   else if (tab === 'announcements') {
-    const anns = cls.announcements || [];
-    const ICONS = {info:'📘', warning:'⚠️', deadline:'⏰', exam:'📝'};
-    content.innerHTML = anns.length
-      ? anns.slice().reverse().map(a => `
-          <div class="ann-card ${a.type||'info'}">
-            <div class="ann-card-text">${ICONS[a.type]||'📘'} ${esc(a.text)}</div>
-            <div class="ann-card-meta">${a.date}</div>
-          </div>`).join('')
-      : '<div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>';
+    const anns   = cls.announcements || [];
+    const COLORS = { info: '#4f6ef7', warning: '#f59e0b', deadline: '#ef4444', exam: '#7c3aed' };
+    const ICONS  = { info: '📘', warning: '⚠️', deadline: '⏰', exam: '📝' };
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
+        <div style="font-family:var(--font);font-weight:700;font-size:.9rem">📢 Announcements</div>
+        <button onclick="openClass('${cls.code}')" style="background:none;border:none;color:var(--accent);font-size:.75rem;cursor:pointer">↻ Refresh</button>
+      </div>
+      ${anns.length ? anns.slice().reverse().map(a => {
+        const c = COLORS[a.type] || COLORS.info;
+        return `
+        <div style="background:${c}10;border:1px solid ${c}30;border-radius:12px;padding:12px 14px;margin-bottom:8px">
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <span style="font-size:1.1rem;flex-shrink:0">${ICONS[a.type]||'📘'}</span>
+            <div style="flex:1">
+              <div style="font-size:.88rem;line-height:1.55;color:var(--text)">${esc(a.text)}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
+                <span style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${c}">${a.type||'info'}</span>
+                <span style="font-size:.65rem;color:var(--muted)">·</span>
+                <span style="font-size:.68rem;color:var(--muted)">📅 ${a.date}</span>
+                ${a.author ? `<span style="font-size:.65rem;color:var(--muted)">· ${esc(a.author)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>`}).join('')
+      : '<div class="empty-state"><div class="es-icon">📢</div><div class="es-text">No announcements yet.</div></div>'}`;
   }
 
+  // ── Live ───────────────────────────────────────────────────
   else if (tab === 'live') {
     const live = cls.live_class;
     content.innerHTML = live
       ? `<div class="live-class-banner" onclick="window.open('${esc(live.link)}','_blank')">
-          <span style="font-size:1.5rem">🔴</span>
-          <div>
-            <div style="font-weight:700;color:var(--green)">${esc(live.title)}</div>
-            <div style="font-size:.75rem;color:var(--muted)">Set ${live.date} · Tap to join</div>
-          </div>
-          <span style="color:var(--green);margin-left:auto;font-weight:700">Join →</span>
-        </div>
-        <p style="font-size:.78rem;color:var(--muted)">Check with your lecturer for the session schedule.</p>`
+           <span style="font-size:1.5rem">🔴</span>
+           <div>
+             <div style="font-weight:700;color:var(--green)">${esc(live.title)}</div>
+             <div style="font-size:.75rem;color:var(--muted)">Set ${live.date} · Tap to join</div>
+           </div>
+           <span style="color:var(--green);margin-left:auto;font-weight:700">Join →</span>
+         </div>
+         <p style="font-size:.78rem;color:var(--muted)">Check with your lecturer for the session schedule.</p>`
       : '<div class="empty-state"><div class="es-icon">🔴</div><div class="es-text">No live class link set yet.</div></div>';
   }
 
+  // ── Exams ──────────────────────────────────────────────────
   else if (tab === 'exams') {
     const exams = cls.exams || [];
     if (!exams.length) {
       content.innerHTML = '<div class="empty-state"><div class="es-icon">📝</div><div class="es-text">No exams assigned yet.</div></div>';
       return;
     }
-    content.innerHTML = `
-      <div id="exam-list-view">
-        ${exams.map(e => `
-          <div class="assign-item">
-            <div class="assign-title">📝 ${esc(e.title)}</div>
-            <div class="assign-due">Assigned ${e.date || ''}</div>
-            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-              <button class="btn-start" style="padding:8px 16px;font-size:.8rem"
-                onclick="startStudentExam('${e.id}','${cls.code}')">▶ Take Exam</button>
-              <button class="btn-outline" style="padding:8px 16px;font-size:.8rem"
-                onclick="viewMyExamResult('${e.id}')">📊 My Results</button>
-            </div>
-          </div>`).join('')}
-      </div>
-      <div id="exam-take-view" style="display:none"></div>
-      <div id="exam-result-view" style="display:none"></div>`;
+    content.innerHTML = exams.map(e => `
+      <div class="assign-item">
+        <div class="assign-title">📝 ${esc(e.title)}</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px">⏱ ${e.duration||60} mins · ${e.questions_per_student||30} questions · Assigned ${e.date||''}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-start" style="padding:8px 16px;font-size:.8rem"
+            onclick="launchExamMode('${e.id}','${cls.code}')">▶ Take Exam</button>
+          <button class="btn-outline" style="padding:8px 16px;font-size:.8rem"
+            onclick="viewMyExamResult('${e.id}')">📊 My Results</button>
+        </div>
+      </div>`).join('');
   }
 
+  // ── Enter Exam by ID ───────────────────────────────────────
   else if (tab === 'exam-entry') {
     content.innerHTML = `
-      <div style="padding:.5rem 0">
-        <div style="margin-bottom:1.25rem">
-          <div style="font-family:var(--font);font-weight:700;font-size:.95rem;margin-bottom:.3rem">🎯 Enter Exam by ID</div>
-          <div style="font-size:.78rem;color:var(--muted)">Your lecturer will give you an Exam ID to enter here.</div>
-        </div>
-
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem">
-          <label style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px">
-            Exam ID
-          </label>
-          <input id="exam-id-input" type="text" placeholder="e.g. ab5f5573-b..."
-            autocomplete="off" spellcheck="false"
-            style="width:100%;background:var(--surface);border:2px solid var(--border);border-radius:10px;
-                   padding:12px;color:var(--text);font-family:var(--font);font-size:.95rem;outline:none;
-                   transition:border-color .2s;box-sizing:border-box;margin-bottom:8px"
-            onfocus="this.style.borderColor='var(--accent)'"
-            onblur="this.style.borderColor='var(--border)'"
-            onkeydown="if(event.key==='Enter') enterExamById()">
-          <div id="exam-entry-err" style="color:var(--red);font-size:.78rem;min-height:16px;margin-bottom:8px"></div>
-          <button id="exam-entry-btn" class="btn-start" style="width:100%;padding:11px"
-            onclick="enterExamById()">▶ Start Exam</button>
-        </div>
-
-        <div id="exam-entry-view"></div>
+      <div style="max-width:400px">
+        <div style="font-family:var(--font);font-weight:700;font-size:.95rem;margin-bottom:.3rem">🎯 Enter Exam by ID</div>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:1rem">Paste the Exam ID given by your lecturer.</p>
+        <input id="exam-id-input" type="text" placeholder="e.g. ab5f5573-b"
+          autocomplete="off" spellcheck="false"
+          style="width:100%;background:var(--surface);border:2px solid var(--border);border-radius:10px;
+                 padding:12px 14px;color:var(--text);font-family:var(--font);font-size:.92rem;outline:none;
+                 transition:border-color .2s;box-sizing:border-box;margin-bottom:6px"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+          onkeydown="if(event.key==='Enter') enterExamById()">
+        <div id="exam-entry-err" style="color:var(--red);font-size:.78rem;min-height:16px;margin-bottom:8px"></div>
+        <button id="exam-entry-btn" class="btn-start" style="width:100%;padding:11px" onclick="enterExamById()">
+          ▶ Start Exam
+        </button>
+        <div id="exam-entry-view" style="margin-top:1rem"></div>
       </div>`;
   }
 
+  // ── Assignments / Tasks ────────────────────────────────────
   else if (tab === 'assignments') {
     const assigns = cls.assignments || [];
     content.innerHTML = assigns.length
@@ -5021,37 +5223,90 @@ function renderClassTab(tab) {
       : '<div class="empty-state"><div class="es-icon">📋</div><div class="es-text">No assignments yet.</div></div>';
   }
 
+  // ── Class Chat (WhatsApp-style) ────────────────────────────
   else if (tab === 'discuss') {
+    content.style.padding = '0';
+    content.style.display = 'flex';
+    content.style.flexDirection = 'column';
     content.innerHTML = `
-      <div id="discuss-msgs" style="min-height:200px;margin-bottom:1rem"></div>
-      <div style="display:flex;gap:8px;align-items:flex-end">
-        <textarea id="discuss-input" class="notes-area" style="min-height:42px;max-height:100px;flex:1"
-          placeholder="Type a message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDiscussion()}"></textarea>
-        <button class="send-btn" onclick="sendDiscussion()">➤</button>
+      <div class="wa-chat-wrap">
+        <!-- Chat header bar -->
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+                    background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+                      display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff">
+            ${esc((cls.name||'?')[0].toUpperCase())}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cls.name)}</div>
+            <div style="font-size:.7rem;color:var(--muted)">Class chat</div>
+          </div>
+          <button onclick="switchClassTab('group-chat',null)"
+            style="background:rgba(79,110,247,0.12);border:1px solid rgba(79,110,247,0.25);
+                   border-radius:8px;padding:5px 10px;color:var(--accent);font-size:.72rem;cursor:pointer;
+                   font-family:var(--font);font-weight:600">
+            👥 Groups
+          </button>
+        </div>
+        <!-- Messages -->
+        <div class="wa-messages" id="discuss-msgs"></div>
+        <!-- Input bar -->
+        <div class="wa-input-bar">
+          <textarea id="discuss-input" class="wa-input" rows="1" placeholder="Message..."
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDiscussion()}"></textarea>
+          <button class="wa-send-btn" onclick="sendDiscussion()">➤</button>
+        </div>
       </div>`;
     loadDiscussion(cls.code);
-    // Poll for new messages every 5 seconds
-    DISCUSS_INTERVAL = setInterval(() => loadDiscussion(cls.code), 5000);
+    DISCUSS_INTERVAL = setInterval(() => loadDiscussion(cls.code), 4000);
+  }
+
+  // ── Group Chat ─────────────────────────────────────────────
+  else if (tab === 'group-chat') {
+    content.style.padding = '0';
+    content.style.display = 'block';
+    content.innerHTML = `
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div style="font-family:var(--font);font-weight:700;font-size:.9rem">👥 Group Chats</div>
+        <button onclick="showCreateGroup()"
+          style="background:var(--accent);color:#fff;border:none;border-radius:8px;
+                 padding:5px 12px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--font)">
+          + New Group
+        </button>
+      </div>
+      <div id="group-list-area" style="padding:8px;flex:1;overflow-y:auto">
+        <div class="empty-state" style="margin-top:1rem">
+          <div class="es-icon">⏳</div><div class="es-text">Loading groups...</div>
+        </div>
+      </div>`;
+    loadGroupList();
   }
 }
-
-function openMaterial(type, encodedContent) {
-  const content = decodeURIComponent(encodedContent);
+function openMaterial(type, encodedContent, encodedTitle) {
+  const content = decodeURIComponent(encodedContent || '');
+  const title   = decodeURIComponent(encodedTitle   || 'Material');
   if (type === 'link') {
-    window.open(content.startsWith('http') ? content : 'https://' + content, '_blank');
+    const url = content.startsWith('http') ? content : 'https://' + content;
+    window.open(url, '_blank');
   } else {
-    // Show note in a modal-style overlay
     const div = document.createElement('div');
-    div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(4px)';
+    div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(6px)';
     div.innerHTML = `
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;max-width:500px;width:100%;max-height:70vh;overflow-y:auto">
-        <div style="display:flex;justify-content:space-between;margin-bottom:1rem">
-          <span style="font-weight:700;font-family:var(--font)">📝 Material</span>
-          <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">✕</button>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;
+                  padding:1.5rem;max-width:540px;width:100%;max-height:78vh;overflow-y:auto;
+                  box-shadow:0 24px 60px #00000060">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <span style="font-weight:700;font-family:var(--font);font-size:.95rem">📝 ${esc(title)}</span>
+          <button onclick="this.closest('div[style*=position]').remove()"
+            style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;
+                   padding:2px 6px;border-radius:6px;transition:color .15s"
+            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
         </div>
-        <div style="white-space:pre-wrap;font-size:.88rem;line-height:1.65">${esc(content)}</div>
+        <div style="white-space:pre-wrap;font-size:.88rem;line-height:1.7;color:var(--text)">${esc(content)}</div>
       </div>`;
     document.body.appendChild(div);
+    div.addEventListener('click', e => { if (e.target === div) div.remove(); });
   }
 }
 
@@ -5059,24 +5314,41 @@ async function loadDiscussion(code) {
   const msgs = $('discuss-msgs');
   if (!msgs) return;
   try {
-    const r = await fetch(`/api/class/discuss?code=${code}`);
+    const r = await fetch(`/api/class/discuss?code=${encodeURIComponent(code)}`);
     const d = await r.json();
     const messages = d.messages || [];
     if (!messages.length) {
-      msgs.innerHTML = '<div class="empty-state"><div class="es-icon">💬</div><div class="es-text">No messages yet — start the conversation!</div></div>';
+      msgs.innerHTML = `<div style="text-align:center;padding:2rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">💬</div>
+        <div style="font-size:.84rem;color:var(--muted)">No messages yet — say hello!</div>
+      </div>`;
       return;
     }
-    const wasAtBottom = msgs.scrollHeight - msgs.scrollTop <= msgs.clientHeight + 50;
-    msgs.innerHTML = messages.map(m => `
-      <div class="discuss-msg">
-        <div class="discuss-av">${m.name[0].toUpperCase()}</div>
-        <div class="discuss-bubble">
-          <div class="discuss-name ${m.sid === S.sid ? '' : ''}" style="color:${m.sid === S.sid ? 'var(--accent)' : 'var(--green)'}">${esc(m.name)}</div>
+    const atBottom = msgs.scrollHeight - msgs.scrollTop <= msgs.clientHeight + 60;
+    let lastDate = '';
+    msgs.innerHTML = messages.map(m => {
+      const mine    = m.sid === S.sid;
+      const msgDate = m.date ? m.date.split(' ')[0] : '';
+      let divider   = '';
+      if (msgDate !== lastDate) {
+        lastDate  = msgDate;
+        const today     = new Date().toISOString().slice(0,10);
+        const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+        const label = msgDate === today ? 'Today' : msgDate === yesterday ? 'Yesterday' : msgDate;
+        divider = `<div class="wa-date-divider"><span>${label}</span></div>`;
+      }
+      const time = m.date ? m.date.split(' ')[1] || '' : '';
+      return `${divider}
+      <div class="wa-msg-row ${mine ? 'mine' : ''}">
+        <div class="wa-av ${mine ? 'mine' : ''}">${(m.name||'?')[0].toUpperCase()}</div>
+        <div class="wa-bubble ${mine ? 'mine' : 'theirs'}">
+          ${!mine ? `<div class="wa-sender">${esc(m.name)}</div>` : ''}
           <div>${esc(m.message)}</div>
-          <div class="discuss-date">${m.date}</div>
+          <div class="wa-time">${time}</div>
         </div>
-      </div>`).join('');
-    if (wasAtBottom) msgs.scrollTop = msgs.scrollHeight;
+      </div>`;
+    }).join('');
+    if (atBottom) msgs.scrollTop = msgs.scrollHeight;
   } catch {}
 }
 
@@ -5085,15 +5357,355 @@ async function sendDiscussion() {
   const msg   = input?.value.trim();
   if (!msg || !CURRENT_CLASS) return;
   input.value = '';
+  input.style.height = 'auto';
+  // Optimistic UI — show immediately
+  const msgs = $('discuss-msgs');
+  if (msgs) {
+    const now  = new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+    const div  = document.createElement('div');
+    div.className = 'wa-msg-row mine';
+    div.innerHTML = `
+      <div class="wa-av mine">${S.name?.[0]?.toUpperCase()||'U'}</div>
+      <div class="wa-bubble mine">
+        <div>${esc(msg)}</div>
+        <div class="wa-time">${now}</div>
+      </div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
   try {
     await fetch('/api/class/discuss', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ sid: S.sid, code: CURRENT_CLASS.code, message: msg, name: S.name })
     });
-    loadDiscussion(CURRENT_CLASS.code);
   } catch { toast('Could not send message.'); }
 }
+
+// ── Group Chat JS ──────────────────────────────────────────────
+
+let CURRENT_GROUP = null;
+let GROUP_INTERVAL = null;
+
+async function loadGroupList() {
+  const area = $('group-list-area');
+  if (!area) return;
+  try {
+    const r = await fetch(`/api/group/list?sid=${encodeURIComponent(S.sid)}`);
+    const d = await r.json();
+    const groups = d.groups || [];
+    if (!groups.length) {
+      area.innerHTML = `
+        <div class="empty-state" style="margin-top:1.5rem">
+          <div class="es-icon">👥</div>
+          <div class="es-text">No groups yet.<br><span style="font-size:.78rem;opacity:.7">Create one or ask a classmate to share their group ID.</span></div>
+        </div>
+        <div style="margin-top:1rem;text-align:center">
+          <input id="join-group-inp" class="sh-input" placeholder="Enter Group ID to join..."
+            style="max-width:260px;margin-bottom:8px">
+          <button class="btn-start" style="padding:7px 16px;font-size:.8rem;display:block;margin:0 auto"
+            onclick="joinGroupById()">Join Group</button>
+        </div>`;
+      return;
+    }
+    area.innerHTML = `
+      ${groups.map(g => `
+        <div class="group-item" onclick="openGroupChat('${g.id}','${esc(g.name)}')">
+          <div class="group-av">${g.name[0].toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:.88rem">${esc(g.name)}</div>
+            <div style="font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${esc(g.last_msg || 'No messages yet')}
+            </div>
+          </div>
+          <div style="font-size:.65rem;color:var(--muted);flex-shrink:0;margin-left:8px">
+            👥 ${g.member_count}
+          </div>
+        </div>`).join('')}
+      <div style="margin-top:.75rem;padding:.875rem;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <div style="font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:6px">Join another group</div>
+        <div style="display:flex;gap:8px">
+          <input id="join-group-inp" class="sh-input" placeholder="Group ID..." style="flex:1;font-size:.82rem">
+          <button class="sh-add-btn" onclick="joinGroupById()">Join</button>
+        </div>
+      </div>`;
+  } catch { if (area) area.innerHTML = '<div style="color:var(--muted);padding:1rem;font-size:.84rem">Could not load groups.</div>'; }
+}
+
+function showCreateGroup() {
+  const area = $('group-list-area');
+  if (!area) return;
+  area.innerHTML = `
+    <div style="padding:.5rem 0">
+      <div style="font-family:var(--font);font-weight:700;font-size:.9rem;margin-bottom:.75rem">Create Group Chat</div>
+      <input id="new-group-name" class="sh-input" placeholder="Group name e.g. Study Squad, BIO 201..."
+        style="margin-bottom:8px" onkeydown="if(event.key==='Enter') createGroup()">
+      <button class="btn-start" style="width:100%;padding:10px" onclick="createGroup()">Create Group</button>
+      <button onclick="loadGroupList()" style="width:100%;margin-top:6px;background:none;border:1px solid var(--border);
+        border-radius:8px;padding:9px;color:var(--muted);cursor:pointer;font-family:var(--font-body);font-size:.84rem">Cancel</button>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.75rem;line-height:1.5">
+        💡 Share your Group ID with classmates so they can join. Full username-based invites coming soon.
+      </p>
+    </div>`;
+  $('new-group-name').focus();
+}
+
+async function createGroup() {
+  const name = $('new-group-name')?.value.trim();
+  if (!name) { toast('Enter a group name.'); return; }
+  try {
+    const r = await fetch('/api/group/create', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, name })
+    });
+    const d = await r.json();
+    toast(`Group "${name}" created ✓ ID: ${d.group_id}`);
+    // Show the ID so they can share it
+    const area = $('group-list-area');
+    if (area) {
+      area.innerHTML = `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center">
+          <div style="font-size:1.5rem;margin-bottom:.5rem">🎉</div>
+          <div style="font-family:var(--font);font-weight:700;margin-bottom:.5rem">Group Created!</div>
+          <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Share this ID with classmates:</div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;
+                      padding:10px;font-family:monospace;font-size:.9rem;letter-spacing:.05em;margin-bottom:.75rem">${d.group_id}</div>
+          <button onclick="navigator.clipboard.writeText('${d.group_id}').then(()=>toast('ID copied ✓'))"
+            class="btn-start" style="padding:8px 20px;font-size:.8rem;margin-bottom:8px">📋 Copy ID</button>
+          <br>
+          <button onclick="openGroupChat('${d.group_id}','${esc(name)}')"
+            class="btn-start" style="padding:8px 20px;font-size:.8rem;background:#22c55e">Open Chat →</button>
+        </div>`;
+    }
+  } catch { toast('Could not create group.'); }
+}
+
+async function joinGroupById() {
+  const gid = $('join-group-inp')?.value.trim();
+  if (!gid) { toast('Enter a Group ID.'); return; }
+  try {
+    const r = await fetch('/api/group/join', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, group_id: gid })
+    });
+    if (!r.ok) { const e = await r.json(); toast(e.detail || 'Group not found.'); return; }
+    const d = await r.json();
+    toast(`Joined "${d.name}" ✓`);
+    loadGroupList();
+  } catch { toast('Could not join group.'); }
+}
+
+function openGroupChat(gid, gname) {
+  CURRENT_GROUP = { id: gid, name: gname };
+  clearInterval(GROUP_INTERVAL);
+  const content = $('class-tab-content');
+  if (!content) return;
+  content.style.padding = '0';
+  content.style.display = 'flex';
+  content.style.flexDirection = 'column';
+  content.innerHTML = `
+    <div class="wa-chat-wrap">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+                  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
+        <button onclick="clearInterval(GROUP_INTERVAL);switchClassTab('group-chat',null)"
+          style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 6px">←</button>
+        <div class="group-av" style="width:32px;height:32px;font-size:.75rem">${gname[0].toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.9rem">${esc(gname)}</div>
+          <div style="font-size:.68rem;color:var(--muted)">
+            ID: ${gid}
+            <button onclick="navigator.clipboard.writeText('${gid}').then(()=>toast('ID copied ✓'))"
+              style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.68rem;padding:0 3px">copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="wa-messages" id="group-msgs"></div>
+      <div class="wa-input-bar">
+        <textarea id="group-input" class="wa-input" rows="1" placeholder="Message..."
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupMessage()}"></textarea>
+        <button class="wa-send-btn" onclick="sendGroupMessage()">➤</button>
+      </div>
+    </div>`;
+  loadGroupMessages();
+  GROUP_INTERVAL = setInterval(loadGroupMessages, 4000);
+}
+
+async function loadGroupMessages() {
+  const msgs = $('group-msgs');
+  if (!msgs || !CURRENT_GROUP) return;
+  try {
+    const r = await fetch(`/api/group/messages?group_id=${CURRENT_GROUP.id}&sid=${encodeURIComponent(S.sid)}`);
+    const d = await r.json();
+    const messages = d.messages || [];
+    const atBottom = msgs.scrollHeight - msgs.scrollTop <= msgs.clientHeight + 60;
+    if (!messages.length) {
+      msgs.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.84rem">No messages yet — say hello! 👋</div>`;
+      return;
+    }
+    let lastDate = '';
+    msgs.innerHTML = messages.map(m => {
+      const mine    = m.sid === S.sid;
+      const msgDate = m.date ? m.date.split(' ')[0] : '';
+      let divider   = '';
+      if (msgDate !== lastDate) {
+        lastDate = msgDate;
+        const today = new Date().toISOString().slice(0,10);
+        const label = msgDate === today ? 'Today' : msgDate;
+        divider = `<div class="wa-date-divider"><span>${label}</span></div>`;
+      }
+      const time = m.date ? m.date.split(' ')[1] || '' : '';
+      return `${divider}
+      <div class="wa-msg-row ${mine ? 'mine' : ''}">
+        <div class="wa-av ${mine ? 'mine' : ''}">${(m.name||'?')[0].toUpperCase()}</div>
+        <div class="wa-bubble ${mine ? 'mine' : 'theirs'}">
+          ${!mine ? `<div class="wa-sender">${esc(m.name)}</div>` : ''}
+          <div>${esc(m.message)}</div>
+          <div class="wa-time">${time}</div>
+        </div>
+      </div>`;
+    }).join('');
+    if (atBottom) msgs.scrollTop = msgs.scrollHeight;
+  } catch {}
+}
+
+async function sendGroupMessage() {
+  const input = $('group-input');
+  const msg   = input?.value.trim();
+  if (!msg || !CURRENT_GROUP) return;
+  input.value = '';
+  input.style.height = 'auto';
+  const msgs = $('group-msgs');
+  if (msgs) {
+    const now = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const div = document.createElement('div');
+    div.className = 'wa-msg-row mine';
+    div.innerHTML = `
+      <div class="wa-av mine">${S.name?.[0]?.toUpperCase()||'U'}</div>
+      <div class="wa-bubble mine"><div>${esc(msg)}</div><div class="wa-time">${now}</div></div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  try {
+    await fetch('/api/group/message', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, group_id: CURRENT_GROUP.id, message: msg, name: S.name })
+    });
+  } catch { toast('Could not send.'); }
+}
+
+// ── Exam.net-style full-screen exam mode ───────────────────────
+
+async function launchExamMode(examId, code) {
+  // Show a full-screen overlay
+  let overlay = $('exam-fullscreen-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'exam-fullscreen-overlay';
+    overlay.className = 'exam-fullscreen';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `<div class="exam-body" style="padding-top:2rem;text-align:center">
+    <div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div>
+    <div style="color:var(--muted);font-size:.88rem">Loading exam...</div>
+  </div>`;
+  overlay.style.display = 'flex';
+
+  try {
+    const r = await fetch('/api/exam/start', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ sid: S.sid, exam_id: examId, code })
+    });
+    if (r.status === 409) {
+      overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+        <div style="font-size:2.5rem;margin-bottom:.75rem">✅</div>
+        <div style="font-family:var(--font);font-weight:700;font-size:1.1rem;margin-bottom:.5rem">Already Submitted</div>
+        <div style="color:var(--muted);font-size:.84rem;margin-bottom:1.5rem">You have already completed this exam.</div>
+        <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
+      </div>`; return;
+    }
+    if (!r.ok) throw new Error((await r.json()).detail || 'Failed to load exam');
+    const d = await r.json();
+    EXAM_STATE = { examId, code, questions: d.questions, answers: {}, timerInterval: null,
+                   timeLeft: d.duration * 60, tabSwitches: 0, title: d.title };
+    renderExamModeUI(overlay);
+    startExamTimer();
+    setupAntiCheat();
+  } catch(e) {
+    overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+      <div style="font-size:2rem;margin-bottom:.5rem">⚠️</div>
+      <div style="color:var(--muted);font-size:.84rem;margin-bottom:1.5rem">${esc(e.message)}</div>
+      <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
+    </div>`;
+  }
+}
+
+function closeExamMode() {
+  clearInterval(EXAM_STATE?.timerInterval);
+  document.removeEventListener('visibilitychange', handleTabSwitch);
+  const overlay = $('exam-fullscreen-overlay');
+  if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
+}
+
+function renderExamModeUI(overlay) {
+  const q   = EXAM_STATE.questions;
+  const tot = q.length;
+  overlay.innerHTML = `
+    <!-- Progress strip -->
+    <div class="exam-progress-strip"><div id="exam-prog-fill" class="exam-progress-fill" style="width:0%"></div></div>
+
+    <!-- Top bar -->
+    <div class="exam-topbar">
+      <div>
+        <div style="font-family:var(--font);font-weight:700;font-size:.9rem;color:#e5e7eb;
+                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">
+          ${esc(EXAM_STATE.title)}
+        </div>
+        <div style="font-size:.7rem;color:#6b7280;margin-top:1px">
+          <span id="exam-answered-count">0</span>/${tot} answered
+        </div>
+      </div>
+      <!-- Tab switch warning -->
+      <div id="exam-tab-warn" style="display:none;background:#ef444415;border:1px solid #ef444430;
+           border-radius:8px;padding:4px 10px;font-size:.72rem;color:#ef4444">
+        ⚠️ Tab switch: <span id="exam-tab-count">0</span>x
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="exam-timer" class="exam-timer-pill"
+          style="background:#4f6ef715;color:#818cf8;border:1px solid #4f6ef730">--:--</div>
+        <button onclick="confirmSubmitExam()"
+          style="background:#22c55e;color:#fff;border:none;border-radius:8px;
+                 padding:7px 14px;font-family:var(--font);font-weight:700;font-size:.82rem;cursor:pointer">
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <!-- Questions body -->
+    <div class="exam-body" id="exam-questions-body">
+      ${q.map((question, i) => `
+        <div class="exam-q-block" id="eq-${i}">
+          <div class="exam-q-label">Question ${i+1} of ${tot}</div>
+          <div class="exam-q-text">${esc(question.question)}</div>
+          <div>
+            ${Object.entries(question.options || {}).map(([letter, text]) => `
+              <button class="exam-option" id="eq-${i}-${letter}"
+                onclick="selectExamAnswer(${i},'${letter}')">
+                <span class="exam-opt-key">${letter}</span>
+                <span>${esc(text)}</span>
+              </button>`).join('')}
+          </div>
+        </div>`).join('')}
+      <div style="text-align:center;padding:1.5rem 0 3rem">
+        <button onclick="confirmSubmitExam()"
+          style="background:var(--accent);color:#fff;border:none;border-radius:10px;
+                 padding:13px 40px;font-family:var(--font);font-weight:700;font-size:.9rem;cursor:pointer">
+          Submit Exam
+        </button>
+      </div>
+    </div>`;
+}
+
+
 
 async function submitAssignment(code, assignId) {
   const ta      = $(`sub-${assignId}`);
@@ -5443,3 +6055,4 @@ async function shareResult(score, topic) {
 </script>
 </body>
 </html>
+
