@@ -2100,23 +2100,40 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         </div>
 
         <!-- ── Insights ── -->
-        <button class="snav-section-btn" id="snav-sec-insights" onclick="snavToggle('insights',this)">
+        <button class="snav-section-btn" id="snav-sec-reports" onclick="snavToggle('reports',this)">
           <span class="snav-section-icon">📊</span>
           <span class="snav-section-label">Reports</span>
           <span class="snav-chevron">▼</span>
         </button>
-        <div class="snav-items" id="snav-items-insights">
+        <div class="snav-items" id="snav-items-reports">
           <button class="snav-item" style="--item-accent:#60a5fa" id="snav-progress"
-            onclick="snavSelect('progress','insights',this)">
+            onclick="snavSelect('progress','reports',this)">
             <span class="snav-item-icon">📈</span> Progress
           </button>
           <button class="snav-item" style="--item-accent:#60a5fa" id="snav-weak-areas"
-            onclick="snavSelect('weak-areas','insights',this)">
+            onclick="snavSelect('weak-areas','reports',this)">
             <span class="snav-item-icon">🎯</span> Weak Areas
           </button>
           <button class="snav-item" style="--item-accent:#60a5fa" id="snav-recommendations"
-            onclick="snavSelect('recommendations','insights',this)">
+            onclick="snavSelect('recommendations','reports',this)">
             <span class="snav-item-icon">💡</span> Recommendations
+          </button>
+        </div>
+
+        <!-- ── Spaces ── -->
+        <button class="snav-section-btn" id="snav-sec-spaces" onclick="snavToggle('Spaces',this)">
+          <span class="snav-section-icon">💠</span>
+          <span class="snav-section-label">Spaces</span>
+          <span class="snav-chevron">▼</span>
+        </button>
+        <div class="snav-items" id="snav-items-spaces">
+          <button class="snav-item" style="--item-accent:#fb923c" id="snav-personal-space"
+            onclick="snavSelect('tasks','planner',this)">
+            <span class="snav-item-icon"👤</span> Personal Space
+          </button>
+          <button class="snav-item" style="--item-accent:#fb923c" id="snav-organization-space"
+            onclick="snavSelect('notes','spaces',this)">
+            <span class="snav-item-icon">👥️</span> Organization Space
           </button>
         </div>
 
