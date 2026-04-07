@@ -66,8 +66,8 @@ LOG_DIR     = _BASE / "logs"
 for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR, LOG_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
-ADMIN_PASSWORD     = os.environ.get("ADMIN_PASSWORD", "123456789")
-LECTURER_PASSWORD  = os.environ.get("LECTURER_PASSWORD", "123456789")
+ADMIN_PASSWORD     = os.environ.get("ADMIN_PASSWORD", "sivarr_admin_2024")
+LECTURER_PASSWORD  = os.environ.get("LECTURER_PASSWORD", "sivarr_lecturer_2024")
 
 # ── Shared file paths (defined early so all functions can use them) ──
 ANN_PATH    = DATA_DIR / "announcements.json"
@@ -1710,8 +1710,101 @@ async def get_discussion(code: str, since: str = ""):
     if code not in classes:
         raise HTTPException(404, "Class not found")
     msgs = classes[code].get("discussions", [])
-    return {"messages": msgs[-50:]}  # Last 50 messages
+    if since:
+        msgs = [m for m in msgs if m.get("date","") > since]
+    return {"messages": msgs[-100:]}
 
+
+# ── Group Chat ────────────────────────────────────────────────
+
+GROUPS_PATH = DATA_DIR / "groups.json"
+
+def load_groups() -> dict:
+    if GROUPS_PATH.exists():
+        try: return json.loads(GROUPS_PATH.read_text())
+        except: return {}
+    return {}
+
+def save_groups(groups: dict):
+    tmp = str(GROUPS_PATH) + ".tmp"
+    with open(tmp, "w") as f: json.dump(groups, f, indent=2)
+    shutil.move(tmp, str(GROUPS_PATH))
+
+
+@app.post("/api/group/create")
+async def create_group(data: dict, request: Request):
+    sid  = validate_sid(str(data.get("sid","")))
+    name = sanitize_text(str(data.get("name","")), 80)
+    if not name: raise HTTPException(400, "Group name required")
+    groups = load_groups()
+    gid = str(uuid.uuid4())[:10]
+    groups[gid] = {
+        "id":       gid,
+        "name":     name,
+        "created_by": sid,
+        "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "members":  [sid],
+        "messages": [],
+    }
+    save_groups(groups)
+    return {"ok": True, "group_id": gid, "name": name}
+
+
+@app.post("/api/group/join")
+async def join_group(data: dict):
+    sid = validate_sid(str(data.get("sid","")))
+    gid = sanitize_text(str(data.get("group_id","")), 20)
+    groups = load_groups()
+    if gid not in groups: raise HTTPException(404, "Group not found")
+    if sid not in groups[gid]["members"]:
+        groups[gid]["members"].append(sid)
+    save_groups(groups)
+    return {"ok": True, "name": groups[gid]["name"]}
+
+
+@app.get("/api/group/list")
+async def list_groups(sid: str):
+    sid    = validate_sid(sid)
+    groups = load_groups()
+    member_of = [
+        {"id": gid, "name": g["name"], "member_count": len(g["members"]),
+         "last_msg": g["messages"][-1]["message"][:50] if g["messages"] else "",
+         "last_date": g["messages"][-1]["date"] if g["messages"] else g["created_at"]}
+        for gid, g in groups.items() if sid in g["members"]
+    ]
+    return {"groups": member_of}
+
+
+@app.post("/api/group/message")
+async def send_group_message(data: dict, request: Request):
+    sid     = validate_sid(str(data.get("sid","")))
+    gid     = sanitize_text(str(data.get("group_id","")), 20)
+    message = sanitize_text(str(data.get("message","")), 1000)
+    name    = sanitize_text(str(data.get("name","Student")), MAX_NAME_LEN)
+    groups  = load_groups()
+    if gid not in groups: raise HTTPException(404, "Group not found")
+    if sid not in groups[gid]["members"]: raise HTTPException(403, "Not a member")
+    msg = {
+        "id":      str(uuid.uuid4())[:8],
+        "sid":     sid,
+        "name":    name,
+        "message": message,
+        "date":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    groups[gid]["messages"].append(msg)
+    groups[gid]["messages"] = groups[gid]["messages"][-300:]
+    save_groups(groups)
+    return {"ok": True, "msg": msg}
+
+
+@app.get("/api/group/messages")
+async def get_group_messages(group_id: str, sid: str):
+    sid    = validate_sid(sid)
+    gid    = sanitize_text(group_id, 20)
+    groups = load_groups()
+    if gid not in groups: raise HTTPException(404, "Group not found")
+    if sid not in groups[gid]["members"]: raise HTTPException(403, "Not a member")
+    return {"messages": groups[gid]["messages"][-100:], "name": groups[gid]["name"]}
 
 
 # ── Dynamic class routes (lecturer management) ───────────────
