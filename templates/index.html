@@ -65,24 +65,20 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   z-index: 1;
 }
 
-.sr-logo {
+.topbar-monogram {
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 2rem;
+  justify-content: center;
 }
 
-.sr-monogram {
-  width: 40px; height: 40px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font);
-  font-weight: 800;
-  font-size: 15px;
-  color: #fff;
-  letter-spacing: -.5px;
+.topbar-monogram img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
+
 
 .sr-name {
   font-family: var(--font);
@@ -1893,12 +1889,9 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   <!-- Topbar -->
   <header class="topbar">
     <!-- Left: Logo -->
-    <div class="topbar-left">
-      <a class="topbar-logo" href="https://sivarr.vercel.app" target="_blank">
-        <div class="topbar-monogram">Sr</div>
-        <span class="topbar-name">Sivarr <span style="color:var(--accent)">AI</span></span>
-      </a>
-    </div>
+   <div class="topbar-monogram">
+  <img src="/static/Sivarr_Ai.png" alt="Sivarr Logo">
+   </div>
 
     <!-- Right: Profile dropdown -->
     <div class="topbar-right">
