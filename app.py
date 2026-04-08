@@ -659,6 +659,9 @@ def parse_quiz_json(raw: str, topic: str) -> dict:
 
 app = FastAPI(title="Sivarr AI", version=VERSION)
 
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -1078,29 +1081,7 @@ async def upload_file(request: Request, sid: str = Form(...), file: UploadFile =
         "filename": file.filename,
         "summary": summary or "File uploaded! You can now quiz yourself on it.",
     }
-
-from fastapi import FastAPI, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-
-app = FastAPI()
-
-# Static files (logo, CSS, JS)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Templates folder
-templates = Jinja2Templates(directory="templates")
-
-# Homepage
-@app.get("/")
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-    from starlette.middleware.sessions import SessionMiddleware
-
-app.add_middleware(SessionMiddleware, secret_key="super-secret-key")
-
-                        
-
+   
 
 # ── Share Results ─────────────────────────────────────────────
 
