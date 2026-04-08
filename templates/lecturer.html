@@ -1344,7 +1344,7 @@ function switchLecTab(tab, btn) {
         <button class="btn-sm" onclick="addMaterial('${cls.code}')">Add Material</button>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:1rem">
-        ${cls.materials.length ? cls.materials.map(m => `
+        ${(cls.materials||[]).length ? (cls.materials||[]).map(m => `
           <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.875rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:flex-start">
             <div>
               <div style="font-weight:600;font-size:.85rem">${m.type === 'link' ? '🔗' : '📝'} ${esc(m.title)}</div>
@@ -1376,14 +1376,14 @@ function switchLecTab(tab, btn) {
         <div class="form-group"><label>Due Date</label><input class="form-input" id="asn-due" placeholder="e.g. Friday 23rd March"></div>
         <button class="btn-sm" onclick="addAssignment('${cls.code}')">Post Assignment</button>
       </div>
-      ${cls.assignments.length ? cls.assignments.map(a => `
+      ${(cls.assignments||[]).length ? (cls.assignments||[]).map(a => `
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.875rem;margin-bottom:.5rem">
           <div style="font-weight:600;font-size:.85rem">📋 ${esc(a.title)}</div>
-          ${a.due ? `<div style="font-size:.75rem;color:var(--yellow)">⏰ Due: ${esc(a.due)}</div>` : ''}
+          ${(a.due||a.due_date) ? `<div style="font-size:.75rem;color:var(--yellow)">⏰ Due: ${esc(a.due||a.due_date)}</div>` : ''}
           <div style="font-size:.75rem;color:var(--muted);margin-top:3px">${(a.submissions||[]).length} submission(s)</div>
           ${(a.submissions||[]).length ? `<div style="margin-top:.5rem">${a.submissions.map(s => `
             <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-top:4px;font-size:.78rem">
-              <strong>${esc(s.name)}</strong> · ${s.date}<br><span style="color:var(--muted)">${esc(s.text.slice(0,100))}...</span>
+              <strong>${esc(s.name)}</strong> · ${s.date}<br><span style="color:var(--muted)">${esc((s.content||s.text||'').slice(0,100))}...</span>
             </div>`).join('')}</div>` : ''}
         </div>`).join('')
       : '<div style="color:var(--muted);font-size:.82rem">No assignments yet.</div>'}`;
@@ -1483,10 +1483,10 @@ async function saveClassLink(code) {
   try {
     await fetch(`/api/class/${code}/link`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ token:TOKEN, link })
+      body: JSON.stringify({ token:TOKEN, link, title: '' })
     });
     toast('Class link saved ✓');
-    LEC_CURRENT_CLASS.class_link = link;
+    if (LEC_CURRENT_CLASS) LEC_CURRENT_CLASS.class_link = link;
   } catch { toast('Failed to save link.'); }
 }
 
@@ -1498,7 +1498,7 @@ async function addAssignment(code) {
   try {
     await fetch(`/api/class/${code}/assignment`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ token:TOKEN, title, description:desc, due })
+      body: JSON.stringify({ token:TOKEN, title, description:desc, due, due_date:due })
     });
     toast('Assignment posted ✓');
     await openLecClass(code);
