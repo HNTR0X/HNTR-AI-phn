@@ -1079,6 +1079,19 @@ async def upload_file(request: Request, sid: str = Form(...), file: UploadFile =
         "summary": summary or "File uploaded! You can now quiz yourself on it.",
     }
 
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+
+# 👇 This line enables /static
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+def home():
+    return {"message": "App is running"}
+
 
 # ── Share Results ─────────────────────────────────────────────
 
