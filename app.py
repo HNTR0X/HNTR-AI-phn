@@ -1095,6 +1095,11 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+    from starlette.middleware.sessions import SessionMiddleware
+
+app.add_middleware(SessionMiddleware, secret_key="super-secret-key")
+
+                        
 
 
 # ── Share Results ─────────────────────────────────────────────
