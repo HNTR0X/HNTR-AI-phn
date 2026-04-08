@@ -1351,7 +1351,8 @@ class MaterialRequest(BaseModel):
     token: str
     code: str = ""
     title: str
-    content: str
+    content: str = ""
+    url: str = ""
     type: str
 
 class ClassAnnouncementRequest(BaseModel):
@@ -1359,19 +1360,21 @@ class ClassAnnouncementRequest(BaseModel):
     code: str
     text: str
     type: str
+    author: str = ""
 
 class LiveClassRequest(BaseModel):
     token: str
     code: str = ""
     link: str
-    title: str
+    title: str = ""
 
 class AssignmentRequest(BaseModel):
     token: str
     code: str = ""
     title: str
-    description: str
-    due_date: str
+    description: str = ""
+    due_date: str = ""
+    due: str = ""
 
 class SubmitAssignmentRequest(BaseModel):
     sid: str
@@ -1504,10 +1507,11 @@ async def class_announcement(req: ClassAnnouncementRequest):
     if req.code not in classes:
         raise HTTPException(404, "Class not found")
     ann = {
-        "id":   str(uuid.uuid4())[:8],
-        "text": sanitize_text(req.text, 500),
-        "type": req.type if req.type in ["info","warning","deadline","exam"] else "info",
-        "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "id":     str(uuid.uuid4())[:8],
+        "text":   sanitize_text(req.text, 500),
+        "type":   req.type if req.type in ["info","warning","deadline","exam"] else "info",
+        "date":   datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "author": sanitize_text(req.author, MAX_NAME_LEN),
     }
     classes[req.code].setdefault("announcements", []).append(ann)
     save_classes(classes)
@@ -1847,6 +1851,7 @@ async def add_material_dynamic(code: str, req: MaterialRequest):
         "id":      str(uuid.uuid4())[:8],
         "title":   sanitize_text(req.title, 200),
         "content": sanitize_text(req.content, 2000),
+        "url":     sanitize_text(req.url, 500),
         "type":    req.type if req.type in ["link","note","file"] else "note",
         "date":    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
@@ -1855,9 +1860,11 @@ async def add_material_dynamic(code: str, req: MaterialRequest):
     return {"ok": True, "id": material["id"]}
 
 
-@app.delete("/api/class/{code}/material/delete")
-async def delete_material(code: str, material_id: str, token: str):
+@app.post("/api/class/{code}/material/delete")
+async def delete_material(code: str, req: dict):
     """Delete a material from a class."""
+    token       = req.get("token","")
+    material_id = req.get("id","")
     verify_lecturer(token)
     classes = load_classes()
     code    = code.upper()
