@@ -1079,18 +1079,22 @@ async def upload_file(request: Request, sid: str = Form(...), file: UploadFile =
         "summary": summary or "File uploaded! You can now quiz yourself on it.",
     }
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
-# 👇 This line enables /static
+# Static files (logo, CSS, JS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Templates folder
+templates = Jinja2Templates(directory="templates")
 
+# Homepage
 @app.get("/")
-def home():
-    return {"message": "App is running"}
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 # ── Share Results ─────────────────────────────────────────────
