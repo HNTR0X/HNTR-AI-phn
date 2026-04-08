@@ -1977,26 +1977,6 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 
 .action-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  .snav-section-btn.nested {
-  padding-left: 18px;
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-.snav-items.nested {
-  padding-left: 14px;
-  border-left: 1px solid rgba(255,255,255,0.05);
-  margin-left: 6px;
-}
-
-.snav-item {
-  transition: all 0.2s ease;
-}
-
-.snav-item:hover {
-  transform: translateX(3px);
-}
-
   .snav-items.nested {
   padding-left: 14px;
   margin-left: 6px;
@@ -2017,11 +1997,30 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   transform: translateX(4px);
 }
   
-  .snav-item.active {
-  background: rgba(99,102,241,0.12);
-  box-shadow: inset 0 0 0 1px rgba(99,102,241,0.2);
+.snav-section-btn.nested {
+  padding-left: 18px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.snav-items.nested {
+  padding-left: 14px;
+  border-left: 1px solid rgba(255,255,255,0.05);
+  margin-left: 6px;
+}
+
+.snav-item {
+  transition: all 0.2s ease;
+}
+
+.snav-item:hover {
+  transform: translateX(3px);
+}
+
+  .snav-section-btn:hover {
+  background: rgba(255,255,255,0.04);
   }
-  
+
 </style>
 </head>
 <body>
@@ -2079,16 +2078,37 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
     <div class="topbar-right">
       <div class="profile-menu" id="profile-menu">
         <button class="profile-trigger" id="profile-trigger" onclick="toggleProfile()">
-          <div class="pa" id="tb-av">?</div>
+          <div class="pa" id="tb-av" style="overflow:hidden">?</div>
           <span class="pn" id="tb-name">Student</span>
           <span class="pa-arrow">▼</span>
         </button>
 
         <div class="profile-dropdown" id="profile-dropdown">
-          <!-- Header -->
-          <div class="pd-header">
+          <!-- Header with avatar + upload -->
+          <div class="pd-header" style="text-align:center;padding:14px 10px 14px">
+            <div style="position:relative;display:inline-block;margin-bottom:8px" onclick="$('pfp-input').click()" title="Change photo">
+              <div class="pa" id="tb-av-big"
+                style="width:56px;height:56px;font-size:1.2rem;border-radius:50%;
+                       background:linear-gradient(135deg,var(--accent),var(--accent2));
+                       display:flex;align-items:center;justify-content:center;
+                       font-family:var(--font);font-weight:700;color:#fff;
+                       cursor:pointer;overflow:hidden;margin:0 auto;
+                       box-shadow:0 0 0 3px var(--border)">?</div>
+              <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;border-radius:50%;
+                          background:var(--accent);display:flex;align-items:center;justify-content:center;
+                          font-size:.6rem;cursor:pointer;border:2px solid var(--card)">✏️</div>
+            </div>
+            <input type="file" id="pfp-input" accept="image/*" style="display:none" onchange="uploadProfilePic(this)">
             <div class="pd-name" id="pd-name">Student</div>
             <div class="pd-matric" id="pd-matric">Matric</div>
+            <button onclick="$('pfp-input').click()"
+              style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:7px;
+                     padding:3px 10px;color:var(--muted);font-size:.7rem;cursor:pointer;
+                     font-family:var(--font-body);transition:all .15s"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              📷 Change photo
+            </button>
           </div>
 
           <!-- View Profile -->
@@ -2308,9 +2328,9 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   <span class="snav-section-label">Spaces</span>
   <span class="snav-chevron">▼</span>
 </button>
-        
-        <div class="snav-items open"id="snav-items-spaces" style="max-height:500px">
-          
+
+<div class="snav-items open" id="snav-items-spaces" style="max-height:500px">
+
   <!-- Personal Space -->
   <button class="snav-section-btn nested" onclick="snavToggle('personal',this)">
     <span class="snav-section-icon">🏠</span>
@@ -3063,7 +3083,62 @@ const API = async (url, body) => {
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const $ = id => document.getElementById(id);
 
-// ═══════════════════════════ ROLE TOGGLE ════════════════════════
+// ═══════════════════════════ PROFILE PICTURE ════════════════════
+
+const PFP_KEY = () => `sivarr_pfp_${S.sid || 'guest'}`;
+
+function uploadProfilePic(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Image too large — max 2MB.'); input.value = ''; return; }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Resize to 200x200 via canvas before saving
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200; canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+      // Crop to square from center
+      const size = Math.min(img.width, img.height);
+      const sx   = (img.width  - size) / 2;
+      const sy   = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      localStorage.setItem(PFP_KEY(), dataUrl);
+      applyProfilePic(dataUrl);
+      toast('Profile photo updated ✓');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function applyProfilePic(dataUrl) {
+  // All avatar elements to update
+  const avatarIds = ['tb-av', 'tb-av-big', 'snav-av'];
+  avatarIds.forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    if (dataUrl) {
+      el.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      el.style.background = 'none';
+      el.style.padding    = '0';
+    } else {
+      el.innerHTML = S.name?.[0]?.toUpperCase() || '?';
+      el.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
+    }
+  });
+}
+
+function loadProfilePic() {
+  const saved = localStorage.getItem(PFP_KEY());
+  if (saved) applyProfilePic(saved);
+}
+
+
 let CURRENT_ROLE = 'student';
 
 function setRole(role) {
@@ -3265,6 +3340,9 @@ async function doLogin(name, matric) {
     const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
     const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
     const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
+    const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
+    // Load saved profile picture
+    loadProfilePic();
     // Init sidebar — open AI section, highlight Chat
     snavToggle('ai', $('snav-sec-ai'));
     updateDiff(r.difficulty);
@@ -6218,7 +6296,7 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
 }
-
+  
 function snavToggle(section, btn) {
   const el = document.getElementById(`snav-items-${section}`);
   if (!el) return;
@@ -6231,8 +6309,7 @@ function snavToggle(section, btn) {
     el.style.maxHeight = null;
   }
 }
-    
+
 </script>
 </body>
 </html>
-
