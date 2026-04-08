@@ -2257,6 +2257,112 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
           </button>
         </div>
 
+        <!-- ── Spaces ── -->
+<button class="snav-section-btn" id="snav-sec-spaces" onclick="snavToggle('spaces',this)">
+  <span class="snav-section-icon">🧩</span>
+  <span class="snav-section-label">Spaces</span>
+  <span class="snav-chevron">▼</span>
+</button>
+
+<div class="snav-items" id="snav-items-spaces">
+
+  <!-- Personal Space -->
+  <button class="snav-section-btn nested" onclick="snavToggle('personal',this)">
+    <span class="snav-section-icon">🏠</span>
+    <span class="snav-section-label">Personal Space</span>
+    <span class="snav-chevron">▼</span>
+  </button>
+
+  <div class="snav-items nested" id="snav-items-personal">
+    <button class="snav-item" onclick="snavSelect('task-tracker','spaces',this)">
+      <span class="snav-item-icon">✅</span> Task Tracker
+    </button>
+    <button class="snav-item" onclick="snavSelect('document-hub','spaces',this)">
+      <span class="snav-item-icon">📁</span> Document Hub
+    </button>
+    <button class="snav-item" onclick="snavSelect('meetings','spaces',this)">
+      <span class="snav-item-icon">📅</span> Meetings
+    </button>
+    <button class="snav-item" onclick="snavSelect('content-hub','spaces',this)">
+      <span class="snav-item-icon">🧠</span> Content Hub
+    </button>
+  </div>
+
+  <!-- Organization Space -->
+  <button class="snav-section-btn nested" onclick="snavToggle('org',this)">
+    <span class="snav-section-icon">🏢</span>
+    <span class="snav-section-label">Organization Space</span>
+    <span class="snav-chevron">▼</span>
+  </button>
+
+  <div class="snav-items nested" id="snav-items-org">
+
+    <!-- Dashboard -->
+    <button class="snav-section-btn nested" onclick="snavToggle('org-dashboard',this)">
+      <span class="snav-section-icon">📊</span>
+      <span class="snav-section-label">Dashboard</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+
+    <div class="snav-items nested" id="snav-items-org-dashboard">
+      <button class="snav-item" onclick="snavSelect('org-overview','spaces',this)">
+        <span class="snav-item-icon">📈</span> Overview
+      </button>
+    </div>
+
+    <!-- Execution -->
+    <button class="snav-section-btn nested" onclick="snavToggle('execution',this)">
+      <span class="snav-section-icon">⚡</span>
+      <span class="snav-section-label">Execution</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+
+    <div class="snav-items nested" id="snav-items-execution">
+      <button class="snav-item" onclick="snavSelect('tasks','spaces',this)">
+        <span class="snav-item-icon">📌</span> Tasks
+      </button>
+      <button class="snav-item" onclick="snavSelect('projects','spaces',this)">
+        <span class="snav-item-icon">📂</span> Projects
+      </button>
+      <button class="snav-item" onclick="snavSelect('workflow','spaces',this)">
+        <span class="snav-item-icon">🔄</span> Workflow
+      </button>
+      <button class="snav-item" onclick="snavSelect('meeting-hub','spaces',this)">
+        <span class="snav-item-icon">📅</span> Meeting Hub
+      </button>
+    </div>
+
+    <!-- Flat items -->
+    <button class="snav-item" onclick="snavSelect('goals','spaces',this)">
+      <span class="snav-item-icon">🎯</span> Goals
+    </button>
+
+    <button class="snav-item" onclick="snavSelect('team','spaces',this)">
+      <span class="snav-item-icon">👥</span> Team
+    </button>
+
+    <button class="snav-item" onclick="snavSelect('knowledge','spaces',this)">
+      <span class="snav-item-icon">📚</span> Knowledge
+    </button>
+
+    <button class="snav-item" onclick="snavSelect('org-insights','spaces',this)">
+      <span class="snav-item-icon">📊</span> Insights
+    </button>
+
+  </div>
+
+</div>
+
+<!-- Bottom Actions -->
+<div style="margin-top:10px;padding:6px 4px;border-top:1px solid rgba(255,255,255,0.05)">
+  <button class="snav-item" onclick="snavSelect('create-new','spaces',this)">
+    <span class="snav-item-icon">➕</span> Create New
+  </button>
+  <button class="snav-item" onclick="snavSelect('settings','spaces',this)">
+    <span class="snav-item-icon">⚙️</span> Settings
+  </button>
+</div>
+
         <!-- Flux (Planner tasks) kept for backward compat, hidden -->
         <div style="height:1px;background:rgba(255,255,255,0.05);margin:8px 4px 4px"></div>
 
