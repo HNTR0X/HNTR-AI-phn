@@ -1976,6 +1976,26 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 }
 
 .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  
+  .snav-section-btn.nested {
+  padding-left: 18px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.snav-items.nested {
+  padding-left: 14px;
+  border-left: 1px solid rgba(255,255,255,0.05);
+  margin-left: 6px;
+}
+
+.snav-item {
+  transition: all 0.2s ease;
+}
+
+.snav-item:hover {
+  transform: translateX(3px);
+}
 
 </style>
 </head>
@@ -6157,6 +6177,21 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
 }
+
+
+function snavToggle(section, btn) {
+  const el = document.getElementById(`snav-items-${section}`);
+  if (!el) return;
+
+  el.classList.toggle('open');
+
+  if (el.classList.contains('open')) {
+    el.style.maxHeight = el.scrollHeight + "px";
+  } else {
+    el.style.maxHeight = null;
+  }
+}
+
 
 </script>
 </body>
