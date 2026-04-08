@@ -1976,26 +1976,6 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 }
 
 .action-btn:hover { border-color: var(--accent); color: var(--accent); }
-  
-  .snav-section-btn.nested {
-  padding-left: 18px;
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-.snav-items.nested {
-  padding-left: 14px;
-  border-left: 1px solid rgba(255,255,255,0.05);
-  margin-left: 6px;
-}
-
-.snav-item {
-  transition: all 0.2s ease;
-}
-
-.snav-item:hover {
-  transform: translateX(3px);
-}
 
 </style>
 </head>
@@ -2276,112 +2256,6 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             <span class="snav-item-icon">💡</span> Recommendations
           </button>
         </div>
-
-        <!-- ── Spaces ── -->
-<button class="snav-section-btn" id="snav-sec-spaces" onclick="snavToggle('spaces',this)">
-  <span class="snav-section-icon">🧩</span>
-  <span class="snav-section-label">Spaces</span>
-  <span class="snav-chevron">▼</span>
-</button>
-
-<div class="snav-items" id="snav-items-spaces">
-
-  <!-- Personal Space -->
-  <button class="snav-section-btn nested" onclick="snavToggle('personal',this)">
-    <span class="snav-section-icon">🏠</span>
-    <span class="snav-section-label">Personal Space</span>
-    <span class="snav-chevron">▼</span>
-  </button>
-
-  <div class="snav-items nested" id="snav-items-personal">
-    <button class="snav-item" onclick="snavSelect('task-tracker','spaces',this)">
-      <span class="snav-item-icon">✅</span> Task Tracker
-    </button>
-    <button class="snav-item" onclick="snavSelect('document-hub','spaces',this)">
-      <span class="snav-item-icon">📁</span> Document Hub
-    </button>
-    <button class="snav-item" onclick="snavSelect('meetings','spaces',this)">
-      <span class="snav-item-icon">📅</span> Meetings
-    </button>
-    <button class="snav-item" onclick="snavSelect('content-hub','spaces',this)">
-      <span class="snav-item-icon">🧠</span> Content Hub
-    </button>
-  </div>
-
-  <!-- Organization Space -->
-  <button class="snav-section-btn nested" onclick="snavToggle('org',this)">
-    <span class="snav-section-icon">🏢</span>
-    <span class="snav-section-label">Organization Space</span>
-    <span class="snav-chevron">▼</span>
-  </button>
-
-  <div class="snav-items nested" id="snav-items-org">
-
-    <!-- Dashboard -->
-    <button class="snav-section-btn nested" onclick="snavToggle('org-dashboard',this)">
-      <span class="snav-section-icon">📊</span>
-      <span class="snav-section-label">Dashboard</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-
-    <div class="snav-items nested" id="snav-items-org-dashboard">
-      <button class="snav-item" onclick="snavSelect('org-overview','spaces',this)">
-        <span class="snav-item-icon">📈</span> Overview
-      </button>
-    </div>
-
-    <!-- Execution -->
-    <button class="snav-section-btn nested" onclick="snavToggle('execution',this)">
-      <span class="snav-section-icon">⚡</span>
-      <span class="snav-section-label">Execution</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-
-    <div class="snav-items nested" id="snav-items-execution">
-      <button class="snav-item" onclick="snavSelect('tasks','spaces',this)">
-        <span class="snav-item-icon">📌</span> Tasks
-      </button>
-      <button class="snav-item" onclick="snavSelect('projects','spaces',this)">
-        <span class="snav-item-icon">📂</span> Projects
-      </button>
-      <button class="snav-item" onclick="snavSelect('workflow','spaces',this)">
-        <span class="snav-item-icon">🔄</span> Workflow
-      </button>
-      <button class="snav-item" onclick="snavSelect('meeting-hub','spaces',this)">
-        <span class="snav-item-icon">📅</span> Meeting Hub
-      </button>
-    </div>
-
-    <!-- Flat items -->
-    <button class="snav-item" onclick="snavSelect('goals','spaces',this)">
-      <span class="snav-item-icon">🎯</span> Goals
-    </button>
-
-    <button class="snav-item" onclick="snavSelect('team','spaces',this)">
-      <span class="snav-item-icon">👥</span> Team
-    </button>
-
-    <button class="snav-item" onclick="snavSelect('knowledge','spaces',this)">
-      <span class="snav-item-icon">📚</span> Knowledge
-    </button>
-
-    <button class="snav-item" onclick="snavSelect('org-insights','spaces',this)">
-      <span class="snav-item-icon">📊</span> Insights
-    </button>
-
-  </div>
-
-</div>
-
-<!-- Bottom Actions -->
-<div style="margin-top:10px;padding:6px 4px;border-top:1px solid rgba(255,255,255,0.05)">
-  <button class="snav-item" onclick="snavSelect('create-new','spaces',this)">
-    <span class="snav-item-icon">➕</span> Create New
-  </button>
-  <button class="snav-item" onclick="snavSelect('settings','spaces',this)">
-    <span class="snav-item-icon">⚙️</span> Settings
-  </button>
-</div>
 
         <!-- Flux (Planner tasks) kept for backward compat, hidden -->
         <div style="height:1px;background:rgba(255,255,255,0.05);margin:8px 4px 4px"></div>
@@ -5197,21 +5071,47 @@ function renderClassDetail(cls) {
       <button class="ctab" onclick="switchClassTab('discuss',this)">💬 Chat</button>
     </div>
 
-    <div id="class-tab-content" style="flex:1;overflow-y:auto;padding:1rem;min-height:0"></div>`;
+    <div id="class-tab-content" style="flex:1;overflow:hidden;padding:1rem;min-height:0;display:block"></div>`;
 
   switchClassTab('materials');
 }
 
 function switchClassTab(tab, btn) {
   CURRENT_CLASS_TAB = tab;
-  document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  else {
-    const btns = document.querySelectorAll('.ctab');
-    btns.forEach(b => { if (b.textContent.toLowerCase().includes(tab.slice(0,3))) b.classList.add('active'); });
-  }
   clearInterval(DISCUSS_INTERVAL);
-  renderClassTab(tab);
+  clearInterval(GROUP_INTERVAL);
+
+  // Reset active buttons
+  document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    document.querySelectorAll('.ctab').forEach(b => {
+      if (b.textContent.toLowerCase().includes(tab.slice(0, 4))) b.classList.add('active');
+    });
+  }
+
+  // Reset content div styles so chat's padding:0 doesn't bleed into other tabs
+  const content = $('class-tab-content');
+  if (content) {
+    content.style.padding      = tab === 'discuss' || tab === 'group-chat' ? '0' : '1rem';
+    content.style.display      = tab === 'discuss' ? 'flex' : 'block';
+    content.style.flexDirection = tab === 'discuss' ? 'column' : '';
+    content.style.overflow     = 'auto';
+  }
+
+  // For tabs that show live data, refetch fresh class detail first
+  if (['materials','announcements','exams'].includes(tab) && CURRENT_CLASS?.code) {
+    fetch(`/api/class/detail?code=${encodeURIComponent(CURRENT_CLASS.code)}&sid=${encodeURIComponent(S.sid)}`)
+      .then(r => r.json())
+      .then(fresh => {
+        CURRENT_CLASS = { ...fresh, code: CURRENT_CLASS.code };
+        renderClassTab(tab);
+      })
+      .catch(() => renderClassTab(tab));
+  } else {
+    renderClassTab(tab);
+  }
 }
 
 function renderClassTab(tab) {
@@ -5351,12 +5251,8 @@ function renderClassTab(tab) {
 
   // ── Class Chat (WhatsApp-style) ────────────────────────────
   else if (tab === 'discuss') {
-    content.style.padding = '0';
-    content.style.display = 'flex';
-    content.style.flexDirection = 'column';
     content.innerHTML = `
-      <div class="wa-chat-wrap">
-        <!-- Chat header bar -->
+      <div class="wa-chat-wrap" style="height:100%">
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
                     background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -5364,21 +5260,19 @@ function renderClassTab(tab) {
             ${esc((cls.name||'?')[0].toUpperCase())}
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(cls.name)}</div>
+            <div style="font-weight:700;font-size:.9rem">${esc(cls.name)}</div>
             <div style="font-size:.7rem;color:var(--muted)">Class chat</div>
           </div>
           <button onclick="switchClassTab('group-chat',null)"
             style="background:rgba(79,110,247,0.12);border:1px solid rgba(79,110,247,0.25);
-                   border-radius:8px;padding:5px 10px;color:var(--accent);font-size:.72rem;cursor:pointer;
-                   font-family:var(--font);font-weight:600">
+                   border-radius:8px;padding:5px 10px;color:var(--accent);font-size:.72rem;
+                   cursor:pointer;font-family:var(--font);font-weight:600;flex-shrink:0">
             👥 Groups
           </button>
         </div>
-        <!-- Messages -->
-        <div class="wa-messages" id="discuss-msgs"></div>
-        <!-- Input bar -->
-        <div class="wa-input-bar">
-          <textarea id="discuss-input" class="wa-input" rows="1" placeholder="Message..."
+        <div class="wa-messages" id="discuss-msgs" style="flex:1;overflow-y:auto;min-height:0"></div>
+        <div class="wa-input-bar" style="flex-shrink:0">
+          <textarea id="discuss-input" class="wa-input" rows="1" placeholder="Type a message..."
             oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDiscussion()}"></textarea>
           <button class="wa-send-btn" onclick="sendDiscussion()">➤</button>
@@ -5390,21 +5284,18 @@ function renderClassTab(tab) {
 
   // ── Group Chat ─────────────────────────────────────────────
   else if (tab === 'group-chat') {
-    content.style.padding = '0';
-    content.style.display = 'block';
     content.innerHTML = `
-      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-        <div style="font-family:var(--font);font-weight:700;font-size:.9rem">👥 Group Chats</div>
-        <button onclick="showCreateGroup()"
-          style="background:var(--accent);color:#fff;border:none;border-radius:8px;
-                 padding:5px 12px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--font)">
-          + New Group
-        </button>
-      </div>
-      <div id="group-list-area" style="padding:8px;flex:1;overflow-y:auto">
-        <div class="empty-state" style="margin-top:1rem">
-          <div class="es-icon">⏳</div><div class="es-text">Loading groups...</div>
+      <div style="display:flex;flex-direction:column;height:100%">
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0">
+          <div style="font-family:var(--font);font-weight:700;font-size:.9rem">👥 Group Chats</div>
+          <button onclick="showCreateGroup()"
+            style="background:var(--accent);color:#fff;border:none;border-radius:8px;
+                   padding:5px 12px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--font)">
+            + New Group
+          </button>
         </div>
+        <div id="group-list-area" style="flex:1;overflow-y:auto;padding:8px"></div>
       </div>`;
     loadGroupList();
   }
@@ -5625,32 +5516,31 @@ function openGroupChat(gid, gname) {
   clearInterval(GROUP_INTERVAL);
   const content = $('class-tab-content');
   if (!content) return;
-  content.style.padding = '0';
-  content.style.display = 'flex';
+  content.style.padding       = '0';
+  content.style.display       = 'flex';
   content.style.flexDirection = 'column';
+  content.style.overflow      = 'hidden';
   content.innerHTML = `
-    <div class="wa-chat-wrap">
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
-                  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
-        <button onclick="clearInterval(GROUP_INTERVAL);switchClassTab('group-chat',null)"
-          style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 6px">←</button>
-        <div class="group-av" style="width:32px;height:32px;font-size:.75rem">${gname[0].toUpperCase()}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:.9rem">${esc(gname)}</div>
-          <div style="font-size:.68rem;color:var(--muted)">
-            ID: ${gid}
-            <button onclick="navigator.clipboard.writeText('${gid}').then(()=>toast('ID copied ✓'))"
-              style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.68rem;padding:0 3px">copy</button>
-          </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+                background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
+      <button onclick="clearInterval(GROUP_INTERVAL);switchClassTab('group-chat',null)"
+        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 6px">←</button>
+      <div class="group-av" style="width:32px;height:32px;font-size:.75rem;flex-shrink:0">${gname[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.9rem">${esc(gname)}</div>
+        <div style="font-size:.68rem;color:var(--muted)">
+          ID: ${gid}
+          <button onclick="navigator.clipboard.writeText('${gid}').then(()=>toast('ID copied ✓'))"
+            style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.68rem;padding:0 3px">copy</button>
         </div>
       </div>
-      <div class="wa-messages" id="group-msgs"></div>
-      <div class="wa-input-bar">
-        <textarea id="group-input" class="wa-input" rows="1" placeholder="Message..."
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupMessage()}"></textarea>
-        <button class="wa-send-btn" onclick="sendGroupMessage()">➤</button>
-      </div>
+    </div>
+    <div class="wa-messages" id="group-msgs" style="flex:1;overflow-y:auto;min-height:0"></div>
+    <div class="wa-input-bar" style="flex-shrink:0">
+      <textarea id="group-input" class="wa-input" rows="1" placeholder="Message..."
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupMessage()}"></textarea>
+      <button class="wa-send-btn" onclick="sendGroupMessage()">➤</button>
     </div>`;
   loadGroupMessages();
   GROUP_INTERVAL = setInterval(loadGroupMessages, 4000);
@@ -6178,21 +6068,7 @@ async function shareResult(score, topic) {
   }
 }
 
-
-function snavToggle(section, btn) {
-  const el = document.getElementById(`snav-items-${section}`);
-  if (!el) return;
-
-  el.classList.toggle('open');
-
-  if (el.classList.contains('open')) {
-    el.style.maxHeight = el.scrollHeight + "px";
-  } else {
-    el.style.maxHeight = null;
-  }
-}
-
-
 </script>
 </body>
 </html>
+
