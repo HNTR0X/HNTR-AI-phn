@@ -829,6 +829,9 @@ async def login(req: LoginRequest, request: Request):
                 raise HTTPException(401, "No password set. Please register.")
             if not bcrypt.checkpw(req.password.encode(), stored.encode()):
                 raise HTTPException(401, "Incorrect password.")
+        else:
+            # Not registered — block login, require registration
+            raise HTTPException(401, "Account not found. Please register first.")
         # If not registered, allow legacy login (no password)
         # Remove this block once all students have registered
 
