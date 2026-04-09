@@ -3144,15 +3144,55 @@ function loadProfilePic() {
 
 
 let CURRENT_ROLE = 'student';
+let AUTH_TAB     = 'login';
 
 function setRole(role) {
   CURRENT_ROLE = role;
-  const sBtn     = $('role-student');
-  const lBtn     = $('role-lecturer');
-  const lmLabel  = $('lm-label');
-  const lmInput  = $('lm');
-  const loginBtn = $('login-btn');
+  const isLec  = role === 'lecturer';
 
+  // Toggle role buttons
+  $('role-student').style.border      = !isLec ? '2px solid var(--accent)' : '1px solid var(--border)';
+  $('role-student').style.background  = !isLec ? '#4f6ef715' : 'none';
+  $('role-student').style.color       = !isLec ? 'var(--accent)' : 'var(--muted)';
+  $('role-lecturer').style.border     = isLec  ? '2px solid var(--accent)' : '1px solid var(--border)';
+  $('role-lecturer').style.background = isLec  ? '#4f6ef715' : 'none';
+  $('role-lecturer').style.color      = isLec  ? 'var(--accent)' : 'var(--muted)';
+
+  // Show/hide field sets
+  $('student-fields').style.display  = isLec ? 'none'  : 'block';
+  $('lecturer-fields').style.display = isLec ? 'block' : 'none';
+  $('auth-tabs').style.display       = isLec ? 'none'  : 'grid';
+
+  // Update heading and button
+  $('login-heading').textContent = isLec ? 'Lecturer Login' : (AUTH_TAB === 'register' ? 'Create Account' : 'Welcome back');
+  $('login-btn').textContent     = isLec ? 'Access Dashboard' : (AUTH_TAB === 'register' ? 'Create Account' : 'Sign In');
+  $('login-err').textContent     = '';
+}
+
+function setAuthTab(tab) {
+  AUTH_TAB      = tab;
+  const isReg   = tab === 'register';
+
+  $('auth-tab-login').style.border      = !isReg ? '2px solid var(--accent)' : '1px solid var(--border)';
+  $('auth-tab-login').style.background  = !isReg ? '#4f6ef715' : 'none';
+  $('auth-tab-login').style.color       = !isReg ? 'var(--accent)' : 'var(--muted)';
+  $('auth-tab-register').style.border     = isReg ? '2px solid var(--accent)' : '1px solid var(--border)';
+  $('auth-tab-register').style.background = isReg ? '#4f6ef715' : 'none';
+  $('auth-tab-register').style.color      = isReg ? 'var(--accent)' : 'var(--muted)';
+
+  $('register-fields').style.display  = isReg ? 'block' : 'none';
+  $('login-heading').textContent       = isReg ? 'Create Account' : 'Welcome back';
+  $('login-btn').textContent           = isReg ? 'Create Account' : 'Sign In';
+  $('login-err').textContent           = '';
+}
+
+function togglePwVis(inputId, btnId) {
+  const inp = $(inputId);
+  const btn = $(btnId);
+  if (!inp) return;
+  inp.type       = inp.type === 'password' ? 'text' : 'password';
+  if (btn) btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    }
   if (role === 'lecturer') {
     // Redirect straight to lecturer portal
     window.location.href = '/lecturer';
