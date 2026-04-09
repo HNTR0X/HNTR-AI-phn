@@ -3409,6 +3409,109 @@ function getSavedSession() {
 <button class="btn-login" id="login-btn" onclick="doLogin()">Sign In</button>
 <p class="login-note">Sivarr platform</p>
 
+  async function doLogin(prefillName, prefillMatric) {
+  const err = $('login-err');
+  const btn = $('login-btn');
+  if (err) err.textContent = '';
+
+  // ── Lecturer path ─────────────────────────────────────────
+  if (CURRENT_ROLE === 'lecturer') {
+    const name = $('lec-name')?.value.trim();
+    const pw   = $('lec-pw')?.value.trim();
+    if (!name || !pw) { if (err) err.textContent = 'Enter your name and password.'; return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
+    try {
+      const r = await fetch('/api/lecturer/login', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name, password: pw })
+      });
+      if (!r.ok) throw new Error('Invalid password');
+      const d = await r.json();
+      localStorage.setItem('sivarr_lec_token', d.token);
+      localStorage.setItem('sivarr_lec_name',  name);
+      window.location.href = '/lecturer';
+    } catch(e) {
+      if (err) err.textContent = 'Incorrect password. Try again.';
+    }
+    if (btn) { btn.disabled = false; btn.textContent = 'Access Dashboard'; }
+    return;
+  }
+
+  // ── Student path ──────────────────────────────────────────
+  const name   = prefillName   || $('ln')?.value.trim();
+  const matric = prefillMatric || $('lm')?.value.trim();
+  const pw     = $('l-pw')?.value || '';
+  const email  = $('l-email')?.value?.trim() || '';
+  const phone  = $('l-phone')?.value?.trim() || '';
+
+  if (!name || !matric) {
+    if (err) err.textContent = 'Enter your name and matric number.';
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Please wait...'; }
+
+  try {
+    const r = await API('/api/login', {
+      name, matric, password: pw,
+      email, phone, action: AUTH_TAB
+    });
+
+    S.sid    = r.sid;   S.name   = r.name;  S.matric = r.matric;
+    S.diff   = r.difficulty; S.topics = r.topics; S.weak = r.weak;
+    S.stats  = { questions: r.questions, quizzes: r.quizzes,
+                 sessions: r.sessions,   wrong: r.wrong_count };
+    S.uploadedFiles = r.uploaded_files || [];
+
+    saveSession(name, matric);
+
+    $('tb-av').textContent   = r.name[0].toUpperCase();
+    $('tb-name').textContent = r.name;
+    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
+    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
+    const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
+    const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
+    const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
+    loadProfilePic();
+    snavToggle('ai', $('snav-sec-ai'));
+    updateDiff(r.difficulty);
+    updateSBStats();
+    renderTopics(r.topics, r.weak);
+    renderFileList();
+    loadWrong();
+
+    $('login-screen').style.display = 'none';
+    $('dashboard').style.display    = 'flex';
+
+    const greet = $('welcome-greeting');
+    if (greet) greet.textContent = r.returning
+      ? `Welcome back, ${r.name.split(' ')[0]} 👋`
+      : `Welcome, ${r.name.split(' ')[0]}! 🎉`;
+
+    try {
+      const ann = await fetch('/api/lecturer/announcements');
+      const ad  = await ann.json();
+      if (ad.announcements?.length) {
+        const latest = ad.announcements[0];
+        addMsg('sivarr', `📢 Announcement:\n\n"${latest.message}"\n\n— ${latest.author}, ${latest.date}`);
+      }
+    } catch(e) {}
+
+  } catch(e) {
+    const msg = e.message || '';
+    if (err) err.textContent =
+      msg.includes('409') ? 'Account already exists — sign in instead.' :
+      msg.includes('401') ? 'Incorrect password.' :
+      msg.includes('400') ? 'Password must be at least 6 characters.' :
+      msg.includes('422') ? 'Check your name and matric number.' :
+      'Login failed — ' + (msg || 'check your connection');
+  }
+
+  if (btn) {
+    btn.disabled    = false;
+    btn.textContent = AUTH_TAB === 'register' ? 'Create Account' : 'Sign In';
+  }
+  }
+
 // ═══════════════════════════ ATTACHMENTS ════════════════════════
 
 let ATTACHMENTS = []; // { name, type, content (base64 or text) }
