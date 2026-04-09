@@ -33,148 +33,111 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-/* ── LOGIN ─────────────────────────────────────────────── */
-#login-screen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background: radial-gradient(ellipse at 50% 0%, #1a1f3a 0%, var(--bg) 65%);
-  position: relative;
-  overflow: hidden;
-}
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="sr-logo">
+      <div class="sr-monogram">
+  <img src="/static/sivarrai.png" alt="Sivarr AI Logo" style="width:30px; height:30px; object-fit:contain;">
+</div>
+      <div class="sr-name">Sivarr <span>●</span></div>
+    </div>
+    <div class="login-tag">✦ Learning Companion</div>
+    <h2 id="login-heading">Welcome back</h2>
+    <p id="login-sub">Sign in to continue your learning journey.</p>
 
-#login-screen::before {
-  content: '';
-  position: absolute;
-  width: 600px; height: 600px;
-  background: radial-gradient(circle, #4f6ef710 0%, transparent 70%);
-  top: -200px; left: 50%; transform: translateX(-50%);
-  pointer-events: none;
-}
+    <!-- Role selector -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem">
+      <button id="role-student" onclick="setRole('student')"
+        style="padding:10px;border-radius:10px;border:2px solid var(--accent);background:#4f6ef715;color:var(--accent);font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
+        🎓 Student
+      </button>
+      <button id="role-lecturer" onclick="setRole('lecturer')"
+        style="padding:10px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
+        👨‍🏫 Lecturer
+      </button>
+    </div>
 
-.login-box {
-  width: 100%; max-width: 400px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 2.5rem;
-  animation: fadeUp .5s ease;
-  position: relative;
-  z-index: 1;
-}
+    <!-- Auth tabs (student only) -->
+    <div id="auth-tabs" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1.25rem">
+      <button id="auth-tab-login" onclick="setAuthTab('login')"
+        style="padding:8px;border-radius:9px;border:2px solid var(--accent);background:#4f6ef715;color:var(--accent);font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s">
+        Sign In
+      </button>
+      <button id="auth-tab-register" onclick="setAuthTab('register')"
+        style="padding:8px;border-radius:9px;border:1px solid var(--border);background:none;color:var(--muted);font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s">
+        Register
+      </button>
+    </div>
 
-.sr-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 2rem;
-}
+    <!-- Student fields -->
+    <div id="student-fields">
+      <div class="field">
+        <label>Full Name</label>
+        <input id="ln" type="text" placeholder="Your full name" autocomplete="off"
+          onkeydown="if(event.key==='Enter') $('lm').focus()">
+      </div>
+      <div class="field">
+        <label>Matric Number</label>
+        <input id="lm" type="text" placeholder="20051947" autocomplete="off"
+          onkeydown="if(event.key==='Enter') $('l-pw').focus()">
+      </div>
 
-.sr-monogram {
-  width: 40px; height: 40px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font);
-  font-weight: 800;
-  font-size: 15px;
-  color: #fff;
-  letter-spacing: -.5px;
-}
+      <!-- Register-only -->
+      <div id="register-fields" style="display:none">
+        <div class="field">
+          <label>Email</label>
+          <input id="l-email" type="email" placeholder="you@university.edu">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input id="l-phone" type="tel" placeholder="+234 800 000 0000">
+        </div>
+      </div>
 
-.sr-name {
-  font-family: var(--font);
-  font-weight: 700;
-  font-size: 1.3rem;
-  letter-spacing: -.02em;
-}
+      <div class="field">
+        <label>Password</label>
+        <div style="position:relative">
+          <input id="l-pw" type="password" placeholder="Min. 6 characters"
+            style="padding-right:40px"
+            onkeydown="if(event.key==='Enter') doLogin()">
+          <button type="button" onclick="togglePwVis('l-pw','l-pw-eye')"
+            id="l-pw-eye"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                   background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;
+                   padding:2px 4px;line-height:1">👁</button>
+        </div>
+      </div>
+    </div>
 
-.sr-name span { color: var(--accent); }
+    <!-- Lecturer fields -->
+    <div id="lecturer-fields" style="display:none">
+      <div class="field">
+        <label>Your Name</label>
+        <input id="lec-name" type="text" placeholder="Dr. Adeyemi John" autocomplete="off"
+          onkeydown="if(event.key==='Enter') $('lec-pw').focus()">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div style="position:relative">
+          <input id="lec-pw" type="password" placeholder="Lecturer password"
+            style="padding-right:40px"
+            onkeydown="if(event.key==='Enter') doLogin()">
+          <button type="button" onclick="togglePwVis('lec-pw','lec-pw-eye')"
+            id="lec-pw-eye"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                   background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;
+                   padding:2px 4px;line-height:1">👁</button>
+        </div>
+      </div>
+    </div>
 
-.login-tag {
-  display: inline-block;
-  background: #4f6ef715;
-  border: 1px solid #4f6ef730;
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-  margin-bottom: 1.25rem;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-
-.login-box h2 {
-  font-family: var(--font);
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: .4rem;
-  letter-spacing: -.02em;
-}
-
-.login-box p {
-  font-size: .85rem;
-  color: var(--muted);
-  margin-bottom: 1.75rem;
-}
-
-.field { margin-bottom: 1rem; }
-
-.field label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  margin-bottom: 6px;
-}
-
-.field input {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 11px 14px;
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: .9rem;
-  outline: none;
-  transition: border-color .2s;
-}
-
-.field input:focus { border-color: var(--accent); }
-.field input::placeholder { color: var(--muted2); }
-
-.btn-login {
-  width: 100%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 13px;
-  font-family: var(--font);
-  font-size: .95rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: .5rem;
-  transition: opacity .2s, transform .1s;
-  letter-spacing: -.01em;
-}
-
-.btn-login:hover { opacity: .9; }
-.btn-login:active { transform: scale(.98); }
-.btn-login:disabled { opacity: .5; cursor: not-allowed; }
-
-.login-note {
-  text-align: center;
-  margin-top: 1.25rem;
-  font-size: .78rem;
-  color: var(--muted);
-}
+    <div id="login-err"
+      style="color:var(--red);font-size:.78rem;min-height:16px;margin-bottom:8px;text-align:center"></div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()">Sign In</button>
+    <p class="login-note">Sivarr platform</p>
+  </div>
+</div>
 
 /* ── DASHBOARD ──────────────────────────────────────────── */
 #dashboard {
