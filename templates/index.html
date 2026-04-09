@@ -3353,110 +3353,58 @@ function getSavedSession() {
 }
 
 // ═══════════════════════════ LOGIN ════════════════════════════
-async function doLogin(name, matric) {
-  // Allow calling with args (auto-login) or from form
-  if (!name || !matric) {
-    name   = $('ln').value.trim();
-    matric = $('lm').value.trim();
-  }
-  if (!name || !matric) { toast('Enter your name and matric number'); return; }
 
-  const btn = $('login-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Connecting...'; }
+  <!-- Login / Register tabs -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1.25rem">
+  <button id="auth-tab-login" onclick="setAuthTab('login')"
+    style="padding:8px;border-radius:9px;border:2px solid var(--accent);background:#4f6ef715;
+           color:var(--accent);font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer">
+    Sign In
+  </button>
+  <button id="auth-tab-register" onclick="setAuthTab('register')"
+    style="padding:8px;border-radius:9px;border:1px solid var(--border);background:none;
+           color:var(--muted);font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer">
+    Register
+  </button>
+</div>
 
-  try {
-    const r = await API('/api/login', { name, matric });
-    S.sid = r.sid; S.name = r.name; S.matric = r.matric;
-    S.diff = r.difficulty; S.topics = r.topics; S.weak = r.weak;
-    S.stats = { questions: r.questions, quizzes: r.quizzes, sessions: r.sessions, wrong: r.wrong_count };
-    S.uploadedFiles = r.uploaded_files || [];
+<div class="field">
+  <label>Full Name</label>
+  <input id="ln" type="text" placeholder="Your full name" autocomplete="off">
+</div>
+<div class="field">
+  <label id="lm-label">Matric Number</label>
+  <input id="lm" type="text" placeholder="20051947" autocomplete="off">
+</div>
 
-    // Save to localStorage for auto-login next visit
-    saveSession(name, matric);
+<!-- Register-only fields -->
+<div id="register-fields" style="display:none">
+  <div class="field">
+    <label>Email</label>
+    <input id="l-email" type="email" placeholder="you@university.edu" autocomplete="off">
+  </div>
+  <div class="field">
+    <label>Phone</label>
+    <input id="l-phone" type="tel" placeholder="+234 800 000 0000" autocomplete="off">
+  </div>
+</div>
 
-    $('tb-av').textContent   = r.name[0].toUpperCase();
-    $('tb-name').textContent = r.name;
-    // Sync new sidebar footer
-    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
-    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
-    const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
-    const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
-    const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
-    // Load saved profile picture
-    loadProfilePic();
-    // Init sidebar — open AI section, highlight Chat
-    snavToggle('ai', $('snav-sec-ai'));
-    updateDiff(r.difficulty);
-    updateSBStats();
-    renderTopics(r.topics, r.weak);
-    renderFileList();
-    loadWrong();
+<div class="field">
+  <label>Password</label>
+  <div style="position:relative">
+    <input id="l-pw" type="password" placeholder="Min. 6 characters"
+      autocomplete="off" onkeydown="if(event.key==='Enter') doLogin()">
+    <button onclick="togglePwVis()" type="button"
+      style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+             background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem">
+      👁
+    </button>
+  </div>
+</div>
 
-    $('login-screen').style.display = 'none';
-    const dash = $('dashboard');
-    dash.style.display = 'flex';
-
-    // Personalise the welcome greeting
-    const greet = $('welcome-greeting');
-    if (greet) {
-      const hr  = new Date().getHours();
-      const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-      greet.textContent = `${tod}, ${r.name.split(' ')[0]}`;
-    }
-    loadAnnouncements();
-
-    // Check for lecturer announcements
-    try {
-      const ann = await fetch('/api/lecturer/announcements');
-      const ad  = await ann.json();
-      if (ad.announcements && ad.announcements.length) {
-        const latest = ad.announcements[0];
-        addMsg('sivarr', `📢 Announcement from your lecturer:\n\n"${latest.message}"\n\n— ${latest.author}, ${latest.date}`);
-      }
-    } catch(e) {}
-  } catch(e) {
-    const msg = e.message || '';
-    if (msg.includes('429')) {
-      toast('Too many attempts — wait a moment and try again.');
-    } else if (msg.includes('422')) {
-      toast('Invalid name or matric number format.');
-    } else if (msg.includes('500')) {
-      toast('Server error — try again in a moment.');
-    } else {
-      toast('Login failed — ' + (msg || 'check your connection'));
-    }
-    console.error('Login error:', e);
-    if (btn) { btn.disabled = false; btn.textContent = 'Continue to Sivarr AI'; }
-    clearSession();
-  }
-}
-
-// Add logout button handler
-function logout() {
-  clearSession();
-  location.reload();
-}
-
-// Auto-login on page load if session exists
-window.addEventListener('DOMContentLoaded', () => {
-  // Clear any stale lecturer tokens — lecturer login is on /lecturer page
-  localStorage.removeItem('sivarr_lecturer_token');
-  localStorage.removeItem('sivarr_lecturer_name');
-
-  const saved = getSavedSession();
-  if (saved) {
-    const btn = $('login-btn');
-    if (btn) { btn.textContent = 'Resuming session...'; btn.disabled = true; }
-    doLogin(saved.name, saved.matric);
-  }
-});
-
-['ln','lm'].forEach((id,i) => {
-  const el = $(id);
-  if (el) el.addEventListener('keydown', e => {
-    if (e.key === 'Enter') i === 0 ? $('lm').focus() : doLogin();
-  });
-});
+<div id="login-err" style="color:var(--red);font-size:.78rem;min-height:16px;margin-bottom:8px;text-align:center"></div>
+<button class="btn-login" id="login-btn" onclick="doLogin()">Sign In</button>
+<p class="login-note">Sivarr platform</p>
 
 // ═══════════════════════════ ATTACHMENTS ════════════════════════
 
