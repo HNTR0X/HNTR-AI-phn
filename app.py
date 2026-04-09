@@ -8,7 +8,6 @@ import collections
 import datetime
 import hashlib
 import hmac
-import bcrypt
 import json
 import logging
 import os
@@ -60,18 +59,6 @@ BANK_LIMIT    = 20
 # Set RAILWAY_VOLUME_MOUNT_PATH in Railway environment variables
 _BASE = Path(os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "."))
 DATA_DIR    = _BASE / "data"
-USERS_PATH = DATA_DIR / "users.json"
-
-def load_users() -> dict:
-    if USERS_PATH.exists():
-        try: return json.loads(USERS_PATH.read_text())
-        except: return {}
-    return {}
-
-def save_users(users: dict):
-    tmp = str(USERS_PATH) + ".tmp"
-    with open(tmp, "w") as f: json.dump(users, f, indent=2)
-    shutil.move(tmp, str(USERS_PATH))
 UPLOADS_DIR = _BASE / "uploads"
 SHARES_DIR  = _BASE / "shares"
 LOG_DIR     = _BASE / "logs"
@@ -699,10 +686,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 class LoginRequest(BaseModel):
     name: str
     matric: str
-    password: str = ""
-    email: str = ""
-    phone: str = ""
-    action: str = "login"   # "login" | "register"
 
     @validator("name")
     def name_valid(cls, v):
@@ -795,45 +778,8 @@ async def login(req: LoginRequest, request: Request):
     key = get_client_key(request)
     check_rate_limit(key, RATE_LIMIT_LOGIN, "login")
 
-    sid = re.sub(r"[^a-z0-9_]", "_",
-          f"{req.name.lower().strip()}_{req.matric.lower().strip()}")
-
-    users = load_users()
-
-    # ── REGISTER ──────────────────────────────────────────────
-    if req.action == "register":
-        if not req.password or len(req.password) < 6:
-            raise HTTPException(400, "Password must be at least 6 characters.")
-        if sid in users:
-            raise HTTPException(409, "Account already exists. Please log in.")
-        hashed = bcrypt.hashpw(req.password.encode(), bcrypt.gensalt()).decode()
-        users[sid] = {
-            "sid":      sid,
-            "name":     sanitize_text(req.name.title(), MAX_NAME_LEN),
-            "matric":   req.matric.upper(),
-            "email":    sanitize_text(req.email, 200),
-            "phone":    sanitize_text(req.phone, 30),
-            "password": hashed,
-            "created":  datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-        }
-        save_users(users)
-
-    # ── LOGIN ──────────────────────────────────────────────────
-    else:
-        if sid in users:
-            # Registered user — verify password
-            if not req.password:
-                raise HTTPException(401, "Password required.")
-            stored = users[sid].get("password", "")
-            if not stored:
-                raise HTTPException(401, "No password set. Please register.")
-            if not bcrypt.checkpw(req.password.encode(), stored.encode()):
-                raise HTTPException(401, "Incorrect password.")
-        else:
-            # Not registered — block login, require registration
-            raise HTTPException(401, "Account not found. Please register first.")
-        # If not registered, allow legacy login (no password)
-        # Remove this block once all students have registered
+    sid = f"{req.name.lower().strip()}_{req.matric.lower().strip()}"
+    sid = re.sub(r"[^a-z0-9_]", "_", sid)  # Sanitize sid
 
     p = load_progress(sid)
     p["sessions"] += 1
@@ -2397,5 +2343,4 @@ async def health():
         "time":    datetime.datetime.now().isoformat(),
         "gemini":  GEMINI_AVAILABLE,
         "model":   _model_name or "not initialized",
-    }
-
+            }
