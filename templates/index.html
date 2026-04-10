@@ -4128,9 +4128,7 @@ const SNAV_ROUTE = {
   'tasks':           () => nav('flux', null),
   'notes':           () => nav('notes', null),
   'study-deck':      () => nav('lab', null),
-  'study-plan':      () => { nav('chat', null); setTimeout(() => {
-    const ci = $('ci'); if (ci) { ci.value = 'Create a personalised weekly study plan for me based on my courses and weak areas'; ci.focus(); }
-  }, 300); },
+  'study-plan':      () => nav('studyplan', null),
   // Assessments
   'quizzes':         () => nav('quiz', null),
   'exams':           () => { nav('courses', null); setTimeout(() => {
