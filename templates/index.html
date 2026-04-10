@@ -631,6 +631,53 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 .btn-start:hover { opacity: .85; }
 
+/* ── Study Plan ── */
+.sp-hrs-btn {
+  flex:1; padding:7px 4px; border-radius:8px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); font-family:var(--font); font-size:.78rem;
+  font-weight:700; cursor:pointer; transition:all .15s;
+}
+.sp-hrs-btn:hover { border-color:var(--accent); color:var(--accent); }
+.sp-hrs-btn.sp-hrs-active { background:#4f6ef720; border-color:var(--accent); color:var(--accent); }
+
+.sp-day-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:1rem; margin-bottom:.75rem;
+  transition:border-color .2s;
+}
+.sp-day-card:hover { border-color:var(--border2); }
+.sp-day-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:.625rem;
+}
+.sp-day-num {
+  font-family:var(--font); font-size:.72rem; font-weight:800;
+  color:var(--accent); text-transform:uppercase; letter-spacing:.06em;
+}
+.sp-day-focus {
+  font-family:var(--font); font-size:.95rem; font-weight:700;
+  margin-bottom:.5rem; color:var(--text);
+}
+.sp-task {
+  display:flex; align-items:flex-start; gap:8px;
+  font-size:.82rem; color:var(--muted); padding:4px 0;
+  border-bottom:1px solid var(--border);
+}
+.sp-task:last-child { border:none; }
+.sp-task-check {
+  width:16px; height:16px; border-radius:4px;
+  border:1px solid var(--border2); flex-shrink:0; margin-top:2px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:.65rem; transition:all .15s;
+}
+.sp-task-check.done { background:var(--green); border-color:var(--green); color:#fff; }
+.sp-hours-badge {
+  font-size:.68rem; font-weight:700; padding:2px 8px;
+  border-radius:20px; background:#4f6ef715; color:var(--accent);
+  border:1px solid #4f6ef730;
+}
+  
 .q-header {
   display: flex;
   justify-content: space-between;
