@@ -2334,6 +2334,69 @@ async def get_student_exam_results(sid: str, code: str = ""):
 
 # ── Health check ──────────────────────────────────────────────
 
+class StudyPlanRequest(BaseModel):
+    sid: str
+    subject: str
+    exam_date: str
+    hours_per_day: int = 2
+
+@app.post("/api/study-plan")
+async def generate_study_plan(req: StudyPlanRequest, request: Request):
+    key = get_client_key(request, req.sid)
+    check_rate_limit(key, 5, "study_plan")
+
+    subject = sanitize_text(req.subject, 100)
+    if not subject:
+        raise HTTPException(400, "Subject required.")
+
+    today = datetime.date.today()
+    try:
+        exam = datetime.date.fromisoformat(req.exam_date)
+    except ValueError:
+        raise HTTPException(400, "Invalid date. Use YYYY-MM-DD.")
+
+    days_left = (exam - today).days
+    if days_left < 1:
+        raise HTTPException(400, "Exam date must be in the future.")
+    days_left = min(days_left, 14)
+
+    hours = max(1, min(int(req.hours_per_day), 8))
+
+    p    = load_progress(req.sid)
+    weak = weak_topics(p)
+    studied = list(p.get("topics", {}).keys())
+
+    prompt = f"""You are Sivarr's study planner. Be specific, realistic and encouraging.
+Student: {p.get('name', 'Student')}
+Subject: {subject}
+Days until exam: {days_left}
+Hours per day: {hours}
+Topics already studied: {', '.join(studied[:10]) or 'none yet'}
+Weak topics needing focus: {', '.join(weak) or 'none identified'}
+
+Create a {days_left}-day study plan. Prioritize weak topics early.
+Reply ONLY with a valid JSON array — no markdown, no extra text:
+[
+  {{"day": 1, "date": "Mon 14 Apr", "focus": "Specific topic name", "tasks": ["Concrete task 1", "Concrete task 2", "Concrete task 3"], "hours": {hours}}},
+  ...
+]
+Make tasks specific and actionable. Each day must have 2-4 tasks."""
+
+    raw = gemini_once(prompt, temp=0.7, tokens=2000)
+    if not raw:
+        raise HTTPException(503, "Could not generate plan. Try again.")
+
+    try:
+        raw   = re.sub(r"```(?:json)?", "", raw).strip().rstrip("`")
+        match = re.search(r'\[[\s\S]*\]', raw)
+        plan  = json.loads(match.group(0) if match else raw)
+    except Exception as e:
+        log.error(f"Study plan parse error: {e} | raw: {raw[:200]}")
+        raise HTTPException(503, "Could not parse plan. Try again.")
+
+    log.info(f"Study plan generated: {req.sid[:20]} | {subject} | {days_left} days")
+    return {"plan": plan, "days_left": days_left, "subject": subject, "exam_date": req.exam_date}
+
 @app.get("/health")
 async def health():
     """Simple health check endpoint for Railway."""
