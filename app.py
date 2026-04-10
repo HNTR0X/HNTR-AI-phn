@@ -779,7 +779,36 @@ async def login(req: LoginRequest, request: Request):
     check_rate_limit(key, RATE_LIMIT_LOGIN, "login")
 
     sid = f"{req.name.lower().strip()}_{req.matric.lower().strip()}"
-    sid = re.sub(r"[^a-z0-9_]", "_", sid)  # Sanitize sid
+    sid = re.sub(r"[^a-z0-9_]", "_", sid)
+
+    users = load_users()
+
+    if req.action == "register":
+        if not req.password or len(req.password) < 6:
+            raise HTTPException(400, "Password must be at least 6 characters.")
+        if sid in users:
+            raise HTTPException(409, "Account already exists. Please sign in.")
+        hashed = bcrypt.hashpw(req.password.encode(), bcrypt.gensalt()).decode()
+        users[sid] = {
+            "sid": sid,
+            "name": req.name.title(),
+            "matric": req.matric.upper(),
+            "email": sanitize_text(req.email, 200),
+            "phone": sanitize_text(req.phone, 30),
+            "password": hashed,
+            "created": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        }
+        save_users(users)
+    else:
+        if sid not in users:
+            raise HTTPException(401, "Account not found. Please register first.")
+        if not req.password:
+            raise HTTPException(401, "Password required.")
+        stored = users[sid].get("password", "")
+        if not stored:
+            raise HTTPException(401, "No password set. Please register.")
+        if not bcrypt.checkpw(req.password.encode(), stored.encode()):
+            raise HTTPException(401, "Incorrect password.")
 
     p = load_progress(sid)
     p["sessions"] += 1
