@@ -6978,18 +6978,6 @@ async function shareResult(score, topic) {
   }
 }
   
-function snavToggle(section, btn) {
-  const el = document.getElementById(`snav-items-${section}`);
-  if (!el) return;
-
-  el.classList.toggle('open');
-
-  if (el.classList.contains('open')) {
-    el.style.maxHeight = el.scrollHeight + "px";
-  } else {
-    el.style.maxHeight = null;
-  }
-}
 
 </script>
 </body>
