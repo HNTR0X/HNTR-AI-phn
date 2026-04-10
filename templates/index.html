@@ -4231,6 +4231,240 @@ function downloadStudyPlan() {
   a.click();
 }
 
+  // ═══════════════════════ CONTENT HUB ════════════════════════
+
+const CH_KEY = () => `sivarr_ch_${S.sid || 'guest'}`;
+let CH_ACTIVE_PLATFORM = null;
+let CH_PERIOD = 7;
+
+const CH_PLATFORMS = {
+  instagram: { name: 'Instagram', icon: '📸', color: '#e1306c' },
+  tiktok:    { name: 'TikTok',    icon: '🎵', color: '#69c9d0' },
+  youtube:   { name: 'YouTube',   icon: '▶️', color: '#ff0000' },
+  twitter:   { name: 'X/Twitter', icon: '𝕏',  color: '#1da1f2' },
+  linkedin:  { name: 'LinkedIn',  icon: '💼', color: '#0077b5' },
+};
+
+const CH_METRICS_DEF = [
+  { key:'followers',     label:'Followers',       color:'#4f6ef7', icon:'👥' },
+  { key:'followers_new', label:'New Followers',   color:'#22c55e', icon:'📈' },
+  { key:'followers_lost',label:'Lost Followers',  color:'#ef4444', icon:'📉' },
+  { key:'views',         label:'Views',           color:'#a78bfa', icon:'👁' },
+  { key:'reach',         label:'Reach',           color:'#f59e0b', icon:'📡' },
+  { key:'likes',         label:'Likes',           color:'#f472b6', icon:'❤️' },
+  { key:'comments',      label:'Comments',        color:'#34d399', icon:'💬' },
+  { key:'shares',        label:'Shares',          color:'#60a5fa', icon:'🔁' },
+  { key:'saves',         label:'Saves',           color:'#fb923c', icon:'🔖' },
+];
+
+function chLoadData() {
+  try { return JSON.parse(localStorage.getItem(CH_KEY()) || '{}'); }
+  catch { return {}; }
+}
+function chSaveData(d) { localStorage.setItem(CH_KEY(), JSON.stringify(d)); }
+
+function chInit() {
+  const data = chLoadData();
+  const connected = Object.keys(data.platforms || {});
+  if (connected.length === 0) {
+    $('ch-connect-screen').style.display = 'block';
+    $('ch-dashboard').style.display = 'none';
+  } else {
+    $('ch-connect-screen').style.display = 'none';
+    $('ch-dashboard').style.display = 'block';
+    CH_ACTIVE_PLATFORM = CH_ACTIVE_PLATFORM || connected[0];
+    chRenderTabs(connected);
+    chRenderDashboard();
+  }
+  // Sync badge states
+  connected.forEach(p => {
+    const badge = $(`ch-badge-${p}`);
+    if (badge) { badge.textContent = 'Connected ✓'; badge.closest('button')?.classList.add('connected'); }
+  });
+}
+
+function chShowConnect() {
+  $('ch-connect-screen').style.display = 'block';
+  $('ch-dashboard').style.display = 'none';
+}
+
+function chConnect(platform) {
+  const data = chLoadData();
+  data.platforms = data.platforms || {};
+
+  // Generate realistic mock data for demo
+  const base = { instagram:12400, tiktok:8200, youtube:3100, twitter:5600, linkedin:2800 };
+  const b = base[platform] || 5000;
+  const days = 30;
+  const mkSeries = (base, variance) => Array.from({length:days}, (_,i) =>
+    Math.max(0, Math.round(base + (Math.random()-0.48) * variance + i * (Math.random()*2-0.5)))
+  );
+
+  data.platforms[platform] = {
+    connected_at: new Date().toISOString(),
+    metrics: {
+      followers:      mkSeries(b, b*0.02),
+      followers_new:  mkSeries(Math.round(b*0.003), 20),
+      followers_lost: mkSeries(Math.round(b*0.001), 8),
+      views:          mkSeries(b*4, b*0.8),
+      reach:          mkSeries(b*2.5, b*0.5),
+      likes:          mkSeries(b*0.08, b*0.02),
+      comments:       mkSeries(Math.round(b*0.012), 15),
+      shares:         mkSeries(Math.round(b*0.008), 10),
+      saves:          mkSeries(Math.round(b*0.015), 12),
+    }
+  };
+  chSaveData(data);
+
+  const badge = $(`ch-badge-${platform}`);
+  if (badge) { badge.textContent = 'Connected ✓'; badge.closest('button')?.classList.add('connected'); }
+  toast(`${CH_PLATFORMS[platform]?.name} connected! 🎉`);
+
+  CH_ACTIVE_PLATFORM = platform;
+  setTimeout(() => chInit(), 400);
+}
+
+function chDisconnect() {
+  if (!CH_ACTIVE_PLATFORM) return;
+  const data = chLoadData();
+  delete (data.platforms || {})[CH_ACTIVE_PLATFORM];
+  chSaveData(data);
+  const badge = $(`ch-badge-${CH_ACTIVE_PLATFORM}`);
+  if (badge) { badge.textContent = 'Connect'; badge.closest('button')?.classList.remove('connected'); }
+  toast(`Disconnected.`);
+  CH_ACTIVE_PLATFORM = null;
+  chInit();
+}
+
+function chSetPeriod(days, btn) {
+  CH_PERIOD = days;
+  document.querySelectorAll('#ch-period-tabs .ch-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  chRenderDashboard();
+}
+
+function chRenderTabs(connected) {
+  const tabs = $('ch-platform-tabs');
+  if (!tabs) return;
+  tabs.innerHTML = connected.map(p => {
+    const pl = CH_PLATFORMS[p] || { name: p, icon: '📊' };
+    return `<button class="ch-tab ${p === CH_ACTIVE_PLATFORM ? 'active' : ''}"
+      onclick="chSwitchPlatform('${p}',this)">${pl.icon} ${pl.name}</button>`;
+  }).join('');
+}
+
+function chSwitchPlatform(p, btn) {
+  CH_ACTIVE_PLATFORM = p;
+  document.querySelectorAll('#ch-platform-tabs .ch-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  chRenderDashboard();
+}
+
+function chRenderDashboard() {
+  const data = chLoadData();
+  const pdata = data.platforms?.[CH_ACTIVE_PLATFORM];
+  if (!pdata) return;
+
+  const metrics = pdata.metrics;
+  const period  = CH_PERIOD;
+  const grid    = $('ch-metrics-grid');
+  if (!grid) return;
+
+  // Slice to period
+  const slice = obj => Object.fromEntries(
+    Object.entries(obj).map(([k,v]) => [k, v.slice(-period)])
+  );
+  const m = slice(metrics);
+
+  // Compute stats: current = last value, prev = value period ago
+  const stat = (arr) => {
+    const cur  = arr[arr.length - 1] || 0;
+    const prev = arr[0] || 0;
+    const delta = cur - prev;
+    const pct   = prev ? ((delta / prev) * 100).toFixed(1) : '0.0';
+    return { cur, delta, pct };
+  };
+
+  const fmt = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
+
+  // Render metric cards
+  grid.innerHTML = CH_METRICS_DEF.map(def => {
+    const s    = stat(m[def.key] || [0]);
+    const up   = s.delta >= 0;
+    const arrow = up ? '▲' : '▼';
+    const cls   = s.delta === 0 ? 'flat' : up ? 'up' : 'down';
+    return `
+      <div class="ch-metric-card" style="--ch-color:${def.color}">
+        <div class="ch-metric-label">${def.icon} ${def.label}</div>
+        <div class="ch-metric-val">${fmt(s.cur)}</div>
+        <div class="ch-metric-delta ${cls}">${arrow} ${fmt(Math.abs(s.delta))} (${s.pct}%)</div>
+      </div>`;
+  }).join('');
+
+  // Engagement rate
+  const totalFollowers = (m.followers || [0]).at(-1) || 1;
+  const totalInteractions = ((m.likes||[0]).at(-1)||0) + ((m.comments||[0]).at(-1)||0) + ((m.shares||[0]).at(-1)||0);
+  const engRate = ((totalInteractions / totalFollowers) * 100).toFixed(2);
+  const engEl = $('ch-eng-val'); if (engEl) engEl.textContent = engRate + '%';
+  const engFill = $('ch-eng-fill'); if (engFill) engFill.style.width = Math.min(parseFloat(engRate)*10, 100) + '%';
+
+  // Sparkline for views
+  chDrawSparkline(m.views || [], '#4f6ef7');
+  const lbl = $('ch-chart-label'); if (lbl) lbl.textContent = '👁 Views — Last ' + period + ' days';
+
+  // AI Insight
+  chGenerateInsight(m, engRate, CH_ACTIVE_PLATFORM);
+}
+
+function chDrawSparkline(data, color) {
+  const svg = $('ch-chart-svg');
+  if (!svg || !data.length) return;
+  const W = 300, H = 60, pad = 4;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * (W - pad*2);
+    const y = H - pad - ((v - min) / range) * (H - pad*2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const areaClose = `${W-pad},${H} ${pad},${H}`;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="ch-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polygon points="${pts.join(' ')} ${areaClose}" fill="url(#ch-grad)"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map((p, i) => i === pts.length-1 ?
+      `<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="3" fill="${color}"/>` : ''
+    ).join('')}`;
+}
+
+function chGenerateInsight(m, engRate, platform) {
+  const insight = $('ch-insight');
+  const txt     = $('ch-insight-text');
+  if (!insight || !txt) return;
+
+  const pName    = CH_PLATFORMS[platform]?.name || platform;
+  const eng      = parseFloat(engRate);
+  const views    = (m.views || [0]).at(-1) || 0;
+  const newFolls = (m.followers_new || [0]).reduce((a,b) => a+b, 0);
+  const comments = (m.comments || [0]).reduce((a,b) => a+b, 0);
+
+  let msg = '';
+  if (eng > 5)       msg = `🔥 Your ${pName} engagement rate of ${engRate}% is above average — your audience is highly active. Keep posting consistently to maintain momentum.`;
+  else if (eng > 3)  msg = `✅ Solid engagement at ${engRate}% on ${pName}. Focus on replies and saves to push past 5% — that's when the algorithm rewards you most.`;
+  else if (eng < 1)  msg = `📉 Your engagement on ${pName} is below 1%. Try shorter content, stronger CTAs, and posting at peak hours (6–9pm local time).`;
+  else               msg = `📊 Your ${pName} stats look steady. You gained ${newFolls.toLocaleString()} new followers this period. ${comments > 50 ? 'Great comment engagement!' : 'Try ending posts with a question to boost comments.'}`;
+
+  txt.textContent = msg;
+  insight.style.display = 'block';
+}
+
 // ═══════════════════════════ DIFFICULTY ═════════════════════════
 function openDiff() { $('diff-modal').classList.add('open'); }
 function closeDiff(e) { if (e.target === $('diff-modal')) $('diff-modal').classList.remove('open'); }
