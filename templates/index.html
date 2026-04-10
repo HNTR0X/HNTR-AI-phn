@@ -2319,7 +2319,7 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             <span class="snav-item-icon">🧪</span> Study Deck
           </button>
           <button class="snav-item" style="--item-accent:#fb923c" id="snav-studyplan"
-            onclick="snavSelect('study-plan','planner',this)">
+            onclick="snavSelect('studyplan','planner',this)">
             <span class="snav-item-icon">🗺️</span> Study Plan
           </button>
         </div>
@@ -3934,7 +3934,7 @@ async function generateStudyPlan() {
   result.style.display = 'none';
 
   try {
-    const res = await fetch('/api/study-plan', {
+    const res = await fetch('/api/studyplan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sid: S.sid, subject, exam_date: date, hours_per_day: SP_HOURS })
@@ -4042,7 +4042,7 @@ function downloadStudyPlan() {
   const blob = new Blob([text], { type: 'text/plain' });
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
-  a.download = `sivarr-study-plan-${subject.replace(/\s+/g,'-').toLowerCase()}.txt`;
+  a.download = `sivarr-studyplan-${subject.replace(/\s+/g,'-').toLowerCase()}.txt`;
   a.click();
 }
 
@@ -4128,7 +4128,7 @@ const SNAV_ROUTE = {
   'tasks':           () => nav('flux', null),
   'notes':           () => nav('notes', null),
   'study-deck':      () => nav('lab', null),
-  'study-plan':      () => nav('studyplan', null),
+  'studyplan':      () => nav('studyplan', null),
   // Assessments
   'quizzes':         () => nav('quiz', null),
   'exams':           () => { nav('courses', null); setTimeout(() => {
