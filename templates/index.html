@@ -3196,6 +3196,137 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
         </div>
       </div>
 
+  <!-- ── Content Hub Panel ── -->
+      <div class="panel" id="panel-contenthub">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🧠 Content Hub</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Track your social presence in one place.</p>
+            </div>
+            <button onclick="chShowConnect()" id="ch-add-btn"
+              style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:7px 14px;color:#fff;font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer;transition:opacity .2s"
+              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+              + Connect
+            </button>
+          </div>
+
+          <!-- Connect Screen (shown when no platforms connected) -->
+          <div id="ch-connect-screen">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem">
+              <div style="font-family:var(--font);font-size:.88rem;font-weight:700;margin-bottom:4px">Connect a platform</div>
+              <p style="font-size:.78rem;color:var(--muted);margin-bottom:1.1rem">Link your social accounts to start tracking analytics.</p>
+
+              <button class="ch-platform-btn" onclick="chConnect('instagram')">
+                <div class="ch-platform-icon" style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)">📸</div>
+                <div>
+                  <div style="font-weight:600;font-size:.85rem">Instagram</div>
+                  <div style="font-size:.72rem;color:var(--muted)">Posts, Reels, Stories</div>
+                </div>
+                <span class="ch-connect-badge" id="ch-badge-instagram">Connect</span>
+              </button>
+
+              <button class="ch-platform-btn" onclick="chConnect('tiktok')">
+                <div class="ch-platform-icon" style="background:#010101;border:1px solid var(--border2)">🎵</div>
+                <div>
+                  <div style="font-weight:600;font-size:.85rem">TikTok</div>
+                  <div style="font-size:.72rem;color:var(--muted)">Videos, Lives, Creator</div>
+                </div>
+                <span class="ch-connect-badge" id="ch-badge-tiktok">Connect</span>
+              </button>
+
+              <button class="ch-platform-btn" onclick="chConnect('youtube')">
+                <div class="ch-platform-icon" style="background:#ff0000">▶️</div>
+                <div>
+                  <div style="font-weight:600;font-size:.85rem">YouTube</div>
+                  <div style="font-size:.72rem;color:var(--muted)">Videos, Shorts, Channel</div>
+                </div>
+                <span class="ch-connect-badge" id="ch-badge-youtube">Connect</span>
+              </button>
+
+              <button class="ch-platform-btn" onclick="chConnect('twitter')">
+                <div class="ch-platform-icon" style="background:#000;border:1px solid var(--border2);font-size:.9rem;font-weight:900;color:#fff">𝕏</div>
+                <div>
+                  <div style="font-weight:600;font-size:.85rem">X / Twitter</div>
+                  <div style="font-size:.72rem;color:var(--muted)">Posts, Impressions</div>
+                </div>
+                <span class="ch-connect-badge" id="ch-badge-twitter">Connect</span>
+              </button>
+
+              <button class="ch-platform-btn" onclick="chConnect('linkedin')">
+                <div class="ch-platform-icon" style="background:#0077b5">💼</div>
+                <div>
+                  <div style="font-weight:600;font-size:.85rem">LinkedIn</div>
+                  <div style="font-size:.72rem;color:var(--muted)">Posts, Profile views</div>
+                </div>
+                <span class="ch-connect-badge" id="ch-badge-linkedin">Connect</span>
+              </button>
+
+            </div>
+          </div>
+
+          <!-- Dashboard (shown after connecting) -->
+          <div id="ch-dashboard" style="display:none">
+
+            <!-- Platform selector tabs -->
+            <div style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:1rem" id="ch-platform-tabs"></div>
+
+            <!-- Period selector -->
+            <div style="display:flex;gap:6px;margin-bottom:1.1rem;flex-wrap:wrap" id="ch-period-tabs">
+              <button class="ch-tab active" onclick="chSetPeriod(7,this)">7 days</button>
+              <button class="ch-tab" onclick="chSetPeriod(14,this)">14 days</button>
+              <button class="ch-tab" onclick="chSetPeriod(30,this)">30 days</button>
+            </div>
+
+            <!-- Metrics grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem" id="ch-metrics-grid"></div>
+
+            <!-- Engagement Rate bar -->
+            <div id="ch-eng-section" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+                <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Engagement Rate</div>
+                <div id="ch-eng-val" style="font-family:var(--font);font-size:1.2rem;font-weight:800;color:var(--accent)"></div>
+              </div>
+              <div class="ch-eng-bar"><div class="ch-eng-fill" id="ch-eng-fill" style="width:0%"></div></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px">
+                <span style="font-size:.68rem;color:var(--muted)">0%</span>
+                <span style="font-size:.68rem;color:var(--muted)">Industry avg: 3.5%</span>
+                <span style="font-size:.68rem;color:var(--muted)">10%</span>
+              </div>
+            </div>
+
+            <!-- Sparkline chart -->
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem" id="ch-chart-label">Views Over Time</div>
+              <svg id="ch-chart-svg" viewBox="0 0 300 60" style="width:100%;height:60px">
+                <defs>
+                  <linearGradient id="ch-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#4f6ef7" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="#4f6ef7" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            <!-- AI Insight -->
+            <div id="ch-insight" style="background:linear-gradient(135deg,#4f6ef710,#7c3aed10);border:1px solid #4f6ef730;border-radius:12px;padding:1rem;margin-bottom:1rem;display:none">
+              <div style="font-size:.75rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">✨ AI Insight</div>
+              <div id="ch-insight-text" style="font-size:.82rem;color:var(--text);line-height:1.6"></div>
+            </div>
+
+            <!-- Disconnect -->
+            <button onclick="chDisconnect()" style="width:100%;background:none;border:1px solid var(--border);border-radius:9px;padding:8px;color:var(--muted);font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s;margin-top:.25rem"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              Disconnect Platform
+            </button>
+
+          </div>
+        </div>
+      </div>
+
 
   <!-- Mobile Nav -->
   <nav class="mobile-nav">
