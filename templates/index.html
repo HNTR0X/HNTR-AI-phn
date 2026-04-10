@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+i<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -3893,6 +3893,157 @@ async function loadStats() {
       <div class="stat-row"><span class="sl">Score</span><span class="sv">${d.last_quiz.pct}%</span></div>
       <div class="stat-row"><span class="sl">Difficulty</span><span class="sv">${(d.last_quiz.difficulty||'medium').toUpperCase()}</span></div>
     </div>` : ''}`;
+}
+
+  // ═══════════════════════ STUDY PLAN ═════════════════════════
+
+let SP_HOURS = 1;
+
+function setSPHours(h, btn) {
+  SP_HOURS = h;
+  document.querySelectorAll('.sp-hrs-btn').forEach(b => b.classList.remove('sp-hrs-active'));
+  if (btn) btn.classList.add('sp-hrs-active');
+}
+
+async function generateStudyPlan() {
+  const subject = $('sp-subject')?.value.trim();
+  const date    = $('sp-date')?.value;
+  const err     = $('sp-err');
+  const btn     = $('sp-btn');
+  const result  = $('sp-result');
+  const countdown = $('sp-countdown');
+
+  err.textContent = '';
+
+  if (!subject) { err.textContent = 'Please enter a subject or course.'; return; }
+  if (!date)    { err.textContent = 'Please pick your exam date.'; return; }
+
+  const today   = new Date(); today.setHours(0,0,0,0);
+  const examDay = new Date(date);
+  const daysLeft = Math.round((examDay - today) / 86400000);
+
+  if (daysLeft < 1) { err.textContent = 'Exam date must be in the future.'; return; }
+
+  // Show countdown
+  countdown.style.display = 'flex';
+  $('sp-days-text').textContent = `${daysLeft} day${daysLeft !== 1 ? 's' : ''} until your exam`;
+  $('sp-exam-label').textContent = `${subject} · ${examDay.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}`;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating your plan...';
+  result.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/study-plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sid: S.sid, subject, exam_date: date, hours_per_day: SP_HOURS })
+    });
+
+    if (!res.ok) {
+      const e = await res.json();
+      throw new Error(e.detail || 'Failed to generate plan.');
+    }
+
+    const data = await res.json();
+    renderStudyPlan(data);
+
+  } catch(e) {
+    err.textContent = e.message || 'Something went wrong. Try again.';
+    countdown.style.display = 'none';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Regenerate Plan';
+  }
+}
+
+function renderStudyPlan(data) {
+  const result = $('sp-result');
+  const plan   = data.plan || [];
+
+  if (!plan.length) {
+    result.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Could not generate plan. Try again.</p>';
+    result.style.display = 'block';
+    return;
+  }
+
+  const saved = JSON.parse(localStorage.getItem(`sp_checks_${S.sid}`) || '{}');
+
+  result.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div style="font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--text)">
+        📅 ${plan.length}-Day Plan · ${data.subject}
+      </div>
+      <button onclick="downloadStudyPlan()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-size:.72rem;cursor:pointer;font-family:var(--font);font-weight:700;transition:all .15s"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        ⬇ Export
+      </button>
+    </div>
+
+    ${plan.map((day, di) => `
+      <div class="sp-day-card" id="sp-day-${di}">
+        <div class="sp-day-header">
+          <span class="sp-day-num">Day ${day.day} · ${esc(day.date || '')}</span>
+          <span class="sp-hours-badge">⏱ ${day.hours || SP_HOURS}h</span>
+        </div>
+        <div class="sp-day-focus">📖 ${esc(day.focus || '')}</div>
+        <div>
+          ${(day.tasks || []).map((task, ti) => {
+            const key = `${di}_${ti}`;
+            const done = saved[key] ? 'done' : '';
+            return `
+              <div class="sp-task">
+                <div class="sp-task-check ${done}" onclick="toggleSPTask('${di}','${ti}',this)">
+                  ${done ? '✓' : ''}
+                </div>
+                <span style="${done ? 'text-decoration:line-through;opacity:.5' : ''}" id="sp-task-text-${di}-${ti}">${esc(task)}</span>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    `).join('')}
+
+    <div style="background:linear-gradient(135deg,#22c55e10,transparent);border:1px solid #22c55e30;border-radius:12px;padding:.875rem;margin-top:.5rem;text-align:center">
+      <div style="font-size:1.2rem;margin-bottom:4px">💪</div>
+      <div style="font-family:var(--font);font-size:.82rem;font-weight:700;color:#22c55e">You've got this, ${S.name.split(' ')[0]}!</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Tick off tasks as you go. Sivarr's got your back 24/7.</div>
+    </div>
+  `;
+
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleSPTask(di, ti, el) {
+  const key   = `${di}_${ti}`;
+  const saved = JSON.parse(localStorage.getItem(`sp_checks_${S.sid}`) || '{}');
+  const done  = !saved[key];
+  saved[key]  = done;
+  localStorage.setItem(`sp_checks_${S.sid}`, JSON.stringify(saved));
+  el.classList.toggle('done', done);
+  el.textContent = done ? '✓' : '';
+  const txt = $(`sp-task-text-${di}-${ti}`);
+  if (txt) txt.style.cssText = done ? 'text-decoration:line-through;opacity:.5' : '';
+}
+
+function downloadStudyPlan() {
+  const subject  = $('sp-subject')?.value.trim() || 'Study Plan';
+  const cards    = document.querySelectorAll('.sp-day-card');
+  let text = `SIVARR STUDY PLAN — ${subject.toUpperCase()}\n`;
+  text += `Generated: ${new Date().toLocaleDateString()}\n`;
+  text += '='.repeat(40) + '\n\n';
+  cards.forEach(card => {
+    const num   = card.querySelector('.sp-day-num')?.textContent || '';
+    const focus = card.querySelector('.sp-day-focus')?.textContent || '';
+    const tasks = [...card.querySelectorAll('.sp-task span')].map(t => `  • ${t.textContent.trim()}`).join('\n');
+    text += `${num}\n${focus}\n${tasks}\n\n`;
+  });
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `sivarr-study-plan-${subject.replace(/\s+/g,'-').toLowerCase()}.txt`;
+  a.click();
 }
 
 // ═══════════════════════════ DIFFICULTY ═════════════════════════
