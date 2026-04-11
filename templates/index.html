@@ -4774,6 +4774,247 @@ function chGenerateInsight(m, engRate, platform) {
   insight.style.display = 'block';
 }
 
+// ═══════════════════════ CREATE NEW ═════════════════════════
+
+function cnOpen() {
+  $('cn-modal-bg').classList.add('open');
+}
+function cnClose(e) {
+  if (e.target === $('cn-modal-bg')) $('cn-modal-bg').classList.remove('open');
+}
+function cnAction(type) {
+  $('cn-modal-bg').classList.remove('open');
+  setTimeout(() => {
+    if (type === 'note') {
+      nav('notes', null);
+      setTimeout(() => {
+        const ta = $('new-note-text'); if (ta) { ta.focus(); ta.scrollIntoView({behavior:'smooth'}); }
+      }, 300);
+    } else if (type === 'task') {
+      nav('flux', null);
+      setTimeout(() => {
+        const btn = document.querySelector('.sh-add-btn, [onclick*="showAddTask"], [onclick*="openTaskModal"]');
+        if (btn) btn.click();
+      }, 300);
+    } else if (type === 'studyplan') {
+      snavSelect('studyplan', 'planner', null);
+      setTimeout(() => {
+        const el = $('sp-subject'); if (el) el.focus();
+      }, 350);
+    } else if (type === 'quiz') {
+      nav('quiz', null);
+      setTimeout(() => {
+        const ti = $('quiz-topic-input'); if (ti) ti.focus();
+      }, 300);
+    } else if (type === 'studydeck') {
+      nav('lab', null);
+      setTimeout(() => {
+        const el = $('lab-file-input-p'); if (el) el.click();
+      }, 350);
+    } else if (type === 'ask') {
+      nav('chat', null);
+      setTimeout(() => {
+        const ci = $('ci'); if (ci) ci.focus();
+      }, 300);
+    }
+  }, 250);
+}
+
+// ═══════════════════════ SETTINGS ═════════════════════════
+
+const ST_KEY = () => `sivarr_st_${S.sid || 'guest'}`;
+
+function stLoad() {
+  return JSON.parse(localStorage.getItem(ST_KEY()) || '{}');
+}
+function stSave(data) {
+  localStorage.setItem(ST_KEY(), JSON.stringify(data));
+}
+
+function stInit() {
+  // Populate profile fields
+  const st = stLoad();
+  const nameEl   = $('st-name-input');
+  const emailEl  = $('st-email-input');
+  const phoneEl  = $('st-phone-input');
+  const avatarL  = $('st-avatar-letter');
+  const nameDisp = $('st-name-display');
+  const matDisp  = $('st-matric-display');
+
+  if (nameEl)   nameEl.value   = S.name || '';
+  if (emailEl)  emailEl.value  = st.email || '';
+  if (phoneEl)  phoneEl.value  = st.phone || '';
+  if (avatarL)  avatarL.textContent = S.name ? S.name[0].toUpperCase() : '?';
+  if (nameDisp) nameDisp.textContent = S.name || '';
+  if (matDisp)  matDisp.textContent  = S.matric || '';
+
+  // Load profile pic into settings avatar
+  const saved = localStorage.getItem(`sivarr_pfp_${S.sid}`);
+  if (saved) {
+    const av = $('st-avatar');
+    if (av) { av.style.backgroundImage = `url(${saved})`; av.style.backgroundSize = 'cover'; $('st-avatar-letter').style.display = 'none'; }
+  }
+
+  // Theme toggle
+  const themeToggle = $('st-theme-toggle');
+  if (themeToggle) {
+    const isDark = !document.body.classList.contains('light');
+    if (isDark) themeToggle.classList.add('on');
+    else themeToggle.classList.remove('on');
+  }
+
+  // Notification toggles
+  ['ann','streak','quiz'].forEach(key => {
+    const el = $(`st-notif-${key}`);
+    if (el) {
+      const val = localStorage.getItem(`sivarr_notif_${key}`);
+      if (val === 'off') el.classList.remove('on');
+      else el.classList.add('on');
+    }
+  });
+
+  // Accent colour — restore saved
+  const savedAccent = localStorage.getItem('sivarr_accent');
+  if (savedAccent) {
+    document.querySelectorAll('.st-accent-dot').forEach(d => {
+      d.classList.toggle('sel', d.style.background === savedAccent);
+    });
+  }
+
+  // Usage bars
+  stUpdateUsage();
+}
+
+function stUpdateUsage() {
+  const today = new Date().toISOString().split('T')[0];
+  const hist  = JSON.parse(localStorage.getItem(`sivarr_usage_${today}`) || '{"chat":0,"quiz":0}');
+  const chatUsed = hist.chat || 0;
+  const quizUsed = hist.quiz || 0;
+  const chatMax  = S.plan === 'pro' ? 999 : 20;
+  const quizMax  = S.plan === 'pro' ? 999 : 5;
+
+  const cu = $('st-usage-chat');    if (cu) cu.textContent = `${chatUsed} / ${chatMax}`;
+  const cb = $('st-usage-chat-bar');if (cb) cb.style.width = Math.min((chatUsed/chatMax)*100,100) + '%';
+  const qu = $('st-usage-quiz');    if (qu) qu.textContent = `${quizUsed} / ${quizMax}`;
+  const qb = $('st-usage-quiz-bar');if (qb) qb.style.width = Math.min((quizUsed/quizMax)*100,100) + '%';
+
+  const badge = $('st-plan-badge');
+  if (badge) {
+    badge.textContent = S.plan === 'pro' ? '⚡ Pro' : '✦ Free';
+    badge.className   = `st-plan-badge ${S.plan === 'pro' ? 'st-plan-pro' : 'st-plan-free'}`;
+  }
+}
+
+function stSaveProfile() {
+  const name  = $('st-name-input')?.value.trim();
+  const email = $('st-email-input')?.value.trim();
+  const phone = $('st-phone-input')?.value.trim();
+
+  if (!name || name.length < 2) { toast('Name must be at least 2 characters.'); return; }
+
+  const st = stLoad();
+  st.email = email;
+  st.phone = phone;
+  stSave(st);
+
+  S.name = name;
+  const nameDisp = $('st-name-display'); if (nameDisp) nameDisp.textContent = name;
+  const avatarL  = $('st-avatar-letter'); if (avatarL) avatarL.textContent = name[0].toUpperCase();
+  const tbAv   = $('tb-av');   if (tbAv)   tbAv.textContent   = name[0].toUpperCase();
+  const tbName = $('tb-name'); if (tbName) tbName.textContent = name;
+
+  toast('Profile saved ✓');
+}
+
+function stToggleTheme(btn) {
+  btn.classList.toggle('on');
+  toggleThemeFromMenu();
+}
+
+function stToggleNotif(btn, key) {
+  btn.classList.toggle('on');
+  localStorage.setItem(`sivarr_notif_${key}`, btn.classList.contains('on') ? 'on' : 'off');
+  toast(`${btn.classList.contains('on') ? 'Enabled' : 'Disabled'} notifications`);
+}
+
+function stSetAccent(color, color2, el) {
+  document.querySelectorAll('.st-accent-dot').forEach(d => d.classList.remove('sel'));
+  el.classList.add('sel');
+  document.documentElement.style.setProperty('--accent',  color);
+  document.documentElement.style.setProperty('--accent2', color2);
+  localStorage.setItem('sivarr_accent',  color);
+  localStorage.setItem('sivarr_accent2', color2);
+  toast('Accent colour updated ✓');
+}
+
+function stChangePassword() {
+  const pw  = $('st-pw-input')?.value;
+  const pw2 = $('st-pw2-input')?.value;
+  if (!pw || pw.length < 6) { toast('Password must be at least 6 characters.'); return; }
+  if (pw !== pw2)            { toast('Passwords do not match.'); return; }
+  toast('Password update coming soon — backend integration needed. 🔧');
+}
+
+function stLogoutAll() {
+  if (!confirm('Sign out of all devices?')) return;
+  clearSession();
+  location.reload();
+}
+
+function stExportData() {
+  const data = {
+    name:    S.name,
+    matric:  S.matric,
+    stats:   S.stats,
+    topics:  S.topics,
+    exported: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `sivarr-data-${S.matric || 'export'}.json`;
+  a.click();
+  toast('Data exported ✓');
+}
+
+async function stClearChat() {
+  if (!confirm('Clear all chat history? This cannot be undone.')) return;
+  try {
+    await fetch('/api/clear-history', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({sid: S.sid})
+    });
+  } catch(e) {}
+  toast('Chat history cleared ✓');
+}
+
+async function stClearWrong() {
+  if (!confirm('Clear revision list?')) return;
+  try { await API('/api/wrong/clear', {sid: S.sid, idx: 'all'}); } catch(e) {}
+  toast('Revision list cleared ✓');
+}
+
+async function stResetProgress() {
+  if (!confirm('⚠️ Reset ALL progress? This cannot be undone.')) return;
+  if (!confirm('Are you absolutely sure? All stats, topics and quiz history will be deleted.')) return;
+  try {
+    await fetch('/api/reset-progress', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({sid: S.sid})
+    });
+    toast('Progress reset. Reloading...');
+    setTimeout(() => { clearSession(); location.reload(); }, 1500);
+  } catch(e) { toast('Reset failed — try again.'); }
+}
+
+// Restore accent on load
+(function() {
+  const a  = localStorage.getItem('sivarr_accent');
+  const a2 = localStorage.getItem('sivarr_accent2');
+  if (a)  document.documentElement.style.setProperty('--accent',  a);
+  if (a2) document.documentElement.style.setProperty('--accent2', a2);
+})();
+  
 // ═══════════════════════════ DIFFICULTY ═════════════════════════
 function openDiff() { $('diff-modal').classList.add('open'); }
 function closeDiff(e) { if (e.target === $('diff-modal')) $('diff-modal').classList.remove('open'); }
