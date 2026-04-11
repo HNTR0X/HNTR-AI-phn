@@ -641,6 +641,103 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .sp-hrs-btn:hover { border-color:var(--accent); color:var(--accent); }
 .sp-hrs-btn.sp-hrs-active { background:#4f6ef720; border-color:var(--accent); color:var(--accent); }
 
+  /* ── Create New Modal ── */
+.cn-modal-bg {
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
+  display:flex;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(6px);opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.cn-modal-bg.open { opacity:1;pointer-events:all; }
+.cn-modal {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px 20px 0 0;width:100%;max-width:520px;
+  padding:1.5rem 1.25rem 2rem;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+.cn-modal-bg.open .cn-modal { transform:translateY(0); }
+.cn-handle {
+  width:36px;height:4px;border-radius:2px;background:var(--border2);
+  margin:0 auto 1.25rem;
+}
+.cn-title {
+  font-family:var(--font);font-size:1rem;font-weight:800;
+  margin-bottom:1.1rem;letter-spacing:-.02em;text-align:center;
+}
+.cn-grid { display:grid;grid-template-columns:1fr 1fr;gap:.625rem; }
+.cn-item {
+  display:flex;align-items:center;gap:10px;padding:12px 13px;
+  border-radius:12px;background:var(--card);border:1px solid var(--border);
+  cursor:pointer;transition:all .18s;text-align:left;font-family:var(--font-body);
+}
+.cn-item:hover {
+  border-color:var(--cn-color,var(--accent));
+  background:color-mix(in srgb,var(--cn-color,var(--accent)) 8%,transparent);
+  transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2);
+}
+.cn-item-icon {
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  background:color-mix(in srgb,var(--cn-color,var(--accent)) 15%,transparent);
+}
+.cn-item-label { font-size:.82rem;font-weight:700;color:var(--text); }
+.cn-item-sub   { font-size:.68rem;color:var(--muted);margin-top:1px; }
+
+/* ── Settings Panel ── */
+.st-section {
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;margin-bottom:.875rem;overflow:hidden;
+}
+.st-section-hd {
+  padding:.875rem 1rem;display:flex;align-items:center;gap:10px;
+  transition:background .15s;border-bottom:1px solid var(--border);
+}
+.st-section-icon {
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+}
+.st-section-title { font-family:var(--font);font-size:.88rem;font-weight:700;flex:1; }
+.st-section-body  { padding:.875rem 1rem;display:flex;flex-direction:column;gap:.75rem; }
+.st-row { display:flex;align-items:center;justify-content:space-between;gap:10px; }
+.st-label { font-size:.82rem;color:var(--muted);font-weight:500; }
+.st-input {
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:8px 12px;color:var(--text);
+  font-family:var(--font-body);font-size:.85rem;outline:none;transition:border-color .2s;
+}
+.st-input:focus { border-color:var(--accent); }
+.st-toggle {
+  width:42px;height:24px;border-radius:20px;background:var(--border2);
+  border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;
+}
+.st-toggle.on { background:var(--accent); }
+.st-toggle::after {
+  content:'';position:absolute;top:3px;left:3px;
+  width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;
+}
+.st-toggle.on::after { transform:translateX(18px); }
+.st-btn {
+  width:100%;padding:9px;border-radius:9px;border:1px solid var(--border);
+  background:none;color:var(--muted);font-family:var(--font);font-size:.8rem;
+  font-weight:700;cursor:pointer;transition:all .15s;text-align:left;
+  display:flex;align-items:center;gap:8px;
+}
+.st-btn:hover { border-color:var(--border2);color:var(--text);background:var(--surface); }
+.st-btn.danger:hover { border-color:var(--red);color:var(--red); }
+.st-accent-dot {
+  width:26px;height:26px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:all .15s;flex-shrink:0;
+}
+.st-accent-dot.sel { border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 3px rgba(255,255,255,.2); }
+.st-plan-badge {
+  display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+  border-radius:20px;font-size:.72rem;font-weight:800;font-family:var(--font);
+}
+.st-plan-free { background:#4f6ef720;color:var(--accent);border:1px solid #4f6ef740; }
+.st-plan-pro  { background:linear-gradient(135deg,#f59e0b20,#f472b620);color:#f59e0b;border:1px solid #f59e0b40; }
+.st-usage-bar  { height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:4px; }
+.st-usage-fill { height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .6s ease; }
+
   /* ── Content Hub ── */
 .ch-platform-btn {
   display:flex; align-items:center; gap:10px;
@@ -3320,8 +3417,181 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
           </div>
         </div>
       </div>
+
+      <!-- ── Settings Panel ── -->
+      <div class="panel" id="panel-settings">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+
+          <div style="margin-bottom:1.5rem">
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">⚙️ Settings</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:3px">Manage your Sivarr experience.</p>
+          </div>
+
+          <!-- Profile -->
+          <div class="st-section">
+            <div class="st-section-hd">
+              <div class="st-section-icon" style="background:#4f6ef720">👤</div>
+              <div class="st-section-title">Profile</div>
+            </div>
+            <div class="st-section-body">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:.25rem">
+                <div id="st-avatar" onclick="$('pfp-input-st').click()" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--font);font-weight:800;font-size:1.2rem;color:#fff;cursor:pointer;flex-shrink:0;position:relative">
+                  <span id="st-avatar-letter">?</span>
+                  <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;border:1px solid var(--border)">✏️</div>
+                </div>
+                <input type="file" id="pfp-input-st" style="display:none" accept="image/*" onchange="uploadProfilePic(this)">
+                <div>
+                  <div id="st-name-display" style="font-family:var(--font);font-weight:700;font-size:.95rem"></div>
+                  <div id="st-matric-display" style="font-size:.75rem;color:var(--muted);margin-top:2px"></div>
+                </div>
+              </div>
+              <div>
+                <div class="st-label" style="margin-bottom:4px">Display Name</div>
+                <input class="st-input" id="st-name-input" type="text" placeholder="Your full name">
+              </div>
+              <div>
+                <div class="st-label" style="margin-bottom:4px">Email</div>
+                <input class="st-input" id="st-email-input" type="email" placeholder="you@university.edu">
+              </div>
+              <div>
+                <div class="st-label" style="margin-bottom:4px">Phone</div>
+                <input class="st-input" id="st-phone-input" type="tel" placeholder="+234 800 000 0000">
+              </div>
+              <button onclick="stSaveProfile()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:9px 20px;color:#fff;font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .2s;width:100%"
+                onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                Save Profile
+              </button>
+            </div>
+          </div>
+
+          <!-- Appearance -->
+          <div class="st-section">
+            <div class="st-section-hd">
+              <div class="st-section-icon" style="background:#a78bfa20">🎨</div>
+              <div class="st-section-title">Appearance</div>
+            </div>
+            <div class="st-section-body">
+              <div class="st-row">
+                <span class="st-label">Dark Mode</span>
+                <button class="st-toggle" id="st-theme-toggle" onclick="stToggleTheme(this)"></button>
+              </div>
+              <div>
+                <div class="st-label" style="margin-bottom:8px">Accent Colour</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap" id="st-accent-picker">
+                  <div class="st-accent-dot sel" style="background:#4f6ef7" onclick="stSetAccent('#4f6ef7','#7c3aed',this)" title="Indigo"></div>
+                  <div class="st-accent-dot" style="background:#06b6d4" onclick="stSetAccent('#06b6d4','#0284c7',this)" title="Cyan"></div>
+                  <div class="st-accent-dot" style="background:#10b981" onclick="stSetAccent('#10b981','#059669',this)" title="Emerald"></div>
+                  <div class="st-accent-dot" style="background:#f59e0b" onclick="stSetAccent('#f59e0b','#d97706',this)" title="Amber"></div>
+                  <div class="st-accent-dot" style="background:#ef4444" onclick="stSetAccent('#ef4444','#dc2626',this)" title="Red"></div>
+                  <div class="st-accent-dot" style="background:#ec4899" onclick="stSetAccent('#ec4899','#db2777',this)" title="Pink"></div>
+                  <div class="st-accent-dot" style="background:#8b5cf6" onclick="stSetAccent('#8b5cf6','#7c3aed',this)" title="Violet"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="st-section">
+            <div class="st-section-hd">
+              <div class="st-section-icon" style="background:#34d39920">🔔</div>
+              <div class="st-section-title">Notifications</div>
+            </div>
+            <div class="st-section-body">
+              <div class="st-row">
+                <span class="st-label">Announcements</span>
+                <button class="st-toggle on" id="st-notif-ann" onclick="stToggleNotif(this,'ann')"></button>
+              </div>
+              <div class="st-row">
+                <span class="st-label">Study streak reminders</span>
+                <button class="st-toggle on" id="st-notif-streak" onclick="stToggleNotif(this,'streak')"></button>
+              </div>
+              <div class="st-row">
+                <span class="st-label">Quiz results</span>
+                <button class="st-toggle on" id="st-notif-quiz" onclick="stToggleNotif(this,'quiz')"></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security -->
+          <div class="st-section">
+            <div class="st-section-hd">
+              <div class="st-section-icon" style="background:#f59e0b20">🔒</div>
+              <div class="st-section-title">Security</div>
+            </div>
+            <div class="st-section-body">
+              <div>
+                <div class="st-label" style="margin-bottom:4px">New Password</div>
+                <input class="st-input" id="st-pw-input" type="password" placeholder="Min. 6 characters">
+              </div>
+              <div>
+                <div class="st-label" style="margin-bottom:4px">Confirm Password</div>
+                <input class="st-input" id="st-pw2-input" type="password" placeholder="Repeat password">
+              </div>
+              <button onclick="stChangePassword()" class="st-btn">
+                🔑 Update Password
+              </button>
+              <button onclick="stLogoutAll()" class="st-btn danger">
+                🚪 Sign Out Everywhere
+              </button>
+            </div>
+          </div>
+
+          <!-- My Plan -->
+          <div class="st-section">
+            <div class="st-section-hd">
+              <div class="st-section-icon" style="background:#f472b620">⚡</div>
+              <div class="st-section-title">My Plan</div>
+            </div>
+            <div class="st-section-body">
+              <div class="st-row">
+                <span class="st-label">Current plan</span>
+                <span class="st-plan-badge st-plan-free" id="st-plan-badge">✦ Free</span>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+                  <span class="st-label">AI Messages today</span>
+                  <span id="st-usage-chat" style="font-size:.75rem;color:var(--muted)">0 / 20</span>
+                </div>
+                <div class="st-usage-bar"><div class="st-usage-fill" id="st-usage-chat-bar" style="width:0%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+                  <span class="st-label">Quizzes today</span>
+                  <span id="st-usage-quiz" style="font-size:.75rem;color:var(--muted)">0 / 5</span>
+                </div>
+                <div class="st-usage-bar"><div class="st-usage-fill" id="st-usage-quiz-bar" style="width:0%"></div></div>
+              </div>
+              <button onclick="toast('Pro plan coming soon! 🚀')" style="width:100%;background:linear-gradient(135deg,#f59e0b,#f472b6);border:none;border-radius:9px;padding:9px;color:#fff;font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .2s"
+                onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                ⚡ Upgrade to Pro
+              </button>
+            </div>
+          </div>
+
+          <!-- Data -->
+          <div class="st-section">
+            <div class="st-section-hd">
+              <div class="st-section-icon" style="background:#ef444420">🗑️</div>
+              <div class="st-section-title">Data & Privacy</div>
+            </div>
+            <div class="st-section-body">
+              <button class="st-btn" onclick="stExportData()">📦 Export my data (JSON)</button>
+              <button class="st-btn danger" onclick="stClearChat()">🗑️ Clear chat history</button>
+              <button class="st-btn danger" onclick="stClearWrong()">🗑️ Clear revision list</button>
+              <button class="st-btn danger" onclick="stResetProgress()">⚠️ Reset all progress</button>
+            </div>
+          </div>
+
+          <div style="text-align:center;padding:1rem 0;font-size:.72rem;color:var(--muted)">
+            Sivarr AI · Built with 🔥 for students
+          </div>
+
+        </div>
+      </div>
     </main>
   </div>
+
+  
 
   <!-- Mobile Nav -->
   <nav class="mobile-nav">
@@ -3335,6 +3605,47 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 </div>
 
 <div class="toast" id="toast"></div>
+
+  <!-- ── Create New Modal ── -->
+<div class="cn-modal-bg" id="cn-modal-bg" onclick="cnClose(event)">
+  <div class="cn-modal">
+    <div class="cn-handle"></div>
+    <div class="cn-title">✦ Create New</div>
+    <div class="cn-grid">
+
+      <button class="cn-item" style="--cn-color:#4f6ef7" onclick="cnAction('note')">
+        <div class="cn-item-icon">📝</div>
+        <div><div class="cn-item-label">Note</div><div class="cn-item-sub">Quick study note</div></div>
+      </button>
+
+      <button class="cn-item" style="--cn-color:#22c55e" onclick="cnAction('task')">
+        <div class="cn-item-icon">✅</div>
+        <div><div class="cn-item-label">Task</div><div class="cn-item-sub">Add to Flux board</div></div>
+      </button>
+
+      <button class="cn-item" style="--cn-color:#f59e0b" onclick="cnAction('studyplan')">
+        <div class="cn-item-icon">🗺️</div>
+        <div><div class="cn-item-label">Study Plan</div><div class="cn-item-sub">Exam countdown</div></div>
+      </button>
+
+      <button class="cn-item" style="--cn-color:#f472b6" onclick="cnAction('quiz')">
+        <div class="cn-item-icon">📝</div>
+        <div><div class="cn-item-label">Quiz</div><div class="cn-item-sub">Test yourself</div></div>
+      </button>
+
+      <button class="cn-item" style="--cn-color:#a78bfa" onclick="cnAction('studydeck')">
+        <div class="cn-item-icon">🧪</div>
+        <div><div class="cn-item-label">Study Deck</div><div class="cn-item-sub">Upload lecture notes</div></div>
+      </button>
+
+      <button class="cn-item" style="--cn-color:#34d399" onclick="cnAction('ask')">
+        <div class="cn-item-icon">💬</div>
+        <div><div class="cn-item-label">Ask AI</div><div class="cn-item-sub">Chat instantly</div></div>
+      </button>
+
+    </div>
+  </div>
+</div>
 
 <!-- Difficulty Modal -->
 <div class="modal-bg" id="diff-modal" onclick="closeDiff(event)">
