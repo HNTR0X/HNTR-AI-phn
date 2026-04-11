@@ -3935,6 +3935,8 @@ async function doLogin(name, matric) {
     S.diff = r.difficulty; S.topics = r.topics; S.weak = r.weak;
     S.stats = { questions: r.questions, quizzes: r.quizzes, sessions: r.sessions, wrong: r.wrong_count };
     S.uploadedFiles = r.uploaded_files || [];
+    S.plan          = r.plan || 'free';
+    
 
     // Save to localStorage for auto-login next visit
     saveSession(name, matric);
