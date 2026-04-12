@@ -5816,6 +5816,502 @@ async function stResetProgress() {
   if (a)  document.documentElement.style.setProperty('--accent',  a);
   if (a2) document.documentElement.style.setProperty('--accent2', a2);
 })();
+
+  // ═══════════════════ LEARNING HUB ══════════════════════════
+
+const LH_COURSES = [
+  // STEM
+  { id:'lh01', title:'Calculus Fundamentals', author:'Dr. Adebayo', emoji:'📐', color:'#4f6ef7', cat:'stem', level:'Beginner', rating:4.8, students:3241, lessons:24, desc:'Master differentiation, integration and applications.' },
+  { id:'lh02', title:'Statistics & Probability', author:'Prof. Okonkwo', emoji:'📊', color:'#7c3aed', cat:'stem', level:'Intermediate', rating:4.7, students:2180, lessons:20, desc:'Data analysis and probability from first principles.' },
+  { id:'lh03', title:'Physics: Mechanics', author:'Dr. Emeka', emoji:'⚙️', color:'#06b6d4', cat:'stem', level:'Intermediate', rating:4.6, students:1890, lessons:18, desc:'Forces, motion, energy and waves.' },
+  { id:'lh04', title:'Organic Chemistry', author:'Dr. Nwosu', emoji:'🧪', color:'#22c55e', cat:'stem', level:'Advanced', rating:4.5, students:1420, lessons:22, desc:'Reactions, mechanisms and lab techniques.' },
+  // Tech
+  { id:'lh05', title:'Python for Beginners', author:'Chinedu Dev', emoji:'🐍', color:'#f59e0b', cat:'tech', level:'Beginner', rating:4.9, students:5210, lessons:30, desc:'Learn programming from zero with Python.' },
+  { id:'lh06', title:'Web Development Bootcamp', author:'Sarah Afolabi', emoji:'💻', color:'#ef4444', cat:'tech', level:'Beginner', rating:4.8, students:4320, lessons:36, desc:'HTML, CSS, JavaScript and React fundamentals.' },
+  { id:'lh07', title:'Data Science Essentials', author:'Dr. Mensah', emoji:'🤖', color:'#8b5cf6', cat:'tech', level:'Intermediate', rating:4.7, students:2890, lessons:28, desc:'Data wrangling, ML and visualization.' },
+  { id:'lh08', title:'Cybersecurity Basics', author:'Tobi Secure', emoji:'🔐', color:'#64748b', cat:'tech', level:'Beginner', rating:4.6, students:1760, lessons:16, desc:'Stay safe online and understand threats.' },
+  // Business
+  { id:'lh09', title:'Entrepreneurship 101', author:'Amara Chukwu', emoji:'🚀', color:'#f472b6', cat:'business', level:'Beginner', rating:4.8, students:3890, lessons:20, desc:'From idea to product to paying customers.' },
+  { id:'lh10', title:'Financial Accounting', author:'Prof. Adeleke', emoji:'💰', color:'#22c55e', cat:'business', level:'Intermediate', rating:4.6, students:2340, lessons:24, desc:'Balance sheets, P&L and financial statements.' },
+  { id:'lh11', title:'Marketing Strategy', author:'Ngozi Brands', emoji:'📣', color:'#f59e0b', cat:'business', level:'Beginner', rating:4.7, students:2890, lessons:18, desc:'Digital, content and growth marketing.' },
+  // Design
+  { id:'lh12', title:'UI/UX Design Fundamentals', author:'Temi Creates', emoji:'🎨', color:'#ec4899', cat:'design', level:'Beginner', rating:4.9, students:4120, lessons:22, desc:'Figma, wireframing, user research and prototyping.' },
+  { id:'lh13', title:'Graphic Design Masterclass', author:'Kofi Art', emoji:'✏️', color:'#a78bfa', cat:'design', level:'Beginner', rating:4.7, students:3210, lessons:26, desc:'Typography, colour theory and branding.' },
+  // Languages
+  { id:'lh14', title:'French for Beginners', emoji:'🇫🇷', color:'#3b82f6', cat:'languages', author:'Marie Dupont', level:'Beginner', rating:4.6, students:1980, lessons:30, desc:'Speak French confidently in 30 lessons.' },
+  { id:'lh15', title:'Yoruba Language & Culture', emoji:'🌍', color:'#22c55e', cat:'languages', author:'Baba Akin', level:'Beginner', rating:4.8, students:1240, lessons:20, desc:'Greetings, grammar and everyday conversation.' },
+  // Arts
+  { id:'lh16', title:'Creative Writing Workshop', emoji:'📝', color:'#f97316', cat:'arts', author:'Chinua Jr.', level:'Beginner', rating:4.7, students:2100, lessons:16, desc:'Fiction, essays and finding your voice.' },
+];
+
+let LH_CAT      = 'all';
+let LH_ENROLLED = [];
+
+async function lhInit() {
+  try {
+    const r = await fetch(`/api/learning-hub/enrolled?sid=${S.sid}`);
+    const d = await r.json();
+    LH_ENROLLED = d.enrolled || [];
+  } catch(e) { LH_ENROLLED = JSON.parse(localStorage.getItem(`lh_enrolled_${S.sid}`) || '[]'); }
+  lhRender();
+}
+
+function lhSetCat(cat, btn) {
+  LH_CAT = cat;
+  document.querySelectorAll('.lh-filter').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  lhRender();
+}
+
+function lhFilter() {
+  lhRender($('lh-search')?.value.trim().toLowerCase());
+}
+
+function lhRender(search = '') {
+  const grid    = $('lh-grid'); if (!grid) return;
+  const contSec = $('lh-continue-section');
+  const contList= $('lh-continue-list');
+  const label   = $('lh-section-label');
+  const count   = $('lh-count');
+
+  let courses = LH_CAT === 'all' ? LH_COURSES : LH_COURSES.filter(c => c.cat === LH_CAT);
+  if (search) courses = courses.filter(c =>
+    c.title.toLowerCase().includes(search) || c.author.toLowerCase().includes(search) || c.cat.includes(search)
+  );
+
+  // Continue learning — enrolled courses
+  const enrolled = courses.filter(c => LH_ENROLLED.includes(c.id));
+  if (enrolled.length && !search) {
+    contSec.style.display = 'block';
+    contList.innerHTML = enrolled.slice(0,2).map(c => {
+      const prog = parseInt(localStorage.getItem(`lh_prog_${S.sid}_${c.id}`) || '0');
+      return `
+        <div class="lh-continue-card" onclick="lhOpenCourse('${c.id}')">
+          <div class="lh-continue-icon" style="background:${c.color}22">${c.emoji}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:var(--font);font-size:.85rem;font-weight:700;margin-bottom:2px">${esc(c.title)}</div>
+            <div style="font-size:.7rem;color:var(--muted);margin-bottom:5px">by ${esc(c.author)} · ${c.lessons} lessons</div>
+            <div class="lh-continue-prog"><div class="lh-continue-fill" style="width:${prog}%"></div></div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:3px">${prog}% complete</div>
+          </div>
+        </div>`;
+    }).join('');
+  } else { contSec.style.display = 'none'; }
+
+  // Grid
+  const notEnrolled = courses.filter(c => !LH_ENROLLED.includes(c.id));
+  const display     = search ? courses : notEnrolled;
+  if (label) label.textContent = search ? `Results for "${search}"` : LH_CAT === 'all' ? 'Recommended for You' : LH_CAT.charAt(0).toUpperCase()+LH_CAT.slice(1);
+  if (count) count.textContent = `${display.length} course${display.length!==1?'s':''}`;
+
+  if (!display.length) {
+    grid.innerHTML = `<div style="grid-column:span 2;text-align:center;padding:2rem;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:.5rem">🔍</div>
+      <div style="font-size:.85rem">No courses found.</div>
+    </div>`; return;
+  }
+
+  const badgeCls = { Beginner:'lh-badge-beginner', Intermediate:'lh-badge-intermediate', Advanced:'lh-badge-advanced' };
+  grid.innerHTML = display.map(c => `
+    <div class="lh-course-card" onclick="lhOpenCourse('${c.id}')">
+      <div class="lh-course-thumb" style="background:${c.color}18">
+        ${c.emoji ? `<span style="font-size:2.5rem">${c.emoji}</span>` : ''}
+        <span class="lh-course-badge ${badgeCls[c.level]||''}">${c.level}</span>
+      </div>
+      <div class="lh-course-body">
+        <div class="lh-course-title">${esc(c.title)}</div>
+        <div class="lh-course-author">by ${esc(c.author)}</div>
+        <div class="lh-course-meta">
+          <span class="lh-rating">★ ${c.rating} · ${(c.students/1000).toFixed(1)}k</span>
+          ${LH_ENROLLED.includes(c.id) ? '<span class="lh-enrolled-badge">✓ Enrolled</span>' : `<span style="font-size:.7rem;color:var(--muted)">${c.lessons} lessons</span>`}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function lhOpenCourse(id) {
+  const c = LH_COURSES.find(x=>x.id===id); if (!c) return;
+  const enrolled = LH_ENROLLED.includes(id);
+  const prog     = parseInt(localStorage.getItem(`lh_prog_${S.sid}_${id}`) || '0');
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);animation:fadeUp .2s ease';
+  modal.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:1.5rem 1.25rem 2.5rem;max-height:85vh;overflow-y:auto">
+      <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 1.25rem"></div>
+      <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:1rem">
+        <div style="width:56px;height:56px;border-radius:12px;background:${c.color}22;display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0">${c.emoji}</div>
+        <div>
+          <div style="font-family:var(--font);font-size:1rem;font-weight:800;letter-spacing:-.02em">${esc(c.title)}</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">by ${esc(c.author)}</div>
+          <div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap">
+            <span style="font-size:.68rem;color:var(--yellow);font-weight:700">★ ${c.rating}</span>
+            <span style="font-size:.68rem;color:var(--muted)">${c.lessons} lessons</span>
+            <span style="font-size:.68rem;color:var(--muted)">${c.students.toLocaleString()} students</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1rem">${esc(c.desc)}</p>
+      ${enrolled ? `
+        <div style="margin-bottom:1rem">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:.75rem;color:var(--muted)">Your progress</span>
+            <span style="font-size:.75rem;font-weight:700;color:var(--accent)">${prog}%</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${prog}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="lhUpdateProgress('${id}');this.closest('[style*=fixed]').remove()" style="flex:1;padding:11px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:var(--font);font-size:.85rem;font-weight:700;cursor:pointer">
+            📈 Update Progress
+          </button>
+          <button onclick="lhUnenroll('${id}');this.closest('[style*=fixed]').remove()" style="padding:11px 14px;border-radius:10px;background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer">
+            Leave
+          </button>
+        </div>` : `
+        <button onclick="lhEnroll('${id}');this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:var(--font);font-size:.88rem;font-weight:700;cursor:pointer">
+          ✦ Enroll — Free
+        </button>`}
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+}
+
+async function lhEnroll(id) {
+  LH_ENROLLED.push(id);
+  localStorage.setItem(`lh_enrolled_${S.sid}`, JSON.stringify(LH_ENROLLED));
+  try { await API('/api/learning-hub/enroll', {sid:S.sid, course_id:id}); } catch(e) {}
+  lhRender();
+  toast('Enrolled! 🎉 Start learning');
+}
+
+function lhUnenroll(id) {
+  LH_ENROLLED = LH_ENROLLED.filter(x=>x!==id);
+  localStorage.setItem(`lh_enrolled_${S.sid}`, JSON.stringify(LH_ENROLLED));
+  lhRender();
+  toast('Unenrolled');
+}
+
+function lhUpdateProgress(id) {
+  const val = prompt('Your progress (0-100%):');
+  if (val === null) return;
+  const pct = Math.min(Math.max(parseInt(val)||0, 0), 100);
+  localStorage.setItem(`lh_prog_${S.sid}_${id}`, pct);
+  lhRender();
+  if (pct >= 100) toast('Course completed! 🏆');
+  else toast(`Progress updated to ${pct}% ✓`);
+}
+
+// ═══════════════════════ VOICE INPUT ════════════════════════
+
+let VOICE_ACTIVE = false;
+let VOICE_REC    = null;
+
+function voiceInit() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { toast('Voice input not supported on this browser.'); return null; }
+  const rec        = new SpeechRecognition();
+  rec.continuous   = false;
+  rec.interimResults= true;
+  rec.lang         = 'en-NG';
+  return rec;
+}
+
+function toggleVoice() {
+  if (VOICE_ACTIVE) {
+    VOICE_REC?.stop();
+    VOICE_ACTIVE = false;
+    updateVoiceBtn(false);
+    return;
+  }
+  VOICE_REC = voiceInit();
+  if (!VOICE_REC) return;
+  VOICE_ACTIVE = true;
+  updateVoiceBtn(true);
+  toast('Listening... 🎤');
+
+  VOICE_REC.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    const ci = $('ci'); if (ci) ci.value = transcript;
+  };
+  VOICE_REC.onend = () => {
+    VOICE_ACTIVE = false;
+    updateVoiceBtn(false);
+    const ci = $('ci');
+    if (ci && ci.value.trim()) {
+      toast('Got it — sending... ✓');
+      setTimeout(() => send(), 500);
+    }
+  };
+  VOICE_REC.onerror = (e) => {
+    VOICE_ACTIVE = false;
+    updateVoiceBtn(false);
+    toast(e.error === 'not-allowed' ? 'Microphone permission denied.' : 'Voice error — try again.');
+  };
+  VOICE_REC.start();
+}
+
+function updateVoiceBtn(active) {
+  const btn = $('voice-btn');
+  if (!btn) return;
+  btn.textContent = active ? '🔴' : '🎤';
+  btn.style.color  = active ? 'var(--red)' : 'var(--muted)';
+  btn.style.borderColor = active ? 'var(--red)' : 'var(--border)';
+  if (active) btn.style.animation = 'pulse 1s infinite';
+  else btn.style.animation = '';
+}
+
+// ═════════════════════ STUDY GROUPS ════════════════════════
+
+let SG_ACTIVE   = null;
+let SG_INTERVAL = null;
+
+async function sgInit() {
+  await sgLoadRooms();
+}
+
+async function sgLoadRooms() {
+  try {
+    const r = await fetch(`/api/group/list?sid=${S.sid}`);
+    const d = await r.json();
+    sgRenderRooms(d.groups || []);
+  } catch(e) { sgRenderRooms([]); }
+}
+
+function sgRenderRooms(groups) {
+  const el = $('sg-rooms-list'); if (!el) return;
+  if (!groups.length) {
+    el.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:.5rem">👥</div>
+      <div style="font-size:.85rem">No groups yet.<br>Create or join one to start studying together.</div>
+    </div>`; return;
+  }
+  el.innerHTML = groups.map(g => `
+    <div class="sg-room" onclick="sgOpenChat('${g.id}','${esc(g.name)}')">
+      <div class="sg-room-av">${g.name[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sg-room-name">${esc(g.name)}</div>
+        <div class="sg-room-meta">${g.members?.length||1} member${(g.members?.length||1)!==1?'s':''} · Tap to open</div>
+      </div>
+      <div style="font-size:.7rem;color:var(--muted)">→</div>
+    </div>`).join('');
+}
+
+function sgShowCreate() {
+  $('sg-create-form').style.display = $('sg-create-form').style.display==='none' ? 'block' : 'none';
+  $('sg-join-form').style.display   = 'none';
+  $('sg-name-input')?.focus();
+}
+function sgShowJoin() {
+  $('sg-join-form').style.display   = $('sg-join-form').style.display==='none' ? 'block' : 'none';
+  $('sg-create-form').style.display = 'none';
+  $('sg-join-input')?.focus();
+}
+
+async function sgCreate() {
+  const name = $('sg-name-input')?.value.trim();
+  if (!name) { toast('Enter a group name.'); return; }
+  try {
+    await API('/api/group/create', {sid:S.sid, name});
+    $('sg-create-form').style.display = 'none';
+    $('sg-name-input').value = '';
+    toast(`Group "${name}" created! Share your ID with friends.`);
+    sgLoadRooms();
+  } catch(e) { toast('Could not create group.'); }
+}
+
+async function sgJoin() {
+  const gid = $('sg-join-input')?.value.trim();
+  if (!gid) { toast('Paste a group ID.'); return; }
+  try {
+    await API('/api/group/join', {sid:S.sid, group_id:gid});
+    $('sg-join-form').style.display = 'none';
+    $('sg-join-input').value = '';
+    toast('Joined group! 🎉');
+    sgLoadRooms();
+  } catch(e) { toast('Invalid group ID or already a member.'); }
+}
+
+function sgOpenChat(gid, gname) {
+  SG_ACTIVE = {id:gid, name:gname};
+  $('sg-list-view').style.display = 'none';
+  $('sg-chat-view').style.display = 'flex';
+  const av = $('sg-chat-av'); if (av) av.textContent = gname[0].toUpperCase();
+  const nm = $('sg-chat-name'); if (nm) nm.textContent = gname;
+  const id = $('sg-chat-id'); if (id) id.textContent = `ID: ${gid}`;
+  sgLoadMessages();
+  clearInterval(SG_INTERVAL);
+  SG_INTERVAL = setInterval(sgLoadMessages, 4000);
+}
+
+function sgBackToList() {
+  clearInterval(SG_INTERVAL);
+  SG_ACTIVE = null;
+  $('sg-chat-view').style.display = 'none';
+  $('sg-list-view').style.display = 'block';
+  sgLoadRooms();
+}
+
+function sgCopyId() {
+  if (!SG_ACTIVE) return;
+  navigator.clipboard.writeText(SG_ACTIVE.id).then(()=>toast('Group ID copied ✓'));
+}
+
+async function sgLoadMessages() {
+  if (!SG_ACTIVE) return;
+  try {
+    const r = await fetch(`/api/group/messages?group_id=${SG_ACTIVE.id}&sid=${S.sid}`);
+    const d = await r.json();
+    sgRenderMessages(d.messages || []);
+  } catch(e) {}
+}
+
+function sgRenderMessages(msgs) {
+  const el = $('sg-messages'); if (!el) return;
+  const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 60;
+  el.innerHTML = msgs.length
+    ? msgs.map(m => {
+        const mine = m.sender === S.sid || m.sender_name === S.name;
+        return `
+          <div class="sg-msg ${mine?'mine':'theirs'}">
+            ${!mine ? `<div class="sg-sender">${esc(m.sender_name||'Student')}</div>` : ''}
+            <div class="sg-bubble">${esc(m.text||'')}</div>
+          </div>`;
+      }).join('')
+    : `<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">No messages yet. Say hello! 👋</div>`;
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
+async function sgSend() {
+  if (!SG_ACTIVE) return;
+  const input = $('sg-msg-input');
+  const text  = input?.value.trim();
+  if (!text) return;
+  input.value = '';
+  try {
+    await API('/api/group/message', {group_id:SG_ACTIVE.id, sid:S.sid, text, sender_name:S.name});
+    sgLoadMessages();
+  } catch(e) { toast('Send failed — try again.'); }
+}
+
+// ═══════════════════════ POMODORO ══════════════════════════
+
+const POM_MODES = { focus:{label:'Focus',mins:25}, short:{label:'Short Break',mins:5}, long:{label:'Long Break',mins:15} };
+const POM_KEY   = () => `sivarr_pom_${S.sid||'guest'}`;
+let POM_MODE    = 'focus';
+let POM_SECS    = 25*60;
+let POM_TOTAL   = 25*60;
+let POM_RUNNING = false;
+let POM_INTERVAL= null;
+let POM_SESSION = 0;
+
+function pomStats() {
+  try { return JSON.parse(localStorage.getItem(POM_KEY()) || '{"today":0,"total":0,"mins":0,"date":""}'); }
+  catch { return {today:0,total:0,mins:0,date:''}; }
+}
+function pomSaveStats(s) { localStorage.setItem(POM_KEY(), JSON.stringify(s)); }
+
+function pomSetMode(mode, btn) {
+  POM_MODE    = mode;
+  POM_RUNNING = false;
+  clearInterval(POM_INTERVAL);
+  POM_SECS  = POM_MODES[mode].mins * 60;
+  POM_TOTAL = POM_SECS;
+  pomRender();
+  document.querySelectorAll('.pom-mode-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const sl = $('pom-sublabel'); if (sl) sl.textContent = POM_MODES[mode].label;
+  const sb = $('pom-start-btn'); if (sb) sb.textContent = '▶ Start';
+}
+
+function pomToggle() {
+  if (POM_RUNNING) {
+    POM_RUNNING = false;
+    clearInterval(POM_INTERVAL);
+    const sb = $('pom-start-btn'); if (sb) sb.textContent = '▶ Resume';
+  } else {
+    POM_RUNNING = true;
+    const sb = $('pom-start-btn'); if (sb) sb.textContent = '⏸ Pause';
+    POM_INTERVAL = setInterval(() => {
+      POM_SECS--;
+      pomRender();
+      if (POM_SECS <= 0) {
+        clearInterval(POM_INTERVAL);
+        POM_RUNNING = false;
+        pomComplete();
+      }
+    }, 1000);
+  }
+}
+
+function pomComplete() {
+  const sb = $('pom-start-btn'); if (sb) sb.textContent = '▶ Start';
+  if (POM_MODE === 'focus') {
+    POM_SESSION++;
+    for (let i=0;i<4;i++) {
+      const dot = $(`pd${i}`);
+      if (dot) dot.classList.toggle('done', i < POM_SESSION % 4);
+    }
+    const st  = pomStats();
+    const today = new Date().toISOString().split('T')[0];
+    if (st.date !== today) { st.today = 0; st.date = today; }
+    st.today++;
+    st.total++;
+    st.mins += POM_MODES.focus.mins;
+    pomSaveStats(st);
+    pomUpdateStatDisplay();
+    toast(`Focus session complete! 🎉 ${POM_SESSION % 4 === 0 ? 'Time for a long break.' : 'Great work!'}`);
+    if (POM_SESSION % 4 === 0) pomSetMode('long', null);
+    else pomSetMode('short', null);
+  } else {
+    toast('Break over — time to focus! 💪');
+    pomSetMode('focus', null);
+    document.querySelectorAll('.pom-mode-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  }
+}
+
+function pomReset() {
+  POM_RUNNING = false;
+  clearInterval(POM_INTERVAL);
+  POM_SECS  = POM_TOTAL;
+  pomRender();
+  const sb = $('pom-start-btn'); if (sb) sb.textContent = '▶ Start';
+}
+
+function pomSkip() {
+  clearInterval(POM_INTERVAL);
+  POM_RUNNING = false;
+  pomComplete();
+}
+
+function pomRender() {
+  const mins = Math.floor(POM_SECS/60).toString().padStart(2,'0');
+  const secs = (POM_SECS%60).toString().padStart(2,'0');
+  const tm   = $('pom-time'); if (tm) tm.textContent = `${mins}:${secs}`;
+  const circ = $('pom-ring-fill');
+  if (circ) {
+    const pct    = POM_SECS / POM_TOTAL;
+    const circum = 2 * Math.PI * 88;
+    circ.style.strokeDashoffset = circum * (1 - pct);
+    circ.style.strokeDasharray  = circum;
+    circ.style.stroke = POM_MODE === 'focus' ? 'url(#pomGrad)' : POM_MODE === 'short' ? '#22c55e' : '#f59e0b';
+  }
+}
+
+function pomUpdateStatDisplay() {
+  const st = pomStats();
+  const today = new Date().toISOString().split('T')[0];
+  const sd = $('pom-stat-today'); if (sd) sd.textContent = st.date===today ? st.today : 0;
+  const st2= $('pom-stat-total'); if (st2) st2.textContent = st.total;
+  const sm = $('pom-stat-mins');  if (sm) sm.textContent = st.mins;
+}
+
+function pomInit() {
+  pomSetMode('focus', null);
+  document.querySelectorAll('.pom-mode-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  pomUpdateStatDisplay();
+  }
   
 // ═══════════════════════════ DIFFICULTY ═════════════════════════
 function openDiff() { $('diff-modal').classList.add('open'); }
