@@ -3810,6 +3810,201 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
       <div class="panel" id="panel-progress">
         <div class="stats-wrap" id="pw"></div>
       </div>
+
+      <!-- ── Learning Hub Panel ── -->
+      <div class="panel" id="panel-learninghub">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+
+          <!-- Header -->
+          <div style="margin-bottom:1.1rem">
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🎓 Learning Hub</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Courses curated for your journey.</p>
+          </div>
+
+          <!-- Search -->
+          <div style="position:relative;margin-bottom:1rem">
+            <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem">🔍</span>
+            <input id="lh-search" type="text" placeholder="Search courses..."
+              style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 12px 9px 34px;color:var(--text);font-family:var(--font-body);font-size:.85rem;outline:none;transition:border-color .2s"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+              oninput="lhFilter()">
+          </div>
+
+          <!-- Category filters -->
+          <div class="lh-filter-bar" id="lh-filters">
+            <button class="lh-filter active" onclick="lhSetCat('all',this)">All</button>
+            <button class="lh-filter" onclick="lhSetCat('stem',this)">STEM</button>
+            <button class="lh-filter" onclick="lhSetCat('business',this)">Business</button>
+            <button class="lh-filter" onclick="lhSetCat('tech',this)">Tech</button>
+            <button class="lh-filter" onclick="lhSetCat('design',this)">Design</button>
+            <button class="lh-filter" onclick="lhSetCat('languages',this)">Languages</button>
+            <button class="lh-filter" onclick="lhSetCat('arts',this)">Arts</button>
+          </div>
+
+          <!-- Continue Learning -->
+          <div id="lh-continue-section" style="display:none;margin-bottom:1.1rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.625rem">
+              <div style="font-family:var(--font);font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Continue Learning</div>
+            </div>
+            <div id="lh-continue-list"></div>
+          </div>
+
+          <!-- Recommended -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+            <div style="font-family:var(--font);font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em" id="lh-section-label">Recommended for You</div>
+            <div id="lh-count" style="font-size:.72rem;color:var(--muted)"></div>
+          </div>
+
+          <!-- Course grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem" id="lh-grid"></div>
+
+        </div>
+      </div>
+
+      <!-- ── Study Groups Panel ── -->
+      <div class="panel" id="panel-studygroups">
+        <!-- Room list -->
+        <div id="sg-list-view" style="flex:1;overflow-y:auto;padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">👥 Study Groups</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Study together, grow faster.</p>
+            </div>
+          </div>
+
+          <!-- Create / Join -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-bottom:1.25rem">
+            <button onclick="sgShowCreate()" style="padding:10px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:var(--font);font-size:.8rem;font-weight:700;cursor:pointer">+ Create Group</button>
+            <button onclick="sgShowJoin()" style="padding:10px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s">🔗 Join by ID</button>
+          </div>
+
+          <!-- Create form -->
+          <div id="sg-create-form" style="display:none;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:1rem;margin-bottom:1rem">
+            <div style="font-family:var(--font);font-size:.82rem;font-weight:700;margin-bottom:.625rem">New Study Group</div>
+            <input class="st-input" id="sg-name-input" placeholder="Group name e.g. MTH301 Squad" style="margin-bottom:.5rem">
+            <div style="display:flex;gap:6px">
+              <button onclick="sgCreate()" style="flex:1;padding:8px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">Create</button>
+              <button onclick="$('sg-create-form').style.display='none'" style="flex:1;padding:8px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Join form -->
+          <div id="sg-join-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
+            <div style="font-family:var(--font);font-size:.82rem;font-weight:700;margin-bottom:.625rem">Join a Group</div>
+            <input class="st-input" id="sg-join-input" placeholder="Paste group ID here" style="margin-bottom:.5rem">
+            <div style="display:flex;gap:6px">
+              <button onclick="sgJoin()" style="flex:1;padding:8px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">Join</button>
+              <button onclick="$('sg-join-form').style.display='none'" style="flex:1;padding:8px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Groups list -->
+          <div id="sg-rooms-list">
+            <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+              <div style="font-size:2rem;margin-bottom:.5rem">👥</div>
+              <div style="font-size:.85rem">No groups yet.<br>Create or join one to start studying together.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat view -->
+        <div id="sg-chat-view" style="display:none;flex-direction:column;height:100%">
+          <!-- Chat header -->
+          <div style="display:flex;align-items:center;gap:10px;padding:.75rem 1rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
+            <button onclick="sgBackToList()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 6px">←</button>
+            <div class="sg-room-av" id="sg-chat-av" style="width:32px;height:32px;font-size:.8rem">G</div>
+            <div style="flex:1">
+              <div id="sg-chat-name" style="font-family:var(--font);font-weight:700;font-size:.88rem"></div>
+              <div id="sg-chat-id" style="font-size:.65rem;color:var(--muted)"></div>
+            </div>
+            <button onclick="sgCopyId()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted);font-size:.65rem;cursor:pointer;font-family:var(--font);font-weight:700">Copy ID</button>
+          </div>
+          <!-- Messages -->
+          <div class="sg-msg-wrap" id="sg-messages"></div>
+          <!-- Input -->
+          <div class="sg-input-bar">
+            <input id="sg-msg-input" class="chat-input" style="min-height:36px;max-height:80px" placeholder="Message the group..."
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sgSend()}">
+            <button onclick="sgSend()" class="send-btn">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Pomodoro Panel ── -->
+      <div class="panel" id="panel-pomodoro">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+
+          <div style="margin-bottom:1.25rem">
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">⏱ Study Timer</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Focus sessions with the Pomodoro technique.</p>
+          </div>
+
+          <!-- Mode tabs -->
+          <div style="display:flex;gap:6px;justify-content:center;margin-bottom:1.5rem" id="pom-modes">
+            <button class="pom-mode-btn active" onclick="pomSetMode('focus',this)">🎯 Focus</button>
+            <button class="pom-mode-btn" onclick="pomSetMode('short',this)">☕ Short Break</button>
+            <button class="pom-mode-btn" onclick="pomSetMode('long',this)">🛋 Long Break</button>
+          </div>
+
+          <!-- Ring timer -->
+          <div class="pom-ring" style="width:200px;height:200px">
+            <svg width="200" height="200" style="transform:rotate(-90deg)">
+              <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="8"/>
+              <circle id="pom-ring-fill" cx="100" cy="100" r="88" fill="none"
+                stroke="url(#pomGrad)" stroke-width="8" stroke-linecap="round"
+                stroke-dasharray="553" stroke-dashoffset="0" style="transition:stroke-dashoffset .5s ease"/>
+              <defs>
+                <linearGradient id="pomGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#4f6ef7"/>
+                  <stop offset="100%" stop-color="#7c3aed"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div style="position:absolute;text-align:center">
+              <div class="pom-time" id="pom-time">25:00</div>
+              <div style="font-size:.65rem;color:var(--muted);margin-top:28px;font-weight:600;letter-spacing:.04em;text-transform:uppercase" id="pom-sublabel">Focus</div>
+            </div>
+          </div>
+
+          <!-- Session dots -->
+          <div style="display:flex;gap:8px;justify-content:center;margin:1rem 0" id="pom-dots">
+            <div class="pom-session-dot" id="pd0"></div>
+            <div class="pom-session-dot" id="pd1"></div>
+            <div class="pom-session-dot" id="pd2"></div>
+            <div class="pom-session-dot" id="pd3"></div>
+          </div>
+
+          <!-- Controls -->
+          <div style="display:flex;gap:.75rem;justify-content:center;margin-bottom:1.5rem">
+            <button class="pom-btn secondary" onclick="pomReset()">↺ Reset</button>
+            <button class="pom-btn primary" id="pom-start-btn" onclick="pomToggle()">▶ Start</button>
+            <button class="pom-btn secondary" onclick="pomSkip()">⏭ Skip</button>
+          </div>
+
+          <!-- Task label -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.875rem">
+            <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Studying</div>
+            <input id="pom-task" class="st-input" placeholder="What are you focusing on?" style="background:var(--surface)">
+          </div>
+
+          <!-- Stats -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.625rem">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;text-align:center">
+              <div id="pom-stat-today" style="font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--accent)">0</div>
+              <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Today</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;text-align:center">
+              <div id="pom-stat-total" style="font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--accent2)">0</div>
+              <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;text-align:center">
+              <div id="pom-stat-mins" style="font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--green)">0</div>
+              <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Mins</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
       
     </main>
   </div>
