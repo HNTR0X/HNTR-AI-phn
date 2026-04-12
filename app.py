@@ -2500,6 +2500,26 @@ async def delete_goal(data: dict):
     save_goals(sid, goals)
     return {"ok": True}
 
+    @app.post("/api/learning-hub/enroll")
+async def enroll_course(data: dict):
+    sid       = sanitize_text(str(data.get("sid","")), 100)
+    course_id = sanitize_text(str(data.get("course_id","")), 50)
+    if not sid or not course_id:
+        raise HTTPException(400, "Missing fields.")
+    p = load_progress(sid)
+    enrolled = p.get("enrolled_courses", [])
+    if course_id not in enrolled:
+        enrolled.append(course_id)
+        p["enrolled_courses"] = enrolled
+        save_progress(sid, p)
+    return {"ok": True, "enrolled": enrolled}
+
+@app.get("/api/learning-hub/enrolled")
+async def get_enrolled(sid: str):
+    sid = sanitize_text(sid, 100)
+    p   = load_progress(sid)
+    return {"enrolled": p.get("enrolled_courses", [])}
+
 @app.get("/health")
 async def health():
     """Simple health check endpoint for Railway."""
