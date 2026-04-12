@@ -5657,6 +5657,8 @@ const SNAV_ROUTE = {
   }, 400); },
   'recommendations': () => { nav('chat', null); setTimeout(() => getSuggestions(), 400); },
   'content-hub':     () => nav('contenthub', null),
+  'goals':           () => nav('goals', null),
+  'document-hub':    () => nav('documenthub', null),
   'create-new':      () => { cnOpen(); },
   'settings':        () => nav('settings', null),
   };
@@ -5722,6 +5724,9 @@ function nav(name, btn) {
   if (name === 'studyplan') { const d = new Date(); d.setDate(d.getDate()+14); $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]); }
   if (name === 'contenthub') chInit();
   if (name === 'settings')   stInit();
+  if (name === 'progress')   loadProgress();
+  if (name === 'goals')      glLoad();
+  if (name === 'documenthub') dhInit();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
@@ -5753,6 +5758,9 @@ function navTab(name, btn) {
   if (name === 'studyplan') { const d = new Date(); d.setDate(d.getDate()+14); $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]); }
   if (name === 'contenthub') chInit();
   if (name === 'settings')   stInit();
+  if (name === 'progress')   loadProgress();
+  if (name === 'goals')      glLoad();
+  if (name === 'documenthub') dhInit();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
