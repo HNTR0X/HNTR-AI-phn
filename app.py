@@ -2437,6 +2437,69 @@ Make tasks specific and actionable. Each day must have 2-4 tasks."""
     log.info(f"Study plan generated: {req.sid[:20]} | {subject} | {days_left} days")
     return {"plan": plan, "days_left": days_left, "subject": subject, "exam_date": req.exam_date}
 
+# ── Goals ─────────────────────────────────────────────────────
+GOALS_PATH = DATA_DIR / "goals.json"
+
+def load_goals(sid: str) -> list:
+    p = DATA_DIR / f"{sid}_goals.json"
+    return json.loads(p.read_text()) if p.exists() else []
+
+def save_goals(sid: str, goals: list):
+    p = DATA_DIR / f"{sid}_goals.json"
+    save_json(p, goals)
+
+@app.get("/api/goals")
+async def get_goals(sid: str):
+    sid = sanitize_text(sid, 100)
+    return {"goals": load_goals(sid)}
+
+@app.post("/api/goals/add")
+async def add_goal(data: dict):
+    sid     = sanitize_text(str(data.get("sid","")), 100)
+    title   = sanitize_text(str(data.get("title","")), 100)
+    subject = sanitize_text(str(data.get("subject","")), 100)
+    target  = int(data.get("target_score", 70))
+    deadline = sanitize_text(str(data.get("deadline","")), 20)
+    if not title:
+        raise HTTPException(400, "Goal title required.")
+    goals = load_goals(sid)
+    goal = {
+        "id":           str(uuid.uuid4())[:8],
+        "title":        title,
+        "subject":      subject,
+        "target_score": min(max(target, 1), 100),
+        "deadline":     deadline,
+        "created":      datetime.date.today().isoformat(),
+        "progress":     0,
+        "completed":    False,
+    }
+    goals.append(goal)
+    save_goals(sid, goals)
+    return {"goal": goal}
+
+@app.post("/api/goals/update")
+async def update_goal(data: dict):
+    sid      = sanitize_text(str(data.get("sid","")), 100)
+    goal_id  = sanitize_text(str(data.get("id","")), 20)
+    progress = int(data.get("progress", 0))
+    completed = bool(data.get("completed", False))
+    goals = load_goals(sid)
+    for g in goals:
+        if g["id"] == goal_id:
+            g["progress"]  = min(max(progress, 0), 100)
+            g["completed"] = completed
+            break
+    save_goals(sid, goals)
+    return {"ok": True}
+
+@app.post("/api/goals/delete")
+async def delete_goal(data: dict):
+    sid     = sanitize_text(str(data.get("sid","")), 100)
+    goal_id = sanitize_text(str(data.get("id","")), 20)
+    goals   = [g for g in load_goals(sid) if g["id"] != goal_id]
+    save_goals(sid, goals)
+    return {"ok": True}
+
 @app.get("/health")
 async def health():
     """Simple health check endpoint for Railway."""
