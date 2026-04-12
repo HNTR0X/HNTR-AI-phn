@@ -2887,6 +2887,10 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
             <input type="file" id="attach-pdf-input"   style="display:none" accept=".pdf"   onchange="handleAttach(this,'pdf')">
             <input type="file" id="attach-file-input"  style="display:none" accept="*/*"    onchange="handleAttach(this,'file')">
             <input type="file" id="attach-doc-input"   style="display:none" accept=".txt,.md,.docx" onchange="handleAttach(this,'doc')">
+            <button id="voice-btn" onclick="toggleVoice()" title="Voice input"
+              style="width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0">
+              🎤
+            </button>
 
             <textarea class="chat-input" id="ci" placeholder="Ask anything — maths, science, essays, careers..." rows="1"
               onkeydown="ckd(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
@@ -6408,9 +6412,12 @@ const SNAV_ROUTE = {
     const wa = $('weak-section'); if (wa) wa.scrollIntoView({ behavior: 'smooth' });
   }, 400); },
   'recommendations': () => { nav('chat', null); setTimeout(() => getSuggestions(), 400); },
-  'content-hub':     () => nav('contenthub', null),
+'content-hub':     () => nav('contenthub', null),
   'goals':           () => nav('goals', null),
   'document-hub':    () => nav('documenthub', null),
+  'materials':       () => nav('learninghub', null),
+  'study-groups':    () => nav('studygroups', null),
+  'pomodoro':        () => nav('pomodoro', null),
   'create-new':      () => { cnOpen(); },
   'settings':        () => nav('settings', null),
   };
@@ -6477,9 +6484,12 @@ function nav(name, btn) {
   if (name === 'studyplan') { const d = new Date(); d.setDate(d.getDate()+14); $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]); }
   if (name === 'contenthub') chInit();
   if (name === 'settings')   stInit();
-  if (name === 'progress')   loadProgress();
-  if (name === 'goals')      glLoad();
+  if (name === 'progress')    loadProgress();
+  if (name === 'goals')       glLoad();
   if (name === 'documenthub') dhInit();
+  if (name === 'learninghub') lhInit();
+  if (name === 'studygroups') sgInit();
+  if (name === 'pomodoro')    pomInit();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
@@ -6511,9 +6521,12 @@ function navTab(name, btn) {
   if (name === 'studyplan') { const d = new Date(); d.setDate(d.getDate()+14); $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]); }
   if (name === 'contenthub') chInit();
   if (name === 'settings')   stInit();
-  if (name === 'progress')   loadProgress();
-  if (name === 'goals')      glLoad();
+  if (name === 'progress')    loadProgress();
+  if (name === 'goals')       glLoad();
   if (name === 'documenthub') dhInit();
+  if (name === 'learninghub') lhInit();
+  if (name === 'studygroups') sgInit();
+  if (name === 'pomodoro')    pomInit();
   if (name === 'quiz' && !S.quizActive) {
     const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
