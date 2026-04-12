@@ -952,6 +952,7 @@ async def quiz_complete(data: dict):
     p.setdefault("quizzes", []).append({
         "topic": topic, "score": score / 5,
         "pct": int(score / 5 * 100), "difficulty": diff,
+        "date": datetime.date.today().isoformat(),
     })
     save_progress(sid, p)
     log.info(f"Quiz complete: {sid[:20]} | {score}/5 | {topic} | {diff}")
@@ -964,15 +965,54 @@ async def progress(sid: str):
     p       = load_progress(sid)
     quizzes = p.get("quizzes", [])
     avg     = (sum(q["score"] for q in quizzes) / len(quizzes) * 100) if quizzes else 0
+
+    # Quiz trend — last 10 with dates for sparkline
+    quiz_history = [
+        {"pct": q.get("pct", 0), "topic": q.get("topic",""), "date": q.get("date","")}
+        for q in quizzes[-10:]
+    ]
+
+    # Topic mastery — convert count to mastery %
+    topics = p.get("topics", {})
+    max_count = max(topics.values()) if topics else 1
+    topic_mastery = {t: min(round((c / max_count) * 100), 100) for t, c in topics.items()}
+
+    # Streak calculation
+    streak = p.get("streak", 0)
+    last_active = p.get("last_active", "")
+    today = datetime.date.today().isoformat()
+    yesterday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+    if last_active not in [today, yesterday]:
+        streak = 0
+
+    # Best topic
+    best_topic = max(topics, key=topics.get) if topics else None
+
+    # Study sessions this week
+    chat_hist = p.get("chat_history", [])
+    week_ago = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    sessions_week = len(set(
+        h.get("time","")[:10] for h in chat_hist
+        if h.get("time","")[:10] >= week_ago
+    ))
+
     return {
         "name": p.get("name",""), "matric": p.get("matric",""),
         "sessions": p["sessions"], "questions": p["questions"],
-        "topics": p["topics"], "weak": weak_topics(p),
+        "topics": topics, "weak": weak_topics(p),
         "difficulty": p.get("difficulty","medium"),
-        "quizzes_taken": len(quizzes), "avg_score": round(avg,1),
+        "quizzes_taken": len(quizzes), "avg_score": round(avg, 1),
         "last_quiz": quizzes[-1] if quizzes else None,
         "wrong_count": len(p.get("wrong_answers",[])),
         "uploaded_files": p.get("uploaded_files",[]),
+        "quiz_history": quiz_history,
+        "topic_mastery": topic_mastery,
+        "streak": streak,
+        "best_topic": best_topic,
+        "sessions_week": sessions_week,
+        "xp": p.get("xp", 0),
+        "level": p.get("level", 1),
+        "badges": p.get("badges", []),
     }
 
 
