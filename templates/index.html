@@ -3643,6 +3643,113 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 
         </div>
       </div>
+
+      <!-- ── Goals Panel ── -->
+      <div class="panel" id="panel-goals">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">🎯 Goals</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Set targets. Track progress. Crush exams.</p>
+            </div>
+            <button onclick="glToggleForm()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:7px 14px;color:#fff;font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer">+ New Goal</button>
+          </div>
+
+          <!-- Add Form -->
+          <div class="gl-add-form" id="gl-add-form">
+            <div style="font-family:var(--font);font-size:.85rem;font-weight:700;margin-bottom:.75rem">✦ New Goal</div>
+            <div style="display:grid;gap:.625rem">
+              <input class="st-input" id="gl-title" placeholder="e.g. Pass Thermodynamics exam">
+              <input class="st-input" id="gl-subject" placeholder="Subject / Course">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem">
+                <div>
+                  <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px">Target Score (%)</div>
+                  <input class="st-input" id="gl-target" type="number" min="1" max="100" value="70">
+                </div>
+                <div>
+                  <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px">Deadline</div>
+                  <input class="st-input" id="gl-deadline" type="date" style="color-scheme:dark">
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:.75rem">
+              <button onclick="glSaveGoal()" style="flex:1;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:9px;color:#fff;font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer">Save Goal</button>
+              <button onclick="glToggleForm()" style="flex:1;background:none;border:1px solid var(--border);border-radius:9px;padding:9px;color:var(--muted);font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Goals List -->
+          <div id="gl-list">
+            <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+              <div style="font-size:2rem;margin-bottom:.5rem">🎯</div>
+              <div style="font-size:.85rem">No goals yet — set your first target!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Document Hub Panel ── -->
+      <div class="panel" id="panel-documenthub">
+        <!-- Doc list view -->
+        <div id="dh-list-view" style="flex:1;overflow-y:auto;padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">📄 Document Hub</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Write, format and save rich notes.</p>
+            </div>
+            <button onclick="dhNewDoc()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:7px 14px;color:#fff;font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer">+ New Doc</button>
+          </div>
+          <div id="dh-docs-list">
+            <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+              <div style="font-size:2rem;margin-bottom:.5rem">📄</div>
+              <div style="font-size:.85rem">No documents yet.<br>Create your first rich note.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editor view -->
+        <div id="dh-editor-view" style="display:none;flex-direction:column;height:100%">
+          <!-- Editor topbar -->
+          <div style="display:flex;align-items:center;gap:8px;padding:.625rem 1rem;border-bottom:1px solid var(--border);background:var(--surface)">
+            <button onclick="dhBackToList()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:4px">←</button>
+            <input id="dh-doc-title-input" style="flex:1;background:none;border:none;color:var(--text);font-family:var(--font);font-size:.95rem;font-weight:700;outline:none" placeholder="Document title...">
+            <button onclick="dhSaveDoc()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:7px;padding:5px 14px;color:#fff;font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer">Save</button>
+          </div>
+          <!-- Formatting toolbar -->
+          <div class="dh-toolbar">
+            <button class="dh-tool-btn" onclick="dhFormat('bold')" title="Bold"><b>B</b></button>
+            <button class="dh-tool-btn" onclick="dhFormat('italic')" title="Italic"><i>I</i></button>
+            <button class="dh-tool-btn" onclick="dhFormat('underline')" title="Underline"><u>U</u></button>
+            <div class="dh-sep"></div>
+            <button class="dh-tool-btn" onclick="dhBlock('h1')" title="Heading 1">H1</button>
+            <button class="dh-tool-btn" onclick="dhBlock('h2')" title="Heading 2">H2</button>
+            <button class="dh-tool-btn" onclick="dhBlock('h3')" title="Heading 3">H3</button>
+            <div class="dh-sep"></div>
+            <button class="dh-tool-btn" onclick="dhFormat('insertUnorderedList')" title="Bullet list">•≡</button>
+            <button class="dh-tool-btn" onclick="dhFormat('insertOrderedList')" title="Numbered list">1≡</button>
+            <div class="dh-sep"></div>
+            <button class="dh-tool-btn" onclick="dhBlock('blockquote')" title="Quote">❝</button>
+            <button class="dh-tool-btn" onclick="dhInsertCode()" title="Code">&lt;/&gt;</button>
+            <div class="dh-sep"></div>
+            <button class="dh-tool-btn" onclick="dhAISuggest()" title="AI Suggest" style="color:var(--accent);width:auto;padding:0 6px">✨ AI</button>
+          </div>
+          <!-- Editor area -->
+          <div class="dh-editor" id="dh-editor" contenteditable="true"
+            data-placeholder="Start writing... Use the toolbar to format your notes."
+            oninput="dhAutoSave()"></div>
+          <!-- Word count -->
+          <div style="padding:4px 1rem;background:var(--surface);border-top:1px solid var(--border);font-size:.68rem;color:var(--muted);display:flex;justify-content:space-between">
+            <span id="dh-word-count">0 words</span>
+            <span id="dh-save-status" style="color:var(--green)">Saved</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Progress Dashboard Panel (replaces plain stats) ── -->
+      <div class="panel" id="panel-progress">
+        <div class="stats-wrap" id="pw"></div>
+      </div>
+      
     </main>
   </div>
 
@@ -4419,33 +4526,415 @@ async function clearWrong(idx) {
 
 // ═══════════════════════════ STATS ══════════════════════════════
 async function loadStats() {
-  const r = await fetch(`/api/progress?sid=${S.sid}`);
-  const d = await r.json();
-  $('sw').innerHTML = `
-    <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:1.1rem">📊 Your Progress</h2>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="sc-label">Questions</div><div class="sc-val">${d.questions}</div></div>
-      <div class="stat-card"><div class="sc-label">Quizzes</div><div class="sc-val">${d.quizzes_taken}</div></div>
-      <div class="stat-card"><div class="sc-label">Avg Score</div><div class="sc-val">${d.avg_score}%</div></div>
-      <div class="stat-card"><div class="sc-label">Sessions</div><div class="sc-val">${d.sessions}</div></div>
-    </div>
-    <div class="r-card" style="margin-bottom:.875rem">
-      <div class="r-title">Topics Studied</div>
-      ${Object.keys(d.topics).length
-        ? Object.entries(d.topics).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`
-            <div class="stat-row"><span class="sl">${esc(t)}</span><span class="sv">${c}×</span></div>`).join('')
-        : '<span style="color:var(--muted);font-size:.78rem">No topics yet — start chatting!</span>'
-      }
-    </div>
-    ${d.last_quiz ? `
-    <div class="r-card">
-      <div class="r-title">Last Quiz</div>
-      <div class="stat-row"><span class="sl">Topic</span><span class="sv">${esc(d.last_quiz.topic)}</span></div>
-      <div class="stat-row"><span class="sl">Score</span><span class="sv">${d.last_quiz.pct}%</span></div>
-      <div class="stat-row"><span class="sl">Difficulty</span><span class="sv">${(d.last_quiz.difficulty||'medium').toUpperCase()}</span></div>
-    </div>` : ''}`;
+  // redirect to new progress panel
+  nav('progress', null);
 }
 
+async function loadProgress() {
+  const r = await fetch(`/api/progress?sid=${S.sid}`);
+  const d = await r.json();
+  const pw = $('pw'); if (!pw) return;
+
+  // Sparkline
+  const hist   = d.quiz_history || [];
+  const W = 280, H = 44, pad = 4;
+  let sparkSVG = '';
+  if (hist.length > 1) {
+    const max = Math.max(...hist.map(q=>q.pct), 1);
+    const pts = hist.map((q,i) => {
+      const x = pad + (i/(hist.length-1))*(W-pad*2);
+      const y = H - pad - (q.pct/max)*(H-pad*2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const areaClose = `${W-pad},${H} ${pad},${H}`;
+    sparkSVG = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:44px;margin-top:6px">
+      <defs><linearGradient id="pr-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4f6ef7" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#4f6ef7" stop-opacity="0"/>
+      </linearGradient></defs>
+      <polygon points="${pts.join(' ')} ${areaClose}" fill="url(#pr-grad)"/>
+      <polyline points="${pts.join(' ')}" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${pts.map((p,i) => i===pts.length-1 ? `<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="3.5" fill="#7c3aed"/>` : '').join('')}
+    </svg>`;
+  }
+
+  // XP level
+  const xp    = d.xp    || 0;
+  const level = d.level || 1;
+  const xpPct = (xp % 100);
+
+  // Topic mastery rows
+  const mastery = d.topic_mastery || {};
+  const masteryHTML = Object.entries(mastery).length
+    ? Object.entries(mastery).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([t,pct])=>`
+        <div class="pr-topic-row">
+          <span style="font-size:.78rem;color:var(--muted);width:100px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span>
+          <div class="pr-topic-bar-wrap"><div class="pr-topic-bar-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:.72rem;color:var(--muted);width:30px;text-align:right">${pct}%</span>
+        </div>`).join('')
+    : '<span style="font-size:.78rem;color:var(--muted)">Chat and quiz to build topic mastery.</span>';
+
+  // Badges
+  const badges = d.badges || [];
+  const badgesHTML = badges.length
+    ? badges.map(b=>`<span class="pr-badge">🏅 ${esc(b)}</span>`).join('')
+    : '<span style="font-size:.78rem;color:var(--muted)">Complete quizzes to earn badges.</span>';
+
+  // Streak fire
+  const streakColor = d.streak >= 7 ? '#f59e0b' : d.streak >= 3 ? '#fb923c' : 'var(--muted)';
+
+  pw.innerHTML = `
+    <!-- Hero: Level + Streak -->
+    <div class="pr-hero">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <div>
+          <div style="font-family:var(--font);font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Level ${level}</div>
+          <div style="font-family:var(--font);font-size:1.3rem;font-weight:800;letter-spacing:-.02em">${d.name?.split(' ')[0] || 'Student'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.4rem">🔥</div>
+          <div style="font-family:var(--font);font-size:.85rem;font-weight:800;color:${streakColor}">${d.streak || 0} day streak</div>
+        </div>
+      </div>
+      <div class="pr-level-bar"><div class="pr-level-fill" style="width:${xpPct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted)">
+        <span>${xp} XP</span>
+        <span>${100 - xpPct} XP to Level ${level+1}</span>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="pr-stat-row">
+      <div class="pr-stat" style="--pr-color:#4f6ef7">
+        <div class="pr-stat-val">${d.questions}</div>
+        <div class="pr-stat-lbl">Questions asked</div>
+      </div>
+      <div class="pr-stat" style="--pr-color:#7c3aed">
+        <div class="pr-stat-val">${d.quizzes_taken}</div>
+        <div class="pr-stat-lbl">Quizzes taken</div>
+      </div>
+      <div class="pr-stat" style="--pr-color:#22c55e">
+        <div class="pr-stat-val">${d.avg_score}%</div>
+        <div class="pr-stat-lbl">Average score</div>
+      </div>
+      <div class="pr-stat" style="--pr-color:#f59e0b">
+        <div class="pr-stat-val">${d.sessions_week || 0}</div>
+        <div class="pr-stat-lbl">Sessions this week</div>
+      </div>
+    </div>
+
+    <!-- Quiz trend sparkline -->
+    ${hist.length > 1 ? `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.875rem">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">📈 Quiz Score Trend</div>
+        <div style="font-size:.72rem;color:var(--accent)">${hist.length} quizzes</div>
+      </div>
+      ${sparkSVG}
+    </div>` : ''}
+
+    <!-- Topic mastery -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.875rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">📚 Topic Mastery</div>
+      ${masteryHTML}
+    </div>
+
+    <!-- Weak areas -->
+    ${d.weak?.length ? `
+    <div style="background:linear-gradient(135deg,#ef444410,transparent);border:1px solid #ef444430;border-radius:12px;padding:1rem;margin-bottom:.875rem" id="weak-section">
+      <div style="font-size:.75rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.625rem">⚠️ Needs Work</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${d.weak.map(t=>`<span style="background:#ef444415;border:1px solid #ef444430;border-radius:20px;padding:3px 10px;font-size:.72rem;color:var(--red);font-weight:600">${esc(t)}</span>`).join('')}
+      </div>
+      <button onclick="nav('chat',null);setTimeout(()=>{const ci=$('ci');if(ci){ci.value='Help me improve at '+${JSON.stringify(d.weak[0])};ci.focus();}},300)" style="width:100%;margin-top:.75rem;background:none;border:1px solid #ef444440;border-radius:8px;padding:7px;color:var(--red);font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s">
+        Study weak topics with AI →
+      </button>
+    </div>` : ''}
+
+    <!-- Badges -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.875rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.625rem">🏅 Badges</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${badgesHTML}</div>
+    </div>
+
+    <!-- Best topic -->
+    ${d.best_topic ? `
+    <div style="background:linear-gradient(135deg,#22c55e10,transparent);border:1px solid #22c55e30;border-radius:12px;padding:.875rem;margin-bottom:.875rem;display:flex;align-items:center;gap:12px">
+      <div style="font-size:1.5rem">⭐</div>
+      <div>
+        <div style="font-family:var(--font);font-size:.82rem;font-weight:700;color:var(--green)">Strongest Topic</div>
+        <div style="font-size:.78rem;color:var(--text);margin-top:1px">${esc(d.best_topic)}</div>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+// ═══════════════════════ GOALS ═════════════════════════════
+
+let GL_GOALS = [];
+
+async function glLoad() {
+  try {
+    const r = await fetch(`/api/goals?sid=${S.sid}`);
+    const d = await r.json();
+    GL_GOALS = d.goals || [];
+    glRender();
+  } catch(e) { GL_GOALS = []; glRender(); }
+}
+
+function glRender() {
+  const list = $('gl-list'); if (!list) return;
+  if (!GL_GOALS.length) {
+    list.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:.5rem">🎯</div>
+      <div style="font-size:.85rem">No goals yet — set your first target!</div>
+    </div>`; return;
+  }
+
+  const today = new Date();
+  list.innerHTML = GL_GOALS.map(g => {
+    const daysLeft = g.deadline
+      ? Math.ceil((new Date(g.deadline) - today) / 86400000) : null;
+    const urgency  = daysLeft !== null && daysLeft <= 3 ? 'var(--red)' :
+                     daysLeft !== null && daysLeft <= 7 ? 'var(--yellow)' : 'var(--muted)';
+    const pct = g.progress || 0;
+    return `
+      <div class="gl-card ${g.completed ? 'done' : ''}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div style="flex:1">
+            <div class="gl-title">${g.completed ? '✅ ' : ''}${esc(g.title)}</div>
+            <div class="gl-meta">
+              ${g.subject ? `📚 ${esc(g.subject)} · ` : ''}
+              🎯 Target: ${g.target_score}%
+              ${daysLeft !== null ? ` · <span style="color:${urgency}">${daysLeft > 0 ? daysLeft+' days left' : daysLeft === 0 ? 'Today!' : 'Overdue'}</span>` : ''}
+            </div>
+          </div>
+          <div style="font-family:var(--font);font-size:.85rem;font-weight:800;color:var(--accent)">${pct}%</div>
+        </div>
+        <div class="gl-prog-wrap">
+          <div class="gl-prog-fill ${g.completed?'done':''}" style="width:${pct}%"></div>
+        </div>
+        <div style="font-size:.68rem;color:var(--muted)">${pct}% of target reached</div>
+        <div class="gl-actions">
+          <button class="gl-action-btn" onclick="glUpdateProgress('${g.id}',${pct})">📈 Update</button>
+          <button class="gl-action-btn done-btn" onclick="glMarkDone('${g.id}')">${g.completed ? '↩ Reopen' : '✓ Done'}</button>
+          <button class="gl-action-btn del-btn" onclick="glDelete('${g.id}')">🗑</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function glToggleForm() {
+  $('gl-add-form').classList.toggle('open');
+  if ($('gl-add-form').classList.contains('open')) {
+    $('gl-title')?.focus();
+    $('gl-deadline').min = new Date().toISOString().split('T')[0];
+  }
+}
+
+async function glSaveGoal() {
+  const title   = $('gl-title')?.value.trim();
+  const subject = $('gl-subject')?.value.trim();
+  const target  = parseInt($('gl-target')?.value) || 70;
+  const deadline = $('gl-deadline')?.value;
+  if (!title) { toast('Enter a goal title.'); return; }
+  try {
+    const r = await API('/api/goals/add', {sid:S.sid, title, subject, target_score:target, deadline});
+    GL_GOALS.push(r.goal);
+    glRender();
+    $('gl-add-form').classList.remove('open');
+    $('gl-title').value = ''; $('gl-subject').value = '';
+    $('gl-target').value = '70'; $('gl-deadline').value = '';
+    toast('Goal added! 🎯');
+  } catch(e) { toast('Could not save goal.'); }
+}
+
+async function glUpdateProgress(id, current) {
+  const val = prompt(`Update progress (0-100%). Currently ${current}%:`);
+  if (val === null) return;
+  const pct = Math.min(Math.max(parseInt(val)||0, 0), 100);
+  try {
+    await API('/api/goals/update', {sid:S.sid, id, progress:pct, completed: pct>=100});
+    const g = GL_GOALS.find(x=>x.id===id);
+    if (g) { g.progress = pct; g.completed = pct>=100; }
+    glRender();
+    if (pct >= 100) toast('Goal completed! 🎉');
+    else toast(`Progress updated to ${pct}% ✓`);
+  } catch(e) { toast('Update failed.'); }
+}
+
+async function glMarkDone(id) {
+  const g = GL_GOALS.find(x=>x.id===id);
+  if (!g) return;
+  const completed = !g.completed;
+  try {
+    await API('/api/goals/update', {sid:S.sid, id, progress: completed?100:g.progress, completed});
+    g.completed = completed;
+    if (completed) g.progress = 100;
+    glRender();
+    toast(completed ? 'Goal completed! 🎉' : 'Goal reopened');
+  } catch(e) { toast('Update failed.'); }
+}
+
+async function glDelete(id) {
+  if (!confirm('Delete this goal?')) return;
+  try {
+    await API('/api/goals/delete', {sid:S.sid, id});
+    GL_GOALS = GL_GOALS.filter(x=>x.id!==id);
+    glRender();
+    toast('Goal deleted');
+  } catch(e) { toast('Delete failed.'); }
+}
+
+// ═══════════════════════ DOCUMENT HUB ══════════════════════
+
+const DH_KEY    = () => `sivarr_docs_${S.sid || 'guest'}`;
+let   DH_ACTIVE = null;
+let   DH_SAVE_TIMER = null;
+
+function dhLoadDocs() {
+  try { return JSON.parse(localStorage.getItem(DH_KEY()) || '[]'); }
+  catch { return []; }
+}
+function dhSaveDocs(docs) { localStorage.setItem(DH_KEY(), JSON.stringify(docs)); }
+
+function dhInit() {
+  dhBackToList();
+  dhRenderList();
+}
+
+function dhRenderList() {
+  const docs = dhLoadDocs();
+  const el   = $('dh-docs-list'); if (!el) return;
+  if (!docs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:.5rem">📄</div>
+      <div style="font-size:.85rem">No documents yet.<br>Create your first rich note.</div>
+    </div>`; return;
+  }
+  el.innerHTML = docs.sort((a,b)=>b.updated-a.updated).map(d=>`
+    <div class="dh-doc-item" onclick="dhOpenDoc('${d.id}')">
+      <div style="font-size:1.1rem">📄</div>
+      <div style="flex:1;overflow:hidden">
+        <div class="dh-doc-title">${esc(d.title||'Untitled')}</div>
+        <div class="dh-doc-date">${new Date(d.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+      <button onclick="event.stopPropagation();dhDeleteDoc('${d.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:4px;transition:color .15s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">🗑</button>
+    </div>`).join('');
+}
+
+function dhNewDoc() {
+  DH_ACTIVE = {id: Date.now().toString(36), title:'', content:'', updated: Date.now()};
+  dhShowEditor();
+  $('dh-doc-title-input').value = '';
+  $('dh-editor').innerHTML = '';
+  $('dh-doc-title-input').focus();
+}
+
+function dhOpenDoc(id) {
+  const docs = dhLoadDocs();
+  DH_ACTIVE  = docs.find(d=>d.id===id);
+  if (!DH_ACTIVE) return;
+  dhShowEditor();
+  $('dh-doc-title-input').value = DH_ACTIVE.title || '';
+  $('dh-editor').innerHTML      = DH_ACTIVE.content || '';
+  dhUpdateWordCount();
+}
+
+function dhShowEditor() {
+  $('dh-list-view').style.display   = 'none';
+  $('dh-editor-view').style.display = 'flex';
+  $('dh-save-status').textContent   = 'Saved';
+  $('dh-save-status').style.color   = 'var(--green)';
+}
+
+function dhBackToList() {
+  if (DH_ACTIVE) dhSaveDoc(true);
+  $('dh-editor-view').style.display = 'none';
+  $('dh-list-view').style.display   = 'block';
+  DH_ACTIVE = null;
+  dhRenderList();
+}
+
+function dhSaveDoc(silent = false) {
+  if (!DH_ACTIVE) return;
+  DH_ACTIVE.title   = $('dh-doc-title-input')?.value.trim() || 'Untitled';
+  DH_ACTIVE.content = $('dh-editor')?.innerHTML || '';
+  DH_ACTIVE.updated = Date.now();
+  const docs  = dhLoadDocs();
+  const idx   = docs.findIndex(d=>d.id===DH_ACTIVE.id);
+  if (idx >= 0) docs[idx] = DH_ACTIVE;
+  else docs.push(DH_ACTIVE);
+  dhSaveDocs(docs);
+  if (!silent) {
+    toast('Document saved ✓');
+    const st = $('dh-save-status');
+    if (st) { st.textContent = 'Saved'; st.style.color = 'var(--green)'; }
+  }
+}
+
+function dhAutoSave() {
+  const st = $('dh-save-status');
+  if (st) { st.textContent = 'Unsaved changes'; st.style.color = 'var(--yellow)'; }
+  dhUpdateWordCount();
+  clearTimeout(DH_SAVE_TIMER);
+  DH_SAVE_TIMER = setTimeout(() => dhSaveDoc(true), 2000);
+}
+
+function dhUpdateWordCount() {
+  const el = $('dh-editor'); if (!el) return;
+  const words = el.innerText.trim().split(/\s+/).filter(Boolean).length;
+  const wc    = $('dh-word-count'); if (wc) wc.textContent = `${words} word${words!==1?'s':''}`;
+}
+
+function dhFormat(cmd) { document.execCommand(cmd, false, null); $('dh-editor').focus(); }
+
+function dhBlock(tag) {
+  const editor = $('dh-editor'); if (!editor) return;
+  const sel    = window.getSelection();
+  if (!sel.rangeCount) return;
+  const text   = sel.toString() || 'Heading';
+  const el     = document.createElement(tag === 'blockquote' ? 'blockquote' : tag);
+  el.textContent = text;
+  const range  = sel.getRangeAt(0);
+  range.deleteContents();
+  range.insertNode(el);
+  editor.focus();
+  dhAutoSave();
+}
+
+function dhInsertCode() {
+  const sel  = window.getSelection();
+  const text = sel?.toString() || 'code';
+  document.execCommand('insertHTML', false, `<code>${text}</code>`);
+  $('dh-editor').focus();
+  dhAutoSave();
+}
+
+async function dhAISuggest() {
+  const content = $('dh-editor')?.innerText.trim();
+  if (!content || content.length < 20) { toast('Write some content first for AI to suggest.'); return; }
+  toast('AI is reading your doc... ✨');
+  try {
+    const r = await API('/api/chat', {
+      sid: S.sid,
+      message: `I'm writing a document. Here's what I have so far:\n\n"${content.slice(0,800)}"\n\nSuggest 2-3 improvements or additions I should make. Be specific and brief.`
+    });
+    const suggestion = document.createElement('blockquote');
+    suggestion.style.cssText = 'border-left:3px solid var(--accent2);padding:.5rem .75rem;background:#7c3aed08;border-radius:0 6px 6px 0;margin:.5rem 0;font-size:.85rem;color:var(--muted)';
+    suggestion.innerHTML = `<strong style="color:var(--accent2)">✨ AI Suggestion:</strong><br>${r.reply}`;
+    $('dh-editor').appendChild(suggestion);
+    dhAutoSave();
+  } catch(e) { toast('AI suggestion failed — try again.'); }
+}
+
+function dhDeleteDoc(id) {
+  if (!confirm('Delete this document?')) return;
+  const docs = dhLoadDocs().filter(d=>d.id!==id);
+  dhSaveDocs(docs);
+  dhRenderList();
+  toast('Document deleted');
+  }
   // ═══════════════════════ STUDY PLAN ═════════════════════════
 
 let SP_HOURS = 1;
