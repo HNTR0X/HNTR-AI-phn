@@ -2366,11 +2366,11 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
       <div class="sr-name">Sivarr <span>●</span></div>
     </div>
     <div class="login-tag">✦ Learning Companion</div>
-    <h2>Welcome back</h2>
-    <p>Sign in to continue your learning journey on Sivarr.</p>
+    <h2 id="login-heading">Welcome back</h2>
+    <p id="login-sub">Sign in to continue your learning journey.</p>
 
     <!-- Role selector -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem">
       <button id="role-student" onclick="setRole('student')"
         style="padding:10px;border-radius:10px;border:2px solid var(--accent);background:#4f6ef715;color:var(--accent);font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s">
         🎓 I'm a Student
@@ -2381,15 +2381,77 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
       </button>
     </div>
 
-    <div class="field">
-      <label>Full Name</label>
-      <input id="ln" type="text" placeholder="Your name" autocomplete="off">
+    <!-- Sign In / Register tabs — student only -->
+    <div id="auth-tabs" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:1.25rem">
+      <button id="auth-tab-login" onclick="setAuthTab('login')"
+        style="padding:8px;border-radius:9px;border:2px solid var(--accent);background:#4f6ef715;color:var(--accent);font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s">
+        Sign In
+      </button>
+      <button id="auth-tab-register" onclick="setAuthTab('register')"
+        style="padding:8px;border-radius:9px;border:1px solid var(--border);background:none;color:var(--muted);font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s">
+        Register
+      </button>
     </div>
-    <div class="field">
-      <label id="lm-label">Matric Number</label>
-      <input id="lm" type="text" placeholder="20051947" autocomplete="off">
+
+    <!-- Student fields -->
+    <div id="student-fields">
+      <div class="field">
+        <label>Full Name</label>
+        <input id="ln" type="text" placeholder="Your full name" autocomplete="off"
+          onkeydown="if(event.key==='Enter') $('lm').focus()">
+      </div>
+      <div class="field">
+        <label id="lm-label">Matric Number</label>
+        <input id="lm" type="text" placeholder="20051947" autocomplete="off"
+          onkeydown="if(event.key==='Enter') $('l-pw').focus()">
+      </div>
+      <!-- Register-only fields -->
+      <div id="register-fields" style="display:none">
+        <div class="field">
+          <label>Email</label>
+          <input id="l-email" type="email" placeholder="you@university.edu">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input id="l-phone" type="tel" placeholder="+234 800 000 0000">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div style="position:relative">
+          <input id="l-pw" type="password" placeholder="Min. 6 characters"
+            style="padding-right:40px" onkeydown="if(event.key==='Enter') doLogin()">
+          <button type="button" onclick="togglePwVis('l-pw','l-pw-eye')" id="l-pw-eye"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                   background:none;border:none;color:var(--muted);cursor:pointer;
+                   font-size:.85rem;padding:2px 4px;line-height:1">👁</button>
+        </div>
+      </div>
     </div>
-    <button class="btn-login" id="login-btn" onclick="doLogin()">Continue to Sivarr AI</button>
+
+    <!-- Lecturer fields -->
+    <div id="lecturer-fields" style="display:none">
+      <div class="field">
+        <label>Your Name</label>
+        <input id="lec-name-login" type="text" placeholder="Dr. Adeyemi John" autocomplete="off"
+          onkeydown="if(event.key==='Enter') $('lec-pw-login').focus()">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div style="position:relative">
+          <input id="lec-pw-login" type="password" placeholder="Lecturer password"
+            style="padding-right:40px" onkeydown="if(event.key==='Enter') doLogin()">
+          <button type="button" onclick="togglePwVis('lec-pw-login','lec-pw-eye')" id="lec-pw-eye"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                   background:none;border:none;color:var(--muted);cursor:pointer;
+                   font-size:.85rem;padding:2px 4px;line-height:1">👁</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="login-err"
+      style="color:var(--red);font-size:.78rem;min-height:16px;margin-bottom:8px;text-align:center"></div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()">Sign In</button>
     <p class="login-note">Sivarr platform</p>
   </div>
 </div>
@@ -4176,32 +4238,138 @@ function loadProfilePic() {
 
 
 let CURRENT_ROLE = 'student';
+let AUTH_TAB     = 'login';
 
 function setRole(role) {
   CURRENT_ROLE = role;
-  const sBtn     = $('role-student');
-  const lBtn     = $('role-lecturer');
-  const lmLabel  = $('lm-label');
-  const lmInput  = $('lm');
-  const loginBtn = $('login-btn');
+  const isLec = role === 'lecturer';
 
-  if (role === 'lecturer') {
-    // Redirect straight to lecturer portal
-    window.location.href = '/lecturer';
+  $('role-student').style.cssText  = `padding:10px;border-radius:10px;font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;border:${!isLec?'2px solid var(--accent)':'1px solid var(--border)'};background:${!isLec?'#4f6ef715':'none'};color:${!isLec?'var(--accent)':'var(--muted)'}`;
+  $('role-lecturer').style.cssText = `padding:10px;border-radius:10px;font-family:var(--font);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;border:${isLec?'2px solid var(--accent)':'1px solid var(--border)'};background:${isLec?'#4f6ef715':'none'};color:${isLec?'var(--accent)':'var(--muted)'}`;
+  $('student-fields').style.display  = isLec ? 'none'  : 'block';
+  $('lecturer-fields').style.display = isLec ? 'block' : 'none';
+  $('auth-tabs').style.display       = isLec ? 'none'  : 'grid';
+  $('login-heading').textContent     = isLec ? 'Lecturer Login' : (AUTH_TAB === 'register' ? 'Create Account' : 'Welcome back');
+  $('login-btn').textContent         = isLec ? 'Access Dashboard' : (AUTH_TAB === 'register' ? 'Create Account' : 'Sign In');
+  $('login-err').textContent         = '';
+}
+
+function setAuthTab(tab) {
+  AUTH_TAB    = tab;
+  const isReg = tab === 'register';
+  $('auth-tab-login').style.cssText    = `padding:8px;border-radius:9px;font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;border:${!isReg?'2px solid var(--accent)':'1px solid var(--border)'};background:${!isReg?'#4f6ef715':'none'};color:${!isReg?'var(--accent)':'var(--muted)'}`;
+  $('auth-tab-register').style.cssText = `padding:8px;border-radius:9px;font-family:var(--font);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;border:${isReg?'2px solid var(--accent)':'1px solid var(--border)'};background:${isReg?'#4f6ef715':'none'};color:${isReg?'var(--accent)':'var(--muted)'}`;
+  $('register-fields').style.display  = isReg ? 'block' : 'none';
+  $('login-heading').textContent       = isReg ? 'Create Account' : 'Welcome back';
+  $('login-btn').textContent           = isReg ? 'Create Account' : 'Sign In';
+  $('login-err').textContent           = '';
+}
+
+function togglePwVis(inputId, btnId) {
+  const inp = $(inputId);
+  const btn = $(btnId);
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if (btn) btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+async function doLogin(prefillName, prefillMatric) {
+  const err = $('login-err');
+  const btn = $('login-btn');
+  if (err) err.textContent = '';
+
+  // ── Lecturer path ─────────────────────────────────────────
+  if (CURRENT_ROLE === 'lecturer') {
+    const name = $('lec-name-login')?.value.trim();
+    const pw   = $('lec-pw-login')?.value.trim();
+    if (!name || !pw) { if (err) err.textContent = 'Enter your name and password.'; return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
+    try {
+      const r = await fetch('/api/lecturer/login', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name, password: pw })
+      });
+      if (!r.ok) throw new Error('Invalid password');
+      const d = await r.json();
+      localStorage.setItem('sivarr_lec_token', d.token);
+      localStorage.setItem('sivarr_lec_name',  name);
+      window.location.href = '/lecturer';
+    } catch(e) {
+      if (err) err.textContent = 'Incorrect password. Try again.';
+      if (btn) { btn.disabled = false; btn.textContent = 'Access Dashboard'; }
+    }
     return;
   }
 
-  // Student styling
-  sBtn.style.border     = '2px solid var(--accent)';
-  sBtn.style.background = '#4f6ef715';
-  sBtn.style.color      = 'var(--accent)';
-  lBtn.style.border     = '1px solid var(--border)';
-  lBtn.style.background = 'none';
-  lBtn.style.color      = 'var(--muted)';
-  lmLabel.textContent   = 'Matric Number';
-  lmInput.placeholder   = '20051947';
-  lmInput.type          = 'text';
-  loginBtn.textContent  = 'Continue to Sivarr AI';
+  // ── Student path ──────────────────────────────────────────
+  const name   = prefillName   || $('ln')?.value.trim();
+  const matric = prefillMatric || $('lm')?.value.trim();
+  const pw     = $('l-pw')?.value || '';
+  const email  = $('l-email')?.value?.trim() || '';
+  const phone  = $('l-phone')?.value?.trim() || '';
+
+  if (!name || !matric) { if (err) err.textContent = 'Enter your name and matric number.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Please wait...'; }
+
+  try {
+    const r = await API('/api/login', { name, matric, password: pw, email, phone, action: AUTH_TAB });
+
+    S.sid    = r.sid;   S.name   = r.name;  S.matric = r.matric;
+    S.diff   = r.difficulty; S.topics = r.topics; S.weak = r.weak;
+    S.stats  = { questions: r.questions, quizzes: r.quizzes, sessions: r.sessions, wrong: r.wrong_count };
+    S.uploadedFiles = r.uploaded_files || [];
+    S.plan   = r.plan || 'free';
+
+    saveSession(name, matric);
+
+    $('tb-av').textContent   = r.name[0].toUpperCase();
+    $('tb-name').textContent = r.name;
+    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
+    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
+    const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
+    const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
+    const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
+    loadProfilePic();
+    snavToggle('ai', $('snav-sec-ai'));
+    updateDiff(r.difficulty);
+    updateSBStats();
+    renderTopics(r.topics, r.weak);
+    renderFileList();
+    loadWrong();
+
+    $('login-screen').style.display = 'none';
+    $('dashboard').style.display    = 'flex';
+
+    const greet = $('welcome-greeting');
+    if (greet) {
+      const hr  = new Date().getHours();
+      const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+      greet.textContent = `${tod}, ${r.name.split(' ')[0]}`;
+    }
+    loadAnnouncements();
+
+    try {
+      const ann = await fetch('/api/lecturer/announcements');
+      const ad  = await ann.json();
+      if (ad.announcements?.length) {
+        const latest = ad.announcements[0];
+        addMsg('sivarr', `📢 Announcement from your lecturer:\n\n"${latest.message}"\n\n— ${latest.author}, ${latest.date}`);
+      }
+    } catch(e) {}
+
+  } catch(e) {
+    const msg = e.message || '';
+    const text = msg.includes('409') ? 'Account already exists — sign in instead.' :
+                 msg.includes('401') ? 'Incorrect password.' :
+                 msg.includes('400') ? 'Password must be at least 6 characters.' :
+                 msg.includes('422') ? 'Check your name and matric number.' :
+                 'Login failed — ' + (msg || 'check your connection');
+    if (err) err.textContent = text;
+    console.error('Login error:', e);
+    if (btn) { btn.disabled = false; btn.textContent = AUTH_TAB === 'register' ? 'Create Account' : 'Sign In'; }
+    clearSession();
+  }
+  if (btn) { btn.disabled = false; btn.textContent = AUTH_TAB === 'register' ? 'Create Account' : 'Sign In'; }
 }
 
 // ═══════════════════════════ ANNOUNCEMENTS ══════════════════════
@@ -4348,86 +4516,6 @@ function getSavedSession() {
 }
 
 // ═══════════════════════════ LOGIN ════════════════════════════
-async function doLogin(name, matric) {
-  // Allow calling with args (auto-login) or from form
-  if (!name || !matric) {
-    name   = $('ln').value.trim();
-    matric = $('lm').value.trim();
-  }
-  if (!name || !matric) { toast('Enter your name and matric number'); return; }
-
-  const btn = $('login-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Connecting...'; }
-
-  try {
-    const r = await API('/api/login', { name, matric });
-    S.sid = r.sid; S.name = r.name; S.matric = r.matric;
-    S.diff = r.difficulty; S.topics = r.topics; S.weak = r.weak;
-    S.stats = { questions: r.questions, quizzes: r.quizzes, sessions: r.sessions, wrong: r.wrong_count };
-    S.uploadedFiles = r.uploaded_files || [];
-    S.plan          = r.plan || 'free';
-    
-
-    // Save to localStorage for auto-login next visit
-    saveSession(name, matric);
-
-    $('tb-av').textContent   = r.name[0].toUpperCase();
-    $('tb-name').textContent = r.name;
-    // Sync new sidebar footer
-    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
-    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
-    const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
-    const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
-    const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
-    // Load saved profile picture
-    loadProfilePic();
-    // Init sidebar — open AI section, highlight Chat
-    snavToggle('ai', $('snav-sec-ai'));
-    updateDiff(r.difficulty);
-    updateSBStats();
-    renderTopics(r.topics, r.weak);
-    renderFileList();
-    loadWrong();
-
-    $('login-screen').style.display = 'none';
-    const dash = $('dashboard');
-    dash.style.display = 'flex';
-
-    // Personalise the welcome greeting
-    const greet = $('welcome-greeting');
-    if (greet) {
-      const hr  = new Date().getHours();
-      const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-      greet.textContent = `${tod}, ${r.name.split(' ')[0]}`;
-    }
-    loadAnnouncements();
-
-    // Check for lecturer announcements
-    try {
-      const ann = await fetch('/api/lecturer/announcements');
-      const ad  = await ann.json();
-      if (ad.announcements && ad.announcements.length) {
-        const latest = ad.announcements[0];
-        addMsg('sivarr', `📢 Announcement from your lecturer:\n\n"${latest.message}"\n\n— ${latest.author}, ${latest.date}`);
-      }
-    } catch(e) {}
-  } catch(e) {
-    const msg = e.message || '';
-    if (msg.includes('429')) {
-      toast('Too many attempts — wait a moment and try again.');
-    } else if (msg.includes('422')) {
-      toast('Invalid name or matric number format.');
-    } else if (msg.includes('500')) {
-      toast('Server error — try again in a moment.');
-    } else {
-      toast('Login failed — ' + (msg || 'check your connection'));
-    }
-    console.error('Login error:', e);
-    if (btn) { btn.disabled = false; btn.textContent = 'Continue to Sivarr AI'; }
-    clearSession();
-  }
-}
-
 // Add logout button handler
 function logout() {
   clearSession();
@@ -8868,3 +8956,4 @@ async function shareResult(score, topic) {
 </script>
 </body>
   </html>
+
