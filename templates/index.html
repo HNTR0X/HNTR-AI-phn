@@ -4677,19 +4677,19 @@ function quickPrompt(text) {
 }
 
 function addMsg(role, text, uncertain = false) {
-  // Hide welcome screen on first real message
   const welcome = $('chat-welcome');
   if (welcome) welcome.style.display = 'none';
 
   const w = $('msgs'), d = document.createElement('div');
   d.className = `msg ${role}`;
-  const av = role === 'sivarr' ? 'Sr' : S.name[0]?.toUpperCase() || 'U';
+  const av      = role === 'sivarr' ? 'Sr' : S.name[0]?.toUpperCase() || 'U';
+  const rendered = role === 'sivarr' ? renderMarkdown(text) : esc(text);
   d.innerHTML = `
     <div class="msg-av">${av}</div>
-    <div>
-      <div class="msg-bub">${esc(text)}</div>
+    <div style="min-width:0;flex:1">
+      <div class="msg-bub md-body">${rendered}</div>
       ${uncertain ? `<div class="uncertain">⚠️ Verify this with your lecturer</div>` : ''}
-      ${role === 'sivarr' ? `<button class="action-btn" style="margin-top:5px;font-size:.68rem" onclick="downloadText('${esc(text).replace(/'/g,"\\'")}')">⬇ Download</button>` : ''}
+      ${role === 'sivarr' ? `<button class="action-btn" style="margin-top:5px;font-size:.68rem" onclick="downloadText(this.closest('.msg').querySelector('.msg-bub').innerText)">⬇ Download</button>` : ''}
     </div>`;
   w.appendChild(d);
   scrollMsgs();
