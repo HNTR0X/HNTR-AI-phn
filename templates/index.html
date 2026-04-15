@@ -5470,6 +5470,30 @@ function dhDeleteDoc(id) {
   }
   // ═══════════════════════ STUDY PLAN ═════════════════════════
 
+  function spLoadSaved() {
+  const saved = localStorage.getItem(`sivarr_sp_${S.sid}`);
+  if (!saved) return;
+  try {
+    const data = JSON.parse(saved);
+    if (!data?.plan?.length) return;
+    // Restore subject + date fields
+    const subj = $('sp-subject'); if (subj) subj.value = data.subject || '';
+    const dt   = $('sp-date');   if (dt)   dt.value   = data.exam_date || '';
+    // Show countdown
+    const countdown = $('sp-countdown');
+    if (countdown && data.exam_date) {
+      const daysLeft = Math.ceil((new Date(data.exam_date) - new Date()) / 86400000);
+      if (daysLeft > 0) {
+        countdown.style.display = 'flex';
+        const dt2 = $('sp-days-text'); if (dt2) dt2.textContent = `${daysLeft} day${daysLeft!==1?'s':''} until your exam`;
+        const el  = $('sp-exam-label'); if (el) el.textContent = `${data.subject} · ${new Date(data.exam_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
+      }
+    }
+    renderStudyPlan(data);
+    const btn = $('sp-btn'); if (btn) btn.textContent = '✨ Regenerate Plan';
+  } catch(e) {}
+  }
+
 let SP_HOURS = 1;
 
 function setSPHours(h, btn) {
