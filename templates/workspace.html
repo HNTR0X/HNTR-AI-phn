@@ -1,1 +1,737 @@
 
+Let me read the exact current code for every one of these before writing fixes.
+
+I have everything. Now writing all fixes precisely.
+
+---
+
+## `app.py` — 2 Changes
+
+### A — Add date to quiz entries + enrich progress API
+
+**Find:**
+```python
+    p.setdefault("quizzes", []).append({
+        "topic": topic, "score": score / 5,
+        "pct": int(score / 5 * 100), "difficulty": diff,
+    })
+```
+**Replace with:**
+```python
+    p.setdefault("quizzes", []).append({
+        "topic": topic, "score": score / 5,
+        "pct": int(score / 5 * 100), "difficulty": diff,
+        "date": datetime.date.today().isoformat(),
+    })
+```
+
+---
+
+### B — Upgrade `/api/progress`
+
+**Find the entire block:**
+```python
+@app.get("/api/progress")
+async def progress(sid: str):
+    sid     = sanitize_text(sid, 100)
+    p       = load_progress(sid)
+    quizzes = p.get("quizzes", [])
+    avg     = (sum(q["score"] for q in quizzes) / len(quizzes) * 100) if quizzes else 0
+    return {
+        "name": p.get("name",""), "matric": p.get("matric",""),
+        "sessions": p["sessions"], "questions": p["questions"],
+        "topics": p["topics"], "weak": weak_topics(p),
+        "difficulty": p.get("difficulty","medium"),
+        "quizzes_taken": len(quizzes), "avg_score": round(avg,1),
+        "last_quiz": quizzes[-1] if quizzes else None,
+        "wrong_count": len(p.get("wrong_answers",[])),
+        "uploaded_files": p.get("uploaded_files",[]),
+    }
+```
+
+**Replace with:**
+```python
+@app.get("/api/progress")
+async def progress(sid: str):
+    sid     = sanitize_text(sid, 100)
+    p       = load_progress(sid)
+    quizzes = p.get("quizzes", [])
+    avg     = (sum(q["score"] for q in quizzes) / len(quizzes) * 100) if quizzes else 0
+
+    # Quiz trend — last 10 with dates for sparkline
+    quiz_history = [
+        {"pct": q.get("pct", 0), "topic": q.get("topic", ""), "date": q.get("date", "")}
+        for q in quizzes[-10:]
+    ]
+
+    # Topic mastery — normalize to percentage
+    topics   = p.get("topics", {})
+    max_count = max(topics.values()) if topics else 1
+    topic_mastery = {
+        t: min(round((c / max_count) * 100), 100)
+        for t, c in topics.items()
+    }
+
+    # Streak
+    streak     = p.get("streak", 0)
+    last_active = p.get("last_active", "")
+    today      = datetime.date.today().isoformat()
+    yesterday  = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+    if last_active not in [today, yesterday]:
+        streak = 0
+
+    # Sessions this week
+    chat_hist    = p.get("chat_history", [])
+    week_ago     = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    sessions_week = len(set(
+        h.get("time", "")[:10] for h in chat_hist
+        if h.get("time", "")[:10] >= week_ago
+    ))
+
+    best_topic = max(topics, key=topics.get) if topics else None
+
+    return {
+        "name": p.get("name", ""), "matric": p.get("matric", ""),
+        "sessions": p["sessions"], "questions": p["questions"],
+        "topics": topics, "weak": weak_topics(p),
+        "difficulty": p.get("difficulty", "medium"),
+        "quizzes_taken": len(quizzes), "avg_score": round(avg, 1),
+        "last_quiz": quizzes[-1] if quizzes else None,
+        "wrong_count": len(p.get("wrong_answers", [])),
+        "uploaded_files": p.get("uploaded_files", []),
+        "quiz_history": quiz_history,
+        "topic_mastery": topic_mastery,
+        "streak": streak,
+        "best_topic": best_topic,
+        "sessions_week": sessions_week,
+        "xp": p.get("xp", 0),
+        "level": p.get("level", 1),
+        "badges": p.get("badges", []),
+    }
+```
+
+---
+
+Now the `index.html` changes.
+
+---
+
+## Change 1 — Fix Chat Markdown Rendering
+
+**Find:**
+```javascript
+function addMsg(role, text, uncertain = false) {
+  // Hide welcome screen on first real message
+  const welcome = $('chat-welcome');
+  if (welcome) welcome.style.display = 'none';
+
+  const w = $('msgs'), d = document.createElement('div');
+  d.className = `msg ${role}`;
+  const av = role === 'sivarr' ? 'Sr' : S.name[0]?.toUpperCase() || 'U';
+  d.innerHTML = `
+    <div class="msg-av">${av}</div>
+    <div>
+      <div class="msg-bub">${esc(text)}</div>
+      ${uncertain ? `<div class="uncertain">⚠️ Verify this with your lecturer</div>` : ''}
+      ${role === 'sivarr' ? `<button class="action-btn" style="margin-top:5px;font-size:.68rem" onclick="downloadText('${esc(text).replace(/'/g,"\\'")}')">⬇ Download</button>` : ''}
+    </div>`;
+  w.appendChild(d);
+  scrollMsgs();
+  return d;
+}
+```
+
+**Replace with:**
+```javascript
+function addMsg(role, text, uncertain = false) {
+  const welcome = $('chat-welcome');
+  if (welcome) welcome.style.display = 'none';
+
+  const w = $('msgs'), d = document.createElement('div');
+  d.className = `msg ${role}`;
+  const av      = role === 'sivarr' ? 'Sr' : S.name[0]?.toUpperCase() || 'U';
+  const rendered = role === 'sivarr' ? renderMarkdown(text) : esc(text);
+  d.innerHTML = `
+    <div class="msg-av">${av}</div>
+    <div style="min-width:0;flex:1">
+      <div class="msg-bub md-body">${rendered}</div>
+      ${uncertain ? `<div class="uncertain">⚠️ Verify this with your lecturer</div>` : ''}
+      ${role === 'sivarr' ? `<button class="action-btn" style="margin-top:5px;font-size:.68rem" onclick="downloadText(this.closest('.msg').querySelector('.msg-bub').innerText)">⬇ Download</button>` : ''}
+    </div>`;
+  w.appendChild(d);
+  scrollMsgs();
+  return d;
+}
+```
+
+Then find your existing `renderMarkdown` function and **replace it** with this richer version:
+
+```javascript
+function renderMarkdown(text) {
+  if (!text) return '';
+  let h = text
+    // Code blocks first (before escaping)
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) =>
+      `<pre style="background:var(--border);border-radius:8px;padding:.75rem;overflow-x:auto;margin:.4rem 0;font-size:.82rem"><code>${esc(code.trim())}</code></pre>`)
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code style="background:var(--border);border-radius:4px;padding:1px 6px;font-size:.85em">$1</code>')
+    // Escape remaining HTML
+    .replace(/&(?!amp;|lt;|gt;|quot;)/g, '&amp;')
+    .replace(/<(?!pre|\/pre|code|\/code)/g, '&lt;')
+    // Headings
+    .replace(/^### (.+)$/gm, '<div style="font-family:var(--font);font-size:.9rem;font-weight:700;margin:.6rem 0 .2rem;color:var(--accent)">$1</div>')
+    .replace(/^## (.+)$/gm,  '<div style="font-family:var(--font);font-size:1rem;font-weight:800;margin:.7rem 0 .3rem">$1</div>')
+    .replace(/^# (.+)$/gm,   '<div style="font-family:var(--font);font-size:1.1rem;font-weight:800;margin:.75rem 0 .3rem">$1</div>')
+    // Bold + italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,         '<em>$1</em>')
+    // Bullet lists
+    .replace(/^[\-\*] (.+)$/gm, '<li style="margin:.15rem 0;padding-left:.25rem">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li style="margin:.15rem 0;padding-left:.25rem">$2</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, m =>
+      `<ul style="padding-left:1.25rem;margin:.35rem 0;list-style:disc">${m}</ul>`)
+    // Horizontal rule
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:.5rem 0">')
+    // Line breaks
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+  return h;
+}
+```
+
+Also add this CSS — find `.btn-start:hover { opacity: .85; }` and add immediately after:
+
+```css
+/* ── Markdown body in chat ── */
+.md-body strong { font-weight:700; }
+.md-body em     { font-style:italic; }
+.md-body ul     { padding-left:1.25rem;margin:.3rem 0; }
+.md-body li     { margin:.15rem 0; }
+.md-body pre    { white-space:pre-wrap; }
+.md-body code   { font-family:monospace; }
+.md-body br + br { margin-top:.3rem; display:block; content:''; }
+```
+
+---
+
+## Change 2 — Upgrade Stats Panel
+
+**Find the entire `async function loadStats()` and replace it:**
+
+```javascript
+async function loadStats() {
+  const r = await fetch(`/api/progress?sid=${S.sid}`);
+  const d = await r.json();
+
+  // Build sparkline SVG
+  const hist = d.quiz_history || [];
+  let sparkSVG = '';
+  if (hist.length > 1) {
+    const W = 300, H = 48, pad = 6;
+    const max = Math.max(...hist.map(q => q.pct), 1);
+    const pts = hist.map((q, i) => {
+      const x = pad + (i / (hist.length - 1)) * (W - pad * 2);
+      const y = H - pad - (q.pct / max) * (H - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const area = `${W - pad},${H} ${pad},${H}`;
+    sparkSVG = `
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:48px;margin-top:8px">
+        <defs>
+          <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4f6ef7" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="#4f6ef7" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${pts.join(' ')} ${area}" fill="url(#sg)"/>
+        <polyline points="${pts.join(' ')}" fill="none" stroke="#4f6ef7"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${pts[pts.length-1].split(',')[0]}"
+                cy="${pts[pts.length-1].split(',')[1]}"
+                r="3.5" fill="#7c3aed"/>
+      </svg>`;
+  }
+
+  // Topic mastery bars
+  const mastery = d.topic_mastery || {};
+  const masteryHTML = Object.entries(mastery).length
+    ? Object.entries(mastery).sort((a, b) => b[1] - a[1]).slice(0, 7).map(([t, pct]) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:.75rem;color:var(--muted);width:90px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span>
+          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .6s ease"></div>
+          </div>
+          <span style="font-size:.7rem;color:var(--muted);width:28px;text-align:right">${pct}%</span>
+        </div>`).join('')
+    : '<span style="font-size:.78rem;color:var(--muted)">Ask questions to build topic mastery.</span>';
+
+  // Badges
+  const badges  = d.badges || [];
+  const badgesHTML = badges.length
+    ? badges.map(b => `<span style="background:#4f6ef718;border:1px solid #4f6ef730;border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:700;color:var(--accent);font-family:var(--font);margin:2px;display:inline-block">🏅 ${esc(b)}</span>`).join('')
+    : '<span style="font-size:.78rem;color:var(--muted)">Complete quizzes to earn badges.</span>';
+
+  // Streak colour
+  const sc = (d.streak || 0) >= 7 ? '#f59e0b' : (d.streak || 0) >= 3 ? '#fb923c' : 'var(--muted)';
+  const xp  = d.xp || 0;
+  const lvl = d.level || 1;
+
+  $('sw').innerHTML = `
+
+    <!-- Hero -->
+    <div style="background:linear-gradient(135deg,#4f6ef718,#7c3aed12);border:1px solid #4f6ef730;border-radius:16px;padding:1.1rem;margin-bottom:.875rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <div>
+          <div style="font-family:var(--font);font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Level ${lvl}</div>
+          <div style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">${esc(d.name?.split(' ')[0] || 'Student')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.3rem">🔥</div>
+          <div style="font-family:var(--font);font-size:.82rem;font-weight:800;color:${sc}">${d.streak || 0} day streak</div>
+        </div>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${xp % 100}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .8s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-top:3px">
+        <span>${xp} XP</span><span>${100 - (xp % 100)} XP to Level ${lvl + 1}</span>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid" style="margin-bottom:.875rem">
+      <div class="stat-card" style="--sc:#4f6ef7"><div class="sc-label">Questions</div><div class="sc-val" style="color:#4f6ef7">${d.questions}</div></div>
+      <div class="stat-card" style="--sc:#7c3aed"><div class="sc-label">Quizzes</div><div class="sc-val" style="color:#7c3aed">${d.quizzes_taken}</div></div>
+      <div class="stat-card" style="--sc:#22c55e"><div class="sc-label">Avg Score</div><div class="sc-val" style="color:#22c55e">${d.avg_score}%</div></div>
+      <div class="stat-card" style="--sc:#f59e0b"><div class="sc-label">This Week</div><div class="sc-val" style="color:#f59e0b">${d.sessions_week || 0}</div></div>
+    </div>
+
+    <!-- Quiz trend -->
+    ${hist.length > 1 ? `
+    <div class="r-card" style="margin-bottom:.875rem">
+      <div class="r-title">📈 Quiz Score Trend <span style="color:var(--muted);font-weight:400;font-size:.72rem">(last ${hist.length})</span></div>
+      ${sparkSVG}
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-top:4px">
+        <span>Earliest</span><span>Latest: ${hist[hist.length-1]?.pct || 0}%</span>
+      </div>
+    </div>` : ''}
+
+    <!-- Topic mastery -->
+    <div class="r-card" style="margin-bottom:.875rem">
+      <div class="r-title">📚 Topic Mastery</div>
+      <div style="margin-top:.5rem">${masteryHTML}</div>
+    </div>
+
+    <!-- Weak areas -->
+    ${d.weak?.length ? `
+    <div style="background:linear-gradient(135deg,#ef444410,transparent);border:1px solid #ef444430;border-radius:12px;padding:.875rem;margin-bottom:.875rem" id="weak-section">
+      <div style="font-size:.72rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">⚠️ Needs Work</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.625rem">
+        ${d.weak.map(t => `<span style="background:#ef444415;border:1px solid #ef444430;border-radius:20px;padding:3px 10px;font-size:.72rem;color:var(--red);font-weight:600">${esc(t)}</span>`).join('')}
+      </div>
+      <button onclick="nav('chat',null);setTimeout(()=>{const ci=$('ci');if(ci){ci.value='Help me improve my understanding of ${esc(d.weak[0]||'')}';ci.focus();}},300)"
+        style="width:100%;background:none;border:1px solid #ef444440;border-radius:8px;padding:7px;color:var(--red);font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer">
+        Study weak topics with AI →
+      </button>
+    </div>` : ''}
+
+    <!-- Badges -->
+    <div class="r-card" style="margin-bottom:.875rem">
+      <div class="r-title">🏅 Badges</div>
+      <div style="margin-top:.5rem;display:flex;flex-wrap:wrap;gap:3px">${badgesHTML}</div>
+    </div>
+
+    <!-- Best topic -->
+    ${d.best_topic ? `
+    <div style="background:linear-gradient(135deg,#22c55e10,transparent);border:1px solid #22c55e30;border-radius:12px;padding:.875rem;display:flex;align-items:center;gap:10px">
+      <div style="font-size:1.4rem">⭐</div>
+      <div>
+        <div style="font-family:var(--font);font-size:.8rem;font-weight:700;color:var(--green)">Strongest Topic</div>
+        <div style="font-size:.78rem;color:var(--text);margin-top:1px">${esc(d.best_topic)}</div>
+      </div>
+    </div>` : ''}
+  `;
+}
+```
+
+---
+
+## Change 3 — Fix Notes (search, no char limit, tags)
+
+**Replace the entire `panel-notes` HTML:**
+
+Find:
+```html
+      <div class="panel" id="panel-notes">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;min-height:0">
+          <div>
+            <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">📓 My Notes</h2>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Personal study notes — saved to your device</p>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
+            <textarea class="notes-area" id="new-note-text" placeholder="Write a study note..."></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+              <span style="font-size:.72rem;color:var(--muted)" id="note-char-count">0 / 1000</span>
+              <button class="btn-start" style="padding:8px 18px;font-size:.82rem" onclick="saveNote()">Save Note</button>
+            </div>
+          </div>
+          <div id="notes-list">
+            <div class="empty-state"><div class="es-icon">📓</div><div class="es-text">No notes yet!</div></div>
+          </div>
+        </div>
+      </div>
+```
+
+**Replace with:**
+```html
+      <div class="panel" id="panel-notes">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:.875rem;min-height:0">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">📓 My Notes</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Saved to your device</p>
+            </div>
+            <button onclick="noteToggleForm()" id="note-add-btn"
+              style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:7px 14px;color:#fff;font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer">
+              + New Note
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div style="position:relative">
+            <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.82rem">🔍</span>
+            <input id="note-search" type="text" placeholder="Search notes..."
+              style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 12px 8px 32px;color:var(--text);font-family:var(--font-body);font-size:.83rem;outline:none;transition:border-color .2s"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+              oninput="noteSearch()">
+          </div>
+
+          <!-- Tag filter -->
+          <div id="note-tag-bar" style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px"></div>
+
+          <!-- Write form -->
+          <div id="note-write-form" style="display:none;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:1rem">
+            <input id="note-tag-input" type="text" placeholder="Tag (e.g. Chemistry, MTH301)"
+              style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--font-body);font-size:.8rem;outline:none;margin-bottom:.5rem;transition:border-color .2s"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <textarea id="new-note-text"
+              style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem;color:var(--text);font-family:var(--font-body);font-size:.86rem;outline:none;resize:vertical;min-height:120px;line-height:1.6;transition:border-color .2s"
+              placeholder="Write your note here — no character limit..."
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+              oninput="noteCharCount()"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+              <span style="font-size:.72rem;color:var(--muted)" id="note-char-count">0 words</span>
+              <div style="display:flex;gap:6px">
+                <button onclick="noteToggleForm()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">Cancel</button>
+                <button onclick="saveNote()" style="padding:7px 14px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer">Save</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes list -->
+          <div id="notes-list">
+            <div class="empty-state"><div class="es-icon">📓</div><div class="es-text">No notes yet — tap New Note!</div></div>
+          </div>
+
+        </div>
+      </div>
+```
+
+Now **replace these JS functions** for notes:
+
+Find `function saveNote()` and replace entirely:
+```javascript
+function saveNote() {
+  const ta   = $('new-note-text');
+  const text = ta?.value.trim();
+  const tag  = $('note-tag-input')?.value.trim() || '';
+  if (!text) { toast('Write something first!'); return; }
+
+  const raw     = localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]';
+  const notes   = JSON.parse(raw);
+  const editIdx = (ta.dataset.editIdx !== undefined && ta.dataset.editIdx !== '')
+    ? parseInt(ta.dataset.editIdx) : -1;
+
+  if (editIdx >= 0 && editIdx < notes.length) {
+    notes[editIdx].text = text;
+    notes[editIdx].tag  = tag;
+    notes[editIdx].date = new Date().toLocaleString() + ' (edited)';
+    delete ta.dataset.editIdx;
+    toast('Note updated ✓');
+  } else {
+    notes.unshift({ text, tag, date: new Date().toLocaleString() });
+    toast('Note saved ✓');
+  }
+
+  const trimmed = notes.slice(0, 100);
+  localStorage.setItem(`sivarr_notes_${S.sid}`, JSON.stringify(trimmed));
+  ta.value = '';
+  if ($('note-tag-input')) $('note-tag-input').value = '';
+  noteCharCount();
+  $('note-write-form').style.display = 'none';
+  renderNotes(trimmed);
+  noteRenderTagBar(trimmed);
+}
+```
+
+Find `function loadNotes()` and replace:
+```javascript
+function loadNotes() {
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  renderNotes(notes);
+  noteRenderTagBar(notes);
+}
+```
+
+Find `function renderNotes(notes)` and replace entirely:
+```javascript
+function renderNotes(notes, filter = '') {
+  const list = $('notes-list'); if (!list) return;
+  let display = notes;
+  if (filter === '__search__') {
+    const q = $('note-search')?.value.trim().toLowerCase();
+    display  = q ? notes.filter(n => n.text.toLowerCase().includes(q) || (n.tag||'').toLowerCase().includes(q)) : notes;
+  } else if (filter) {
+    display = notes.filter(n => (n.tag||'').toLowerCase() === filter.toLowerCase());
+  }
+  if (!display.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">📓</div><div class="es-text">${filter ? 'No notes with this tag.' : 'No notes yet — tap New Note!'}</div></div>`;
+    return;
+  }
+  list.innerHTML = display.map((n, i) => {
+    const realIdx = notes.indexOf(n);
+    const lines   = n.text.split('\n');
+    const title   = lines[0].slice(0, 55) + (lines[0].length > 55 || lines.length > 1 ? '...' : '');
+    const words   = n.text.trim().split(/\s+/).length;
+    return `
+      <div class="note-accordion" id="note-acc-${i}">
+        <div class="note-acc-header" onclick="toggleNote(${i})">
+          <div style="flex:1;min-width:0">
+            <div class="note-acc-title">${esc(title)}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+              ${n.tag ? `<span style="background:#4f6ef715;border:1px solid #4f6ef730;border-radius:10px;padding:1px 7px;font-size:.65rem;color:var(--accent);font-weight:700">${esc(n.tag)}</span>` : ''}
+              <span class="note-acc-date">📅 ${n.date}</span>
+              <span style="font-size:.65rem;color:var(--muted)">${words} words</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <button onclick="event.stopPropagation();noteEdit(${realIdx})"
+              style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted);font-size:.7rem;cursor:pointer;transition:all .15s"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit</button>
+            <button onclick="event.stopPropagation();deleteNote(${realIdx})"
+              style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted);font-size:.7rem;cursor:pointer;transition:all .15s"
+              onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Delete</button>
+            <span class="note-acc-arrow" id="note-arrow-${i}">▼</span>
+          </div>
+        </div>
+        <div class="note-acc-body" id="note-body-${i}" style="display:none">
+          <div style="white-space:pre-wrap;font-size:.86rem;line-height:1.7;padding:.75rem 0;color:var(--text)">${esc(n.text)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+```
+
+Then add these new helper functions — find `function toggleNote` and add **before it**:
+
+```javascript
+function noteToggleForm() {
+  const form = $('note-write-form');
+  const open = form.style.display === 'none' || !form.style.display;
+  form.style.display = open ? 'block' : 'none';
+  if (open) {
+    $('new-note-text').focus();
+    delete $('new-note-text').dataset.editIdx;
+    if ($('note-tag-input')) $('note-tag-input').value = '';
+    if ($('new-note-text')) $('new-note-text').value = '';
+    noteCharCount();
+  }
+}
+
+function noteCharCount() {
+  const ta  = $('new-note-text'); if (!ta) return;
+  const wc  = ta.value.trim().split(/\s+/).filter(Boolean).length;
+  const el  = $('note-char-count'); if (el) el.textContent = `${wc} word${wc!==1?'s':''}`;
+}
+
+function noteSearch() {
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  renderNotes(notes, '__search__');
+}
+
+function noteRenderTagBar(notes) {
+  const bar = $('note-tag-bar'); if (!bar) return;
+  const tags = [...new Set(notes.map(n => n.tag).filter(Boolean))];
+  if (!tags.length) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = [`<button onclick="noteFilterTag('',this)" style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font);font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" class="note-tag-filter active">All</button>`,
+    ...tags.map(t => `<button onclick="noteFilterTag('${esc(t)}',this)" style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font);font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" class="note-tag-filter">${esc(t)}</button>`)
+  ].join('');
+}
+
+function noteFilterTag(tag, btn) {
+  document.querySelectorAll('.note-tag-filter').forEach(b => {
+    b.style.background = 'var(--card)'; b.style.color = 'var(--muted)'; b.style.borderColor = 'var(--border)';
+  });
+  btn.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
+  btn.style.color = '#fff'; btn.style.borderColor = 'transparent';
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  renderNotes(notes, tag);
+}
+
+function noteEdit(idx) {
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  const note  = notes[idx]; if (!note) return;
+  const ta    = $('new-note-text');
+  const form  = $('note-write-form');
+  if (ta) { ta.value = note.text; ta.dataset.editIdx = idx; }
+  if ($('note-tag-input')) $('note-tag-input').value = note.tag || '';
+  if (form) form.style.display = 'block';
+  noteCharCount();
+  ta?.focus();
+  form?.scrollIntoView({ behavior: 'smooth' });
+}
+```
+
+Also find `function editNote` and **delete it** entirely (replaced by `noteEdit` above).
+
+---
+
+## Change 4 — Persist Study Plan
+
+Find `function generateStudyPlan()` and inside it find this line:
+```javascript
+    renderStudyPlan(data);
+```
+
+**Replace with:**
+```javascript
+    localStorage.setItem(`sivarr_sp_${S.sid}`, JSON.stringify(data));
+    renderStudyPlan(data);
+```
+
+Then find `function setSPHours` and add this new function **immediately before it**:
+
+```javascript
+function spLoadSaved() {
+  const saved = localStorage.getItem(`sivarr_sp_${S.sid}`);
+  if (!saved) return;
+  try {
+    const data = JSON.parse(saved);
+    if (!data?.plan?.length) return;
+    // Restore subject + date fields
+    const subj = $('sp-subject'); if (subj) subj.value = data.subject || '';
+    const dt   = $('sp-date');   if (dt)   dt.value   = data.exam_date || '';
+    // Show countdown
+    const countdown = $('sp-countdown');
+    if (countdown && data.exam_date) {
+      const daysLeft = Math.ceil((new Date(data.exam_date) - new Date()) / 86400000);
+      if (daysLeft > 0) {
+        countdown.style.display = 'flex';
+        const dt2 = $('sp-days-text'); if (dt2) dt2.textContent = `${daysLeft} day${daysLeft!==1?'s':''} until your exam`;
+        const el  = $('sp-exam-label'); if (el) el.textContent = `${data.subject} · ${new Date(data.exam_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
+      }
+    }
+    renderStudyPlan(data);
+    const btn = $('sp-btn'); if (btn) btn.textContent = '✨ Regenerate Plan';
+  } catch(e) {}
+}
+```
+
+Then find this in `nav()`:
+```javascript
+  if (name === 'studyplan') { const d = new Date(); d.setDate(d.getDate()+14); $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]); }
+```
+
+**Replace with:**
+```javascript
+  if (name === 'studyplan') {
+    $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]);
+    setTimeout(spLoadSaved, 100);
+  }
+```
+
+---
+
+## Change 5 — Fix Classes Join
+
+The join UI exists and `submitJoinClass` works. The problem is the sidebar `Materials` route redirects to courses but never opens the join form. The join button already exists in `loadClasses()`. This is actually fine — the issue is the sidebar **Materials** entry navigates to courses but doesn't trigger `loadClasses()`.
+
+Find in `SNAV_ROUTE`:
+```javascript
+  'materials':       () => { nav('courses', null); setTimeout(() => {
+    const matBtn = document.querySelector('.ctab[onclick*="materials"]'); if (matBtn) matBtn.click();
+  }, 350); },
+```
+
+**Replace with:**
+```javascript
+  'materials':       () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
+  'courses':         () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
+```
+
+---
+
+## Change 6 — Add Mobile Swipe Gestures
+
+Find `function toast(msg` and add this entire block **immediately before it**:
+
+```javascript
+// ═══════════════════════ SWIPE GESTURES ════════════════════════
+
+(function initSwipe() {
+  let startX = 0, startY = 0, startTime = 0;
+  const PANELS = ['chat','quiz','stats','courses','lab','flux','announcements','notes','studyplan'];
+  let currentIdx = 0;
+
+  function getCurrentIdx() {
+    const active = document.querySelector('.panel.active');
+    if (!active) return 0;
+    const id = active.id.replace('panel-','');
+    const i  = PANELS.indexOf(id);
+    return i >= 0 ? i : currentIdx;
+  }
+
+  document.addEventListener('touchstart', e => {
+    startX    = e.touches[0].clientX;
+    startY    = e.touches[0].clientY;
+    startTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    const dx   = e.changedTouches[0].clientX - startX;
+    const dy   = e.changedTouches[0].clientY - startY;
+    const dt   = Date.now() - startTime;
+    const absDx = Math.abs(dx), absDy = Math.abs(dy);
+
+    // Must be fast, horizontal, and significant
+    if (dt > 350 || absDx < 60 || absDy > absDx * 0.8) return;
+
+    // Don't swipe if inside a scrollable area scrolled horizontally
+    const target = e.target.closest('.chat-msgs,.quiz-wrap,.stats-wrap,.tab-bar,.lh-filter-bar,.sg-msg-wrap');
+    if (target) return;
+
+    currentIdx = getCurrentIdx();
+
+    if (dx < 0 && currentIdx < PANELS.length - 1) {
+      // Swipe left = next panel
+      nav(PANELS[currentIdx + 1], null);
+      currentIdx++;
+    } else if (dx > 0 && currentIdx > 0) {
+      // Swipe right = previous panel
+      nav(PANELS[currentIdx - 1], null);
+      currentIdx--;
+    }
+  }, { passive: true });
+})();
+```
+
+---
+
+That's all 6 fixes — push everything and Sivarr will feel dramatically more polished. Chat will render formatted responses beautifully, stats will look like a real dashboard, notes will be searchable and unlimited, study plans will persist across sessions, classes will load properly, and students can swipe between panels on mobile. 🔥
