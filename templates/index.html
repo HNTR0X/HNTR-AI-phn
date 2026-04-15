@@ -4339,7 +4339,9 @@ async function doLogin(prefillName, prefillMatric) {
     loadWrong();
 
     $('login-screen').style.display = 'none';
+    const dash= $('dashboard');
     $('dashboard').style.display    = 'flex';
+    document.body.classList.add('dashboard-active');
 
     const greet = $('welcome-greeting');
     if (greet) {
