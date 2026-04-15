@@ -8936,6 +8936,63 @@ function renderNotes(notes, filter = '') {
   }).join('');
 }
 
+  function noteToggleForm() {
+  const form = $('note-write-form');
+  const open = form.style.display === 'none' || !form.style.display;
+  form.style.display = open ? 'block' : 'none';
+  if (open) {
+    $('new-note-text').focus();
+    delete $('new-note-text').dataset.editIdx;
+    if ($('note-tag-input')) $('note-tag-input').value = '';
+    if ($('new-note-text')) $('new-note-text').value = '';
+    noteCharCount();
+  }
+}
+
+function noteCharCount() {
+  const ta  = $('new-note-text'); if (!ta) return;
+  const wc  = ta.value.trim().split(/\s+/).filter(Boolean).length;
+  const el  = $('note-char-count'); if (el) el.textContent = `${wc} word${wc!==1?'s':''}`;
+}
+
+function noteSearch() {
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  renderNotes(notes, '__search__');
+}
+
+function noteRenderTagBar(notes) {
+  const bar = $('note-tag-bar'); if (!bar) return;
+  const tags = [...new Set(notes.map(n => n.tag).filter(Boolean))];
+  if (!tags.length) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = [`<button onclick="noteFilterTag('',this)" style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font);font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" class="note-tag-filter active">All</button>`,
+    ...tags.map(t => `<button onclick="noteFilterTag('${esc(t)}',this)" style="padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font);font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" class="note-tag-filter">${esc(t)}</button>`)
+  ].join('');
+}
+
+function noteFilterTag(tag, btn) {
+  document.querySelectorAll('.note-tag-filter').forEach(b => {
+    b.style.background = 'var(--card)'; b.style.color = 'var(--muted)'; b.style.borderColor = 'var(--border)';
+  });
+  btn.style.background = 'linear-gradient(135deg,var(--accent),var(--accent2))';
+  btn.style.color = '#fff'; btn.style.borderColor = 'transparent';
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  renderNotes(notes, tag);
+}
+
+function noteEdit(idx) {
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+  const note  = notes[idx]; if (!note) return;
+  const ta    = $('new-note-text');
+  const form  = $('note-write-form');
+  if (ta) { ta.value = note.text; ta.dataset.editIdx = idx; }
+  if ($('note-tag-input')) $('note-tag-input').value = note.tag || '';
+  if (form) form.style.display = 'block';
+  noteCharCount();
+  ta?.focus();
+  form?.scrollIntoView({ behavior: 'smooth' });
+}
+  
 function toggleNote(idx) {
   const body  = $(`note-body-${idx}`);
   const arrow = $(`note-arrow-${idx}`);
