@@ -8953,31 +8953,33 @@ function editNote(idx) {
 function saveNote() {
   const ta   = $('new-note-text');
   const text = ta?.value.trim();
+  const tag  = $('note-tag-input')?.value.trim() || '';
   if (!text) { toast('Write something first!'); return; }
-  if (text.length > 1000) { toast('Note too long — max 1000 characters.'); return; }
 
   const raw     = localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]';
   const notes   = JSON.parse(raw);
-  const editIdx = ta.dataset.editIdx !== undefined && ta.dataset.editIdx !== '' ? parseInt(ta.dataset.editIdx) : -1;
+  const editIdx = (ta.dataset.editIdx !== undefined && ta.dataset.editIdx !== '')
+    ? parseInt(ta.dataset.editIdx) : -1;
 
   if (editIdx >= 0 && editIdx < notes.length) {
-    // Update existing note
     notes[editIdx].text = text;
+    notes[editIdx].tag  = tag;
     notes[editIdx].date = new Date().toLocaleString() + ' (edited)';
     delete ta.dataset.editIdx;
     toast('Note updated ✓');
   } else {
-    // New note
-    notes.unshift({ text, date: new Date().toLocaleString() });
+    notes.unshift({ text, tag, date: new Date().toLocaleString() });
     toast('Note saved ✓');
   }
 
-  const trimmed = notes.slice(0, 50);
+  const trimmed = notes.slice(0, 100);
   localStorage.setItem(`sivarr_notes_${S.sid}`, JSON.stringify(trimmed));
   ta.value = '';
-  const counter = $('note-char-count');
-  if (counter) counter.textContent = '0 / 1000';
+  if ($('note-tag-input')) $('note-tag-input').value = '';
+  noteCharCount();
+  $('note-write-form').style.display = 'none';
   renderNotes(trimmed);
+  noteRenderTagBar(trimmed);
 }
 
 function deleteNote(idx) {
