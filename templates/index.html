@@ -6876,6 +6876,54 @@ async function refreshTopics() {
   renderTopics(S.topics, S.weak);
 }
 
+// ═══════════════════════ SWIPE GESTURES ════════════════════════
+
+(function initSwipe() {
+  let startX = 0, startY = 0, startTime = 0;
+  const PANELS = ['chat','quiz','stats','courses','lab','flux','announcements','notes','studyplan'];
+  let currentIdx = 0;
+
+  function getCurrentIdx() {
+    const active = document.querySelector('.panel.active');
+    if (!active) return 0;
+    const id = active.id.replace('panel-','');
+    const i  = PANELS.indexOf(id);
+    return i >= 0 ? i : currentIdx;
+  }
+
+  document.addEventListener('touchstart', e => {
+    startX    = e.touches[0].clientX;
+    startY    = e.touches[0].clientY;
+    startTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    const dx   = e.changedTouches[0].clientX - startX;
+    const dy   = e.changedTouches[0].clientY - startY;
+    const dt   = Date.now() - startTime;
+    const absDx = Math.abs(dx), absDy = Math.abs(dy);
+
+    // Must be fast, horizontal, and significant
+    if (dt > 350 || absDx < 60 || absDy > absDx * 0.8) return;
+
+    // Don't swipe if inside a scrollable area scrolled horizontally
+    const target = e.target.closest('.chat-msgs,.quiz-wrap,.stats-wrap,.tab-bar,.lh-filter-bar,.sg-msg-wrap');
+    if (target) return;
+
+    currentIdx = getCurrentIdx();
+
+    if (dx < 0 && currentIdx < PANELS.length - 1) {
+      // Swipe left = next panel
+      nav(PANELS[currentIdx + 1], null);
+      currentIdx++;
+    } else if (dx > 0 && currentIdx > 0) {
+      // Swipe right = previous panel
+      nav(PANELS[currentIdx - 1], null);
+      currentIdx--;
+    }
+  }, { passive: true });
+})();
+  
 function toast(msg, ms=2500) {
   const el = $('toast'); el.textContent = msg;
   el.classList.add('show');
