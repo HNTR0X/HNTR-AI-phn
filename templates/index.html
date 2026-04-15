@@ -632,6 +632,15 @@ body.dashboard-active { overflow: hidden; }
 
 .btn-start:hover { opacity: .85; }
 
+  /* ── Markdown body in chat ── */
+.md-body strong { font-weight:700; }
+.md-body em     { font-style:italic; }
+.md-body ul     { padding-left:1.25rem;margin:.3rem 0; }
+.md-body li     { margin:.15rem 0; }
+.md-body pre    { white-space:pre-wrap; }
+.md-body code   { font-family:monospace; }
+.md-body br + br { margin-top:.3rem; display:block; content:''; }
+
 /* ── Study Plan ── */
 .sp-hrs-btn {
   flex:1; padding:7px 4px; border-radius:8px;
