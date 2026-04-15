@@ -4895,9 +4895,138 @@ async function clearWrong(idx) {
 
 // ═══════════════════════════ STATS ══════════════════════════════
 async function loadStats() {
-  // redirect to new progress panel
-  nav('progress', null);
-}
+  const r = await fetch(`/api/progress?sid=${S.sid}`);
+  const d = await r.json();
+
+  // Build sparkline SVG
+  const hist = d.quiz_history || [];
+  let sparkSVG = '';
+  if (hist.length > 1) {
+    const W = 300, H = 48, pad = 6;
+    const max = Math.max(...hist.map(q => q.pct), 1);
+    const pts = hist.map((q, i) => {
+      const x = pad + (i / (hist.length - 1)) * (W - pad * 2);
+      const y = H - pad - (q.pct / max) * (H - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const area = `${W - pad},${H} ${pad},${H}`;
+    sparkSVG = `
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:48px;margin-top:8px">
+        <defs>
+          <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4f6ef7" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="#4f6ef7" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${pts.join(' ')} ${area}" fill="url(#sg)"/>
+        <polyline points="${pts.join(' ')}" fill="none" stroke="#4f6ef7"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${pts[pts.length-1].split(',')[0]}"
+                cy="${pts[pts.length-1].split(',')[1]}"
+                r="3.5" fill="#7c3aed"/>
+      </svg>`;
+  }
+
+  // Topic mastery bars
+  const mastery = d.topic_mastery || {};
+  const masteryHTML = Object.entries(mastery).length
+    ? Object.entries(mastery).sort((a, b) => b[1] - a[1]).slice(0, 7).map(([t, pct]) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:.75rem;color:var(--muted);width:90px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span>
+          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .6s ease"></div>
+          </div>
+          <span style="font-size:.7rem;color:var(--muted);width:28px;text-align:right">${pct}%</span>
+        </div>`).join('')
+    : '<span style="font-size:.78rem;color:var(--muted)">Ask questions to build topic mastery.</span>';
+
+  // Badges
+  const badges  = d.badges || [];
+  const badgesHTML = badges.length
+    ? badges.map(b => `<span style="background:#4f6ef718;border:1px solid #4f6ef730;border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:700;color:var(--accent);font-family:var(--font);margin:2px;display:inline-block">🏅 ${esc(b)}</span>`).join('')
+    : '<span style="font-size:.78rem;color:var(--muted)">Complete quizzes to earn badges.</span>';
+
+  // Streak colour
+  const sc = (d.streak || 0) >= 7 ? '#f59e0b' : (d.streak || 0) >= 3 ? '#fb923c' : 'var(--muted)';
+  const xp  = d.xp || 0;
+  const lvl = d.level || 1;
+
+  $('sw').innerHTML = `
+
+    <!-- Hero -->
+    <div style="background:linear-gradient(135deg,#4f6ef718,#7c3aed12);border:1px solid #4f6ef730;border-radius:16px;padding:1.1rem;margin-bottom:.875rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <div>
+          <div style="font-family:var(--font);font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Level ${lvl}</div>
+          <div style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">${esc(d.name?.split(' ')[0] || 'Student')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.3rem">🔥</div>
+          <div style="font-family:var(--font);font-size:.82rem;font-weight:800;color:${sc}">${d.streak || 0} day streak</div>
+        </div>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${xp % 100}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .8s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-top:3px">
+        <span>${xp} XP</span><span>${100 - (xp % 100)} XP to Level ${lvl + 1}</span>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid" style="margin-bottom:.875rem">
+      <div class="stat-card" style="--sc:#4f6ef7"><div class="sc-label">Questions</div><div class="sc-val" style="color:#4f6ef7">${d.questions}</div></div>
+      <div class="stat-card" style="--sc:#7c3aed"><div class="sc-label">Quizzes</div><div class="sc-val" style="color:#7c3aed">${d.quizzes_taken}</div></div>
+      <div class="stat-card" style="--sc:#22c55e"><div class="sc-label">Avg Score</div><div class="sc-val" style="color:#22c55e">${d.avg_score}%</div></div>
+      <div class="stat-card" style="--sc:#f59e0b"><div class="sc-label">This Week</div><div class="sc-val" style="color:#f59e0b">${d.sessions_week || 0}</div></div>
+    </div>
+
+    <!-- Quiz trend -->
+    ${hist.length > 1 ? `
+    <div class="r-card" style="margin-bottom:.875rem">
+      <div class="r-title">📈 Quiz Score Trend <span style="color:var(--muted);font-weight:400;font-size:.72rem">(last ${hist.length})</span></div>
+      ${sparkSVG}
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-top:4px">
+        <span>Earliest</span><span>Latest: ${hist[hist.length-1]?.pct || 0}%</span>
+      </div>
+    </div>` : ''}
+
+    <!-- Topic mastery -->
+    <div class="r-card" style="margin-bottom:.875rem">
+      <div class="r-title">📚 Topic Mastery</div>
+      <div style="margin-top:.5rem">${masteryHTML}</div>
+    </div>
+
+    <!-- Weak areas -->
+    ${d.weak?.length ? `
+    <div style="background:linear-gradient(135deg,#ef444410,transparent);border:1px solid #ef444430;border-radius:12px;padding:.875rem;margin-bottom:.875rem" id="weak-section">
+      <div style="font-size:.72rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">⚠️ Needs Work</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.625rem">
+        ${d.weak.map(t => `<span style="background:#ef444415;border:1px solid #ef444430;border-radius:20px;padding:3px 10px;font-size:.72rem;color:var(--red);font-weight:600">${esc(t)}</span>`).join('')}
+      </div>
+      <button onclick="nav('chat',null);setTimeout(()=>{const ci=$('ci');if(ci){ci.value='Help me improve my understanding of ${esc(d.weak[0]||'')}';ci.focus();}},300)"
+        style="width:100%;background:none;border:1px solid #ef444440;border-radius:8px;padding:7px;color:var(--red);font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer">
+        Study weak topics with AI →
+      </button>
+    </div>` : ''}
+
+    <!-- Badges -->
+    <div class="r-card" style="margin-bottom:.875rem">
+      <div class="r-title">🏅 Badges</div>
+      <div style="margin-top:.5rem;display:flex;flex-wrap:wrap;gap:3px">${badgesHTML}</div>
+    </div>
+
+    <!-- Best topic -->
+    ${d.best_topic ? `
+    <div style="background:linear-gradient(135deg,#22c55e10,transparent);border:1px solid #22c55e30;border-radius:12px;padding:.875rem;display:flex;align-items:center;gap:10px">
+      <div style="font-size:1.4rem">⭐</div>
+      <div>
+        <div style="font-family:var(--font);font-size:.8rem;font-weight:700;color:var(--green)">Strongest Topic</div>
+        <div style="font-size:.78rem;color:var(--text);margin-top:1px">${esc(d.best_topic)}</div>
+      </div>
+    </div>` : ''}
+  `;
+  }
 
 async function loadProgress() {
   const r = await fetch(`/api/progress?sid=${S.sid}`);
