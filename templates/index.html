@@ -9002,24 +9002,6 @@ function toggleNote(idx) {
   if (arrow) arrow.textContent = open ? '▼' : '▲';
 }
 
-function editNote(idx) {
-  const raw   = localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]';
-  const notes = JSON.parse(raw);
-  const note  = notes[idx];
-  if (!note) return;
-
-  const ta = $('new-note-text');
-  if (ta) {
-    ta.value = note.text;
-    ta.focus();
-    const counter = $('note-char-count');
-    if (counter) counter.textContent = `${note.text.length} / 1000`;
-    // Store edit index
-    ta.dataset.editIdx = idx;
-    toast('Editing note — save to update it');
-  }
-}
-
 function saveNote() {
   const ta   = $('new-note-text');
   const text = ta?.value.trim();
