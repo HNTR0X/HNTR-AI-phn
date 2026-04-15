@@ -7205,16 +7205,37 @@ function parseLabResult(raw) {
 }
 
 function renderMarkdown(text) {
-  return text
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^[-•] (.+)$/gm, '<li style="margin:.2rem 0">$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li style="margin:.2rem 0">$2</li>')
-    .replace(/(<li[^>]*>.*<\/li>\n?)+/g, m => `<ul style="padding-left:1.1rem;margin:.3rem 0">${m}</ul>`)
+  if (!text) return '';
+  let h = text
+    // Code blocks first (before escaping)
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) =>
+      `<pre style="background:var(--border);border-radius:8px;padding:.75rem;overflow-x:auto;margin:.4rem 0;font-size:.82rem"><code>${esc(code.trim())}</code></pre>`)
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code style="background:var(--border);border-radius:4px;padding:1px 6px;font-size:.85em">$1</code>')
+    // Escape remaining HTML
+    .replace(/&(?!amp;|lt;|gt;|quot;)/g, '&amp;')
+    .replace(/<(?!pre|\/pre|code|\/code)/g, '&lt;')
+    // Headings
+    .replace(/^### (.+)$/gm, '<div style="font-family:var(--font);font-size:.9rem;font-weight:700;margin:.6rem 0 .2rem;color:var(--accent)">$1</div>')
+    .replace(/^## (.+)$/gm,  '<div style="font-family:var(--font);font-size:1rem;font-weight:800;margin:.7rem 0 .3rem">$1</div>')
+    .replace(/^# (.+)$/gm,   '<div style="font-family:var(--font);font-size:1.1rem;font-weight:800;margin:.75rem 0 .3rem">$1</div>')
+    // Bold + italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,         '<em>$1</em>')
+    // Bullet lists
+    .replace(/^[\-\*] (.+)$/gm, '<li style="margin:.15rem 0;padding-left:.25rem">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li style="margin:.15rem 0;padding-left:.25rem">$2</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, m =>
+      `<ul style="padding-left:1.25rem;margin:.35rem 0;list-style:disc">${m}</ul>`)
+    // Horizontal rule
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:.5rem 0">')
+    // Line breaks
     .replace(/\n{2,}/g, '<br><br>')
     .replace(/\n/g, '<br>');
-}
+  return h;
+  }
 
 async function runStudyHaven(input) {
   const file = input.files[0];
