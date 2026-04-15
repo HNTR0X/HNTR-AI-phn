@@ -6689,9 +6689,8 @@ const SNAV_ROUTE = {
   }, 300); },
   // Academics
   'courses':         () => { nav('courses', null); },
-  'materials':       () => { nav('courses', null); setTimeout(() => {
-    const matBtn = document.querySelector('.ctab[onclick*="materials"]'); if (matBtn) matBtn.click();
-  }, 350); },
+  'materials':       () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
+  'courses':         () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
   'announcements':   () => nav('announcements', null),
   // Planner
   'tasks':           () => nav('flux', null),
