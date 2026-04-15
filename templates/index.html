@@ -5519,6 +5519,7 @@ async function generateStudyPlan() {
     }
 
     const data = await res.json();
+    localStorage.setItem(`sivarr_sp_${S.sid}`, JSON.stringify(data));
     renderStudyPlan(data);
 
   } catch(e) {
