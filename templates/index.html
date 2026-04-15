@@ -4522,7 +4522,7 @@ function getSavedSession() {
 // Add logout button handler
 function logout() {
   clearSession();
-  document.classlist.body.remove('dashboard-active');
+  document.body.classList.remove('dashboard-active');
   location.reload();
 }
 
