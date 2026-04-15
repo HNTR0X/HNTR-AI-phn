@@ -52,7 +52,7 @@ log = logging.getLogger("sivarr")
 #  CONFIGURATION
 # ═══════════════════════════════════════════════════════════════
 
-VERSION       = "4.2"
+VERSION       = "3"
 CACHE_EXPIRY  = 30
 HISTORY_LIMIT = 40
 BANK_LIMIT    = 20
@@ -89,8 +89,8 @@ def save_users(users: dict):
     shutil.move(tmp, str(USERS_PATH))
 
 # ── Rate limiting config ──────────────────────────────────────
-RATE_LIMIT_CHAT     = int(os.environ.get("RATE_LIMIT_CHAT", 30))      # max chat msgs per window
-RATE_LIMIT_QUIZ     = int(os.environ.get("RATE_LIMIT_QUIZ", 20))      # max quiz questions per window
+RATE_LIMIT_CHAT     = int(os.environ.get("RATE_LIMIT_CHAT", 20))      # max chat msgs per window
+RATE_LIMIT_QUIZ     = int(os.environ.get("RATE_LIMIT_QUIZ", 5))      # max quiz questions per window
 RATE_LIMIT_UPLOAD   = int(os.environ.get("RATE_LIMIT_UPLOAD", 5))     # max uploads per window
 RATE_LIMIT_WINDOW   = int(os.environ.get("RATE_LIMIT_WINDOW", 60))    # window in seconds
 RATE_LIMIT_LOGIN    = int(os.environ.get("RATE_LIMIT_LOGIN", 10))     # max login attempts per window
