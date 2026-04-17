@@ -674,8 +674,8 @@ app = FastAPI(title="Sivarr AI", version=VERSION)
 
 from fastapi.staticfiles import StaticFiles
 app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/css", StaticFiles(directory="css"), name="css")
-app.mount("/js",  StaticFiles(directory="js"),  name="js")
+app.mount("/css",    StaticFiles(directory="css"),    name="css")
+app.mount("/js",     StaticFiles(directory="js"),     name="js")
 
 app.add_middleware(
     CORSMiddleware,
@@ -785,7 +785,7 @@ class AdminLoginRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return Path("/index.html").read_text()
+    return Path("templates/index.html").read_text()
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page():
