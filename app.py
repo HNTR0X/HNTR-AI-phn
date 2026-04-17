@@ -674,6 +674,8 @@ app = FastAPI(title="Sivarr AI", version=VERSION)
 
 from fastapi.staticfiles import StaticFiles
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/css", StaticFiles(directory="css"), name="css")
+app.mount("/js",  StaticFiles(directory="js"),  name="js")
 
 app.add_middleware(
     CORSMiddleware,
