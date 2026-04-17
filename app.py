@@ -783,7 +783,7 @@ class AdminLoginRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return Path("templates/index.html").read_text()
+    return Path("/index.html").read_text()
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page():
