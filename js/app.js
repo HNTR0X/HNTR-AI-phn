@@ -1,5 +1,4 @@
 
- <script>
 // ═══════════════════════════ STATE ═══════════════════════════
 const S = {
   sid: null, name: '', matric: '', diff: 'medium',
@@ -5073,7 +5072,4 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
 }
-  
-
-</script>
 
