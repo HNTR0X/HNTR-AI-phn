@@ -1,4 +1,4 @@
-<style>
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -2354,6 +2354,3 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   .snav-section-btn:hover {
   background: rgba(255,255,255,0.04);
   }
-
-</style>
-
