@@ -282,10 +282,15 @@ body.dashboard-active { overflow: hidden; }
 /* Body layout */
 .body {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 200px 1fr 0px;
   height: calc(100vh - 56px);
   overflow: hidden;
   min-height: 0;
+  transition: grid-template-columns .3s cubic-bezier(.4,0,.2,1);
+}
+
+.body.right-open {
+  grid-template-columns: 200px 1fr 300px;
 }
 
 /* ── Sidebar ─────────────────────────────────────────── */
