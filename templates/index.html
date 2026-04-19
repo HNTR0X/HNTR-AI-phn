@@ -532,6 +532,14 @@
           <div class="stat-row"><span class="sl">Sessions</span><span class="sv" id="sq-s">0</span></div>
           <div class="stat-row"><span class="sl">Revision</span><span class="sv" id="sq-w">0</span></div>
         </div>
+        <div style="padding:6px 8px;display:flex;flex-direction:column;gap:4px;border-top:1px solid rgba(255,255,255,0.05);margin-top:4px">
+  <div style="font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:2px 2px 4px">Quick View →</div>
+  <button onclick="openRightPanel('progress')" style="width:100%;padding:5px 8px;border-radius:7px;background:none;border:1px solid rgba(255,255,255,0.07);color:var(--muted);font-size:.72rem;cursor:pointer;text-align:left;transition:all .15s;font-family:var(--font-body)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='var(--muted)'">📊 Progress</button>
+  <button onclick="openRightPanel('topics')" style="width:100%;padding:5px 8px;border-radius:7px;background:none;border:1px solid rgba(255,255,255,0.07);color:var(--muted);font-size:.72rem;cursor:pointer;text-align:left;transition:all .15s;font-family:var(--font-body)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='var(--muted)'">📚 Topics</button>
+  <button onclick="openRightPanel('wrong')" style="width:100%;padding:5px 8px;border-radius:7px;background:none;border:1px solid rgba(255,255,255,0.07);color:var(--muted);font-size:.72rem;cursor:pointer;text-align:left;transition:all .15s;font-family:var(--font-body)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='var(--muted)'">📖 Revision</button>
+  <button onclick="openRightPanel('notes')" style="width:100%;padding:5px 8px;border-radius:7px;background:none;border:1px solid rgba(255,255,255,0.07);color:var(--muted);font-size:.72rem;cursor:pointer;text-align:left;transition:all .15s;font-family:var(--font-body)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='var(--muted)'">📓 Notes</button>
+  <button onclick="openRightPanel('announcements')" style="width:100%;padding:5px 8px;border-radius:7px;background:none;border:1px solid rgba(255,255,255,0.07);color:var(--muted);font-size:.72rem;cursor:pointer;text-align:left;transition:all .15s;font-family:var(--font-body)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='var(--muted)'">📢 Notices</button>
+        </div>
       </div>
 
       <!-- User footer -->
