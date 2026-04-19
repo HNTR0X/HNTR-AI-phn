@@ -2677,6 +2677,18 @@ const SNAV_ROUTE = {
 let SNAV_ACTIVE = 'chat';
 
 function snavSelect(itemId, sectionId, btnEl) {
+  // Alt+click = open in right panel instead of navigating
+  if (window._altHeld) {
+    const rightMap = {
+      'progress': 'progress', 'weak-areas': 'wrong',
+      'notes': 'notes', 'announcements': 'announcements',
+      'recommendations': 'topics',
+    };
+    if (rightMap[itemId]) { openRightPanel(rightMap[itemId]); return; }
+  }
+  // ... rest of existing snavSelect code
+
+function snavSelect(itemId, sectionId, btnEl) {
   // Clear all active states
   document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
   const dash = $('snav-dash'); if (dash) dash.classList.remove('active');
