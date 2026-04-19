@@ -1378,6 +1378,66 @@ body.dashboard-active { overflow: hidden; }
   /* ── Other panels ── */
   .quiz-wrap  { flex: 1; overflow-y: auto; padding: 1rem; }
   .stats-wrap { flex: 1; overflow-y: auto; padding: 1rem; }
+  /* ── New panels on mobile ── */
+  #panel-progress    { flex: 1; overflow-y: auto; }
+  #panel-goals       { flex: 1; overflow-y: auto; }
+  #panel-documenthub { flex: 1; overflow: hidden; }
+  #panel-learninghub { flex: 1; overflow-y: auto; }
+  #panel-studygroups { flex: 1; overflow: hidden; }
+  #panel-pomodoro    { flex: 1; overflow-y: auto; }
+  #panel-contenthub  { flex: 1; overflow-y: auto; }
+  #panel-settings    { flex: 1; overflow-y: auto; }
+  #panel-studyplan   { flex: 1; overflow-y: auto; }
+
+  /* ── Fix tab bar height calculation ── */
+  .body {
+    height: calc(100dvh - 56px - 52px);
+  }
+
+  /* ── Touch-friendly tab pills ── */
+  .tab-pill {
+    padding: 8px 16px;
+    font-size: .8rem;
+  }
+
+  /* ── Goals on mobile ── */
+  .gl-add-form { border-radius: 10px; }
+
+  /* ── Document hub on mobile ── */
+  .dh-toolbar { gap: 2px; padding: .4rem .5rem; }
+  .dh-tool-btn { width: 30px; height: 30px; font-size: .78rem; }
+
+  /* ── Study groups chat on mobile ── */
+  .sg-msg-wrap { padding: .625rem; }
+
+  /* ── Pomodoro on mobile ── */
+  .pom-ring { width: 180px; height: 180px; }
+  .pom-time { font-size: 2rem; }
+
+  /* ── Learning hub grid on mobile ── */
+  #lh-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
+  .lh-course-thumb { height: 90px; }
+  .lh-course-title { font-size: .8rem; }
+
+  /* ── Content hub on mobile ── */
+  .ch-metric-val { font-size: 1.3rem; }
+  #ch-metrics-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
+
+  /* ── Settings on mobile ── */
+  .st-section-body { padding: .75rem; }
+  .st-accent-dot { width: 28px; height: 28px; }
+
+  /* ── Study plan on mobile ── */
+  .sp-hrs-btn { padding: 7px 2px; font-size: .72rem; }
+
+  /* ── Progress dashboard on mobile ── */
+  .pr-stat-row { grid-template-columns: 1fr 1fr; }
+  .pr-stat-val { font-size: 1.3rem; }
+
+  /* ── Create New modal on mobile ── */
+  .cn-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
+  .cn-item { padding: 10px; }
+  .cn-item-label { font-size: .78rem; }
   #panel-more { flex: 1; overflow-y: auto; }
 
   /* ── Login ── */
