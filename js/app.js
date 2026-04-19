@@ -2602,27 +2602,31 @@ function navTab(name, btn) {
   }
 
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const desktopBtn = document.querySelector(`.nav-btn[onclick*="'${name}'"]`);
-  if (desktopBtn) desktopBtn.classList.add('active');
 
-  if (name === 'stats')         loadStats();
-  if (name === 'more')          syncMore();
-  if (name === 'leaderboard')   loadLeaderboard();
-  if (name === 'notes')         loadNotes();
-  if (name === 'flux')     loadStudyHelp();
-  if (name === 'courses')       loadClasses();
-  if (name === 'announcements') loadAllAnnouncements();
-  if (name === 'studyplan') { const d = new Date(); d.setDate(d.getDate()+14); $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]); }
-  if (name === 'contenthub') chInit();
-  if (name === 'settings')   stInit();
-  if (name === 'progress')    loadProgress();
-  if (name === 'goals')       glLoad();
-  if (name === 'documenthub') dhInit();
-  if (name === 'learninghub') lhInit();
-  if (name === 'studygroups') sgInit();
-  if (name === 'pomodoro')    pomInit();
+  // Sync sidebar active state
+  syncSnavFromPanel(name);
+
+  // Trigger panel init functions — same as nav()
+  if (name === 'stats')          loadStats();
+  if (name === 'progress')       loadProgress();
+  if (name === 'notes')          loadNotes();
+  if (name === 'flux')           loadStudyHelp();
+  if (name === 'courses')        loadClasses();
+  if (name === 'announcements')  loadAllAnnouncements();
+  if (name === 'goals')          glLoad();
+  if (name === 'documenthub')    dhInit();
+  if (name === 'learninghub')    lhInit();
+  if (name === 'studygroups')    sgInit();
+  if (name === 'pomodoro')       pomInit();
+  if (name === 'contenthub')     chInit();
+  if (name === 'settings')       stInit();
+  if (name === 'studyplan') {
+    $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]);
+    setTimeout(spLoadSaved, 100);
+  }
   if (name === 'quiz' && !S.quizActive) {
-    const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
+    const qd = $('qd-label');
+    if (qd) qd.textContent = S.diff.charAt(0).toUpperCase() + S.diff.slice(1);
   }
 }
 
