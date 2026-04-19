@@ -2408,6 +2408,167 @@ function pomInit() {
   document.querySelectorAll('.pom-mode-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   pomUpdateStatDisplay();
   }
+
+// ═══════════════════════ RIGHT SIDEBAR ══════════════════════
+
+let RIGHT_OPEN    = false;
+let RIGHT_CONTENT = null;
+
+const RIGHT_PANELS = {
+  progress: {
+    title: '📊 Progress',
+    load: async () => {
+      const r = await fetch(`/api/progress?sid=${S.sid}`);
+      const d = await r.json();
+      const streak = d.streak || 0;
+      const sc = streak >= 7 ? '#f59e0b' : streak >= 3 ? '#fb923c' : 'var(--muted)';
+      return `
+        <div style="background:linear-gradient(135deg,#4f6ef718,#7c3aed12);border:1px solid #4f6ef730;border-radius:12px;padding:1rem;margin-bottom:.75rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+            <div style="font-family:var(--font);font-size:.78rem;font-weight:700">Level ${d.level||1}</div>
+            <div style="font-size:.75rem;color:${sc};font-weight:700">🔥 ${streak} day streak</div>
+          </div>
+          <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${(d.xp||0)%100}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px"></div>
+          </div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:3px">${d.xp||0} XP</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem">
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;text-align:center">
+            <div style="font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--accent)">${d.questions}</div>
+            <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Questions</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;text-align:center">
+            <div style="font-family:var(--font);font-size:1.3rem;font-weight:800;color:#22c55e">${d.avg_score}%</div>
+            <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Avg Score</div>
+          </div>
+        </div>
+        ${d.weak?.length ? `
+        <div style="background:#ef444410;border:1px solid #ef444430;border-radius:10px;padding:.75rem">
+          <div style="font-size:.7rem;font-weight:700;color:var(--red);margin-bottom:.4rem">⚠️ Needs Work</div>
+          ${d.weak.map(t=>`<span style="background:#ef444415;border:1px solid #ef444430;border-radius:20px;padding:2px 8px;font-size:.68rem;color:var(--red);display:inline-block;margin:2px">${esc(t)}</span>`).join('')}
+        </div>` : ''}
+        ${d.best_topic ? `
+        <div style="background:#22c55e10;border:1px solid #22c55e30;border-radius:10px;padding:.75rem;margin-top:.5rem;display:flex;align-items:center;gap:8px">
+          <span style="font-size:1.2rem">⭐</span>
+          <div>
+            <div style="font-size:.7rem;color:var(--green);font-weight:700">Strongest</div>
+            <div style="font-size:.78rem">${esc(d.best_topic)}</div>
+          </div>
+        </div>` : ''}`;
+    }
+  },
+
+  topics: {
+    title: '📚 Topics Studied',
+    load: async () => {
+      const r = await fetch(`/api/progress?sid=${S.sid}`);
+      const d = await r.json();
+      const topics = d.topic_mastery || {};
+      if (!Object.keys(topics).length)
+        return '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1rem">No topics yet — start chatting!</div>';
+      return Object.entries(topics).sort((a,b)=>b[1]-a[1]).map(([t,pct])=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:.75rem;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</span>
+          <div style="width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px"></div>
+          </div>
+          <span style="font-size:.68rem;color:var(--muted);width:28px;text-align:right;flex-shrink:0">${pct}%</span>
+        </div>`).join('');
+    }
+  },
+
+  wrong: {
+    title: '📖 Revision List',
+    load: async () => {
+      const r = await fetch(`/api/wrong?sid=${S.sid}`);
+      const d = await r.json();
+      const wrongs = d.wrong_answers || [];
+      if (!wrongs.length)
+        return '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1rem">No wrong answers yet — keep quizzing!</div>';
+      return wrongs.slice(-10).reverse().map((w,i)=>`
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;margin-bottom:.5rem">
+          <div style="font-size:.78rem;font-weight:600;margin-bottom:3px">${esc(w.question||'').slice(0,80)}${(w.question||'').length>80?'...':''}</div>
+          <div style="font-size:.7rem;color:var(--muted)">✅ <span style="color:var(--green);font-weight:600">${esc(w.correct)}</span> · ${esc(w.topic||'')}</div>
+        </div>`).join('');
+    }
+  },
+
+  notes: {
+    title: '📓 Recent Notes',
+    load: async () => {
+      const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+      if (!notes.length)
+        return '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1rem">No notes yet!</div>';
+      return notes.slice(0,5).map(n=>`
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;margin-bottom:.5rem;cursor:pointer" onclick="nav('notes',null);closeRightPanel()">
+          ${n.tag ? `<span style="background:#4f6ef715;border:1px solid #4f6ef730;border-radius:10px;padding:1px 7px;font-size:.65rem;color:var(--accent);font-weight:700;display:inline-block;margin-bottom:4px">${esc(n.tag)}</span>` : ''}
+          <div style="font-size:.8rem;font-weight:600;margin-bottom:2px">${esc(n.text.split('\n')[0].slice(0,60))}</div>
+          <div style="font-size:.68rem;color:var(--muted)">${n.date}</div>
+        </div>`).join('');
+    }
+  },
+
+  announcements: {
+    title: '📢 Announcements',
+    load: async () => {
+      try {
+        const r = await fetch('/api/announcements/active');
+        const d = await r.json();
+        const anns = d.announcements || [];
+        if (!anns.length)
+          return '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1rem">No announcements.</div>';
+        return anns.slice(0,5).map(a=>`
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem;margin-bottom:.5rem">
+            <div style="font-size:.8rem;font-weight:600;margin-bottom:3px">${esc(a.text||a.message||'').slice(0,100)}</div>
+            <div style="font-size:.68rem;color:var(--muted)">${esc(a.author||'')} · ${esc(a.date||'')}</div>
+          </div>`).join('');
+      } catch(e) { return '<div style="color:var(--muted);font-size:.82rem">Could not load.</div>'; }
+    }
+  },
+};
+
+async function openRightPanel(key) {
+  const panel = RIGHT_PANELS[key];
+  if (!panel) return;
+  RIGHT_CONTENT = key;
+
+  const title = $('right-panel-title');
+  const body  = $('right-panel-body');
+  if (title) title.textContent = panel.title;
+  if (body)  body.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--muted)"><div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div><div style="font-size:.78rem">Loading...</div></div>';
+
+  // Open panel
+  $('body-layout').classList.add('right-open');
+  RIGHT_OPEN = true;
+  updateRightToggleBtn();
+
+  try {
+    const html = await panel.load();
+    if (body) body.innerHTML = html;
+  } catch(e) {
+    if (body) body.innerHTML = '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1rem">Could not load content.</div>';
+  }
+}
+
+function toggleRightPanel() {
+  if (RIGHT_OPEN) closeRightPanel();
+  else if (RIGHT_CONTENT) openRightPanel(RIGHT_CONTENT);
+  else openRightPanel('progress'); // default
+}
+
+function closeRightPanel() {
+  $('body-layout').classList.remove('right-open');
+  RIGHT_OPEN = false;
+  updateRightToggleBtn();
+}
+
+function updateRightToggleBtn() {
+  const btn = $('right-toggle-btn');
+  if (!btn) return;
+  btn.textContent  = RIGHT_OPEN ? '❯' : '❮';
+  btn.title        = RIGHT_OPEN ? 'Close panel' : 'Open side panel';
+}
   
 // ═══════════════════════════ DIFFICULTY ═════════════════════════
 function openDiff() { $('diff-modal').classList.add('open'); }
