@@ -198,35 +198,56 @@
   </header>
 
   <!-- Scrollable Tab Bar (mobile only) -->
-  <div class="tab-bar" id="tab-bar">
-    <button class="tab-pill active" id="tab-chat" onclick="navTab('chat', this)">
-      <span class="tp-icon">💬</span> AI Chat
-    </button>
-    <button class="tab-pill" id="tab-quiz" onclick="navTab('quiz', this)">
-      <span class="tp-icon">📝</span> Quiz
-    </button>
-    <button class="tab-pill" id="tab-courses" onclick="navTab('courses', this)">
-      <span class="tp-icon">🏫</span> Classes
-    </button>
-    <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements', this)">
-      <span class="tp-icon">📢</span> Notices
-    </button>
-    <button class="tab-pill" id="tab-stats" onclick="navTab('stats', this)">
-      <span class="tp-icon">📊</span> Progress
-    </button>
-    <button class="tab-pill" id="tab-notes" onclick="navTab('notes', this)">
-      <span class="tp-icon">📓</span> Notes
-    </button>
-    <button class="tab-pill" id="tab-flux" onclick="navTab('flux', this)">
-      <span class="tp-icon">🗂️</span> Flux
-    </button>
-    <button class="tab-pill" id="tab-lab" onclick="navTab('lab', this)">
-      <span class="tp-icon">🧪</span> Study Deck
-    </button>
-    <button class="tab-pill" id="tab-more" onclick="navTab('more', this)">
-      <span class="tp-icon">💡</span> More
-    </button>
-  </div>
+<div class="tab-bar" id="tab-bar">
+  <button class="tab-pill active" id="tab-chat" onclick="navTab('chat',this)">
+    <span class="tp-icon">💬</span> Chat
+  </button>
+  <button class="tab-pill" id="tab-quiz" onclick="navTab('quiz',this)">
+    <span class="tp-icon">📝</span> Quiz
+  </button>
+  <button class="tab-pill" id="tab-progress" onclick="navTab('progress',this)">
+    <span class="tp-icon">📊</span> Progress
+  </button>
+  <button class="tab-pill" id="tab-courses" onclick="navTab('courses',this)">
+    <span class="tp-icon">🏫</span> Classes
+  </button>
+  <button class="tab-pill" id="tab-studyplan" onclick="navTab('studyplan',this)">
+    <span class="tp-icon">🗺️</span> Study Plan
+  </button>
+  <button class="tab-pill" id="tab-notes" onclick="navTab('notes',this)">
+    <span class="tp-icon">📓</span> Notes
+  </button>
+  <button class="tab-pill" id="tab-lab" onclick="navTab('lab',this)">
+    <span class="tp-icon">🧪</span> Study Deck
+  </button>
+  <button class="tab-pill" id="tab-flux" onclick="navTab('flux',this)">
+    <span class="tp-icon">🗂️</span> Tasks
+  </button>
+  <button class="tab-pill" id="tab-goals" onclick="navTab('goals',this)">
+    <span class="tp-icon">🎯</span> Goals
+  </button>
+  <button class="tab-pill" id="tab-documenthub" onclick="navTab('documenthub',this)">
+    <span class="tp-icon">📄</span> Docs
+  </button>
+  <button class="tab-pill" id="tab-learninghub" onclick="navTab('learninghub',this)">
+    <span class="tp-icon">🎓</span> Learn
+  </button>
+  <button class="tab-pill" id="tab-studygroups" onclick="navTab('studygroups',this)">
+    <span class="tp-icon">👥</span> Groups
+  </button>
+  <button class="tab-pill" id="tab-pomodoro" onclick="navTab('pomodoro',this)">
+    <span class="tp-icon">⏱</span> Timer
+  </button>
+  <button class="tab-pill" id="tab-contenthub" onclick="navTab('contenthub',this)">
+    <span class="tp-icon">🧠</span> Content
+  </button>
+  <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements',this)">
+    <span class="tp-icon">📢</span> Notices
+  </button>
+  <button class="tab-pill" id="tab-settings" onclick="navTab('settings',this)">
+    <span class="tp-icon">⚙️</span> Settings
+  </button>
+</div>
 
   <!-- Body -->
   <div class="body">
