@@ -1,4 +1,3 @@
-
 // ═══════════════════════════ STATE ═══════════════════════════
 const S = {
   sid: null, name: '', matric: '', diff: 'medium',
@@ -5248,7 +5247,9 @@ async function shareResult(score, topic) {
   } catch(e) {
     toast('Could not create share link — try again.');
   }
-  // Track Alt key for right panel shortcut
+}
+
+// Track Alt key for right panel shortcut
 window._altHeld = false;
 document.addEventListener('keydown', e => { if (e.key === 'Alt') window._altHeld = true; });
 document.addEventListener('keyup',   e => { if (e.key === 'Alt') window._altHeld = false; });
