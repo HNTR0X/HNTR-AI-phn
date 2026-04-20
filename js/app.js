@@ -111,6 +111,29 @@ function togglePwVis(inputId, btnId) {
   if (btn) btn.textContent = inp.type === 'password' ? '👁' : '🙈';
 }
 
+// Add this right after the S state object definition
+function updateSBStats() {
+  $('sq-q').textContent  = S.stats.questions;
+  $('sq-qz').textContent = S.stats.quizzes;
+  $('sq-s').textContent  = S.stats.sessions;
+  $('sq-w').textContent  = S.stats.wrong || 0;
+}
+
+function renderTopics(topics, weak) {
+  const html = !topics.length
+    ? `<span style="color:var(--muted);font-size:.78rem">Ask questions to build your topic list</span>`
+    : topics.map(t => `<span class="topic-tag ${weak.includes(t)?'weak':''}">${esc(t)}</span>`).join('');
+  const el  = $('topics-list');   if (el)  el.innerHTML  = html;
+  const elm = $('topics-list-m'); if (elm) elm.innerHTML = html;
+}
+
+async function refreshTopics() {
+  const r = await fetch(`/api/progress?sid=${S.sid}`);
+  const d = await r.json();
+  S.topics = Object.keys(d.topics); S.weak = d.weak;
+  renderTopics(S.topics, S.weak);
+}
+
 async function doLogin(prefillName, prefillMatric) {
   const err = $('login-err');
   const btn = $('login-btn');
