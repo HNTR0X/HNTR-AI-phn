@@ -2687,7 +2687,7 @@ function snavSelect(itemId, sectionId, btnEl) {
   }
   // ... rest of existing snavSelect code
 
-function snavSelect(itemId, sectionId, btnEl) {
+ {
   // Clear all active states
   document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
   const dash = $('snav-dash'); if (dash) dash.classList.remove('active');
