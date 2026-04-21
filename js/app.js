@@ -111,29 +111,6 @@ function togglePwVis(inputId, btnId) {
   if (btn) btn.textContent = inp.type === 'password' ? '👁' : '🙈';
 }
 
-// Add this right after the S state object definition
-function updateSBStats() {
-  $('sq-q').textContent  = S.stats.questions;
-  $('sq-qz').textContent = S.stats.quizzes;
-  $('sq-s').textContent  = S.stats.sessions;
-  $('sq-w').textContent  = S.stats.wrong || 0;
-}
-
-function renderTopics(topics, weak) {
-  const html = !topics.length
-    ? `<span style="color:var(--muted);font-size:.78rem">Ask questions to build your topic list</span>`
-    : topics.map(t => `<span class="topic-tag ${weak.includes(t)?'weak':''}">${esc(t)}</span>`).join('');
-  const el  = $('topics-list');   if (el)  el.innerHTML  = html;
-  const elm = $('topics-list-m'); if (elm) elm.innerHTML = html;
-}
-
-async function refreshTopics() {
-  const r = await fetch(`/api/progress?sid=${S.sid}`);
-  const d = await r.json();
-  S.topics = Object.keys(d.topics); S.weak = d.weak;
-  renderTopics(S.topics, S.weak);
-}
-
 async function doLogin(prefillName, prefillMatric) {
   const err = $('login-err');
   const btn = $('login-btn');
@@ -2708,9 +2685,7 @@ function snavSelect(itemId, sectionId, btnEl) {
     };
     if (rightMap[itemId]) { openRightPanel(rightMap[itemId]); return; }
   }
-  // ... rest of existing snavSelect code
 
-function snavSelect(itemId, sectionId, btnEl) {
   // Clear all active states
   document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
   const dash = $('snav-dash'); if (dash) dash.classList.remove('active');
@@ -3730,138 +3705,11 @@ async function submitExam() {
   EXAM_STATE.examId = null;
 }
 
-function renderExamResults(d, container) {
-  const wrap = container || $('exam-fullscreen-overlay');
-  if (!wrap) return;
-  wrap.style.display = 'flex';
 
-  const grade  = d.grade || 'F';
-  const score  = d.score || 0;
-  const emoji  = score >= 70 ? '🏆' : score >= 50 ? '👍' : '📚';
-  const msg    = score >= 70 ? 'Excellent work!' : score >= 50 ? 'Good effort!' : 'Keep practising!';
-  const gColor = grade==='A'?'#22c55e':grade==='B'?'#4f6ef7':grade==='C'?'#f59e0b':'#ef4444';
 
-  wrap.innerHTML = `
-    <div class="exam-results-wrap">
-      <div style="width:100%;max-width:600px">
 
-        <!-- Score card -->
-        <div style="background:#13151c;border:1px solid rgba(255,255,255,0.08);border-radius:20px;
-                    padding:2rem;text-align:center;margin-bottom:1.25rem">
-          <div style="font-size:3rem;margin-bottom:.5rem">${emoji}</div>
-          <div style="font-family:var(--font);font-size:3.5rem;font-weight:800;line-height:1;
-                      background:linear-gradient(135deg,var(--accent),var(--accent2));
-                      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
-            ${score}%
-          </div>
-          <div style="font-size:1.3rem;font-weight:800;margin:.4rem 0;color:${gColor}">Grade ${grade}</div>
-          <div style="color:#9ca3af;font-size:.88rem;margin-bottom:1rem">${msg}</div>
-          <div style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap">
-            <div style="text-align:center">
-              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#e5e7eb">${d.correct||0}/${d.total||0}</div>
-              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Correct</div>
-            </div>
-            ${d.time_taken ? `<div style="text-align:center">
-              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#e5e7eb">${d.time_taken}</div>
-              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Time</div>
-            </div>` : ''}
-            ${(d.tab_switches||EXAM_STATE?.tabSwitches||0) > 0 ? `<div style="text-align:center">
-              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#ef4444">${d.tab_switches||EXAM_STATE?.tabSwitches||0}</div>
-              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Tab switches</div>
-            </div>` : ''}
-          </div>
-        </div>
 
-        <!-- Question breakdown -->
-        <div style="font-family:var(--font);font-weight:700;font-size:.9rem;color:#e5e7eb;margin-bottom:.75rem">
-          Question Breakdown
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem">
-          ${(d.breakdown||[]).map((b, i) => `
-            <div style="background:${b.is_correct?'#22c55e0d':'#ef44440d'};
-                        border:1px solid ${b.is_correct?'#22c55e25':'#ef444425'};
-                        border-radius:12px;padding:12px 14px">
-              <div style="display:flex;align-items:flex-start;gap:8px">
-                <span style="font-size:.9rem;flex-shrink:0">${b.is_correct?'✅':'❌'}</span>
-                <div style="flex:1">
-                  <div style="font-size:.84rem;font-weight:600;color:#e5e7eb;margin-bottom:4px">
-                    Q${i+1}: ${esc(b.question)}
-                  </div>
-                  ${!b.is_correct ? `
-                    <div style="font-size:.75rem;color:#9ca3af">
-                      Your answer: <span style="color:#ef4444;font-weight:600">${b.your_answer||'Not answered'}</span>
-                      &nbsp;·&nbsp; Correct: <span style="color:#22c55e;font-weight:600">${b.correct}</span>
-                    </div>
-                    ${b.explanation ? `<div style="font-size:.75rem;color:#6b7280;margin-top:4px;font-style:italic">💡 ${esc(b.explanation)}</div>` : ''}
-                  ` : ''}
-                </div>
-              </div>
-            </div>`).join('')}
-        </div>
 
-        <button onclick="closeExamMode()"
-          style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;
-                 border-radius:10px;font-family:var(--font);font-weight:700;font-size:.9rem;cursor:pointer">
-          ← Back to Courses
-        </button>
-      </div>
-    </div>`;
-}
-
-async function viewMyExamResult(examId) {
-  // Show results in the fullscreen overlay
-  let overlay = $('exam-fullscreen-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'exam-fullscreen-overlay';
-    overlay.className = 'exam-fullscreen';
-    document.body.appendChild(overlay);
-  }
-  overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
-    <div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div>
-    <div style="color:#9ca3af;font-size:.88rem">Loading results...</div>
-  </div>`;
-  overlay.style.display = 'flex';
-
-  try {
-    const r = await fetch(`/api/exam/student-results?sid=${encodeURIComponent(S.sid)}`);
-    const d = await r.json();
-    const result = (d.results || []).find(res => res.exam_id === examId);
-    if (!result) {
-      overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
-        <div style="font-size:2rem;margin-bottom:.5rem">📝</div>
-        <div style="color:#9ca3af;margin-bottom:1.5rem">No submission found for this exam.</div>
-        <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
-      </div>`;
-      return;
-    }
-    renderExamResults(result, overlay);
-  } catch {
-    overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
-      <div style="font-size:2rem;margin-bottom:.5rem">⚠️</div>
-      <div style="color:#9ca3af;margin-bottom:1.5rem">Could not load results.</div>
-      <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
-    </div>`;
-  }
-}
-
-async function enterExamById() {
-  const inp = $('exam-id-input');
-  const err = $('exam-entry-err');
-  const btn = $('exam-entry-btn');
-  const id  = inp?.value.trim();
-
-  if (!id) { if (err) err.textContent = 'Enter an Exam ID.'; return; }
-  if (err) err.textContent = '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
-
-  try {
-    await launchExamMode(id, CURRENT_CLASS?.code || '');
-  } catch(e) {
-    if (err) err.textContent = e.message || 'Could not start exam.';
-  }
-  if (btn) { btn.disabled = false; btn.textContent = '▶ Start Exam'; }
-}
 
 function renderExamResults(d) {
   const takeView = $('exam-take-view');
@@ -5276,4 +5124,4 @@ async function shareResult(score, topic) {
 window._altHeld = false;
 document.addEventListener('keydown', e => { if (e.key === 'Alt') window._altHeld = true; });
 document.addEventListener('keyup',   e => { if (e.key === 'Alt') window._altHeld = false; });
-}
+
