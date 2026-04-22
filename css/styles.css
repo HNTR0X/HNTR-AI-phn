@@ -1171,7 +1171,7 @@ body.dashboard-active { overflow: hidden; }
 .right-close-btn:hover { background: var(--card); color: var(--text); }
 
 .right-panel-body {
-  padding-bottom: 0;
+  padding-bottom: 0px;
 }
 
 /* Hide on mobile */
