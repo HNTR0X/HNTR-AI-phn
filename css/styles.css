@@ -364,7 +364,10 @@ body.dashboard-active { overflow: hidden; }
   transition: max-height .2s ease, opacity .15s ease;
   padding-left: 10px;
 }
-.snav-items.open { opacity: 1; }
+.snav-items.open {
+  opacity: 1;
+  max-height: 500px !important;
+}
 
 /* Sub item */
 .snav-item {
@@ -463,6 +466,7 @@ body.dashboard-active { overflow: hidden; }
   min-height: 0;
   height: 100%;
   flex: 1;
+  position: relative;
 }
 
 .panel {
@@ -472,10 +476,20 @@ body.dashboard-active { overflow: hidden; }
   min-height: 0;
   overflow: hidden;
   width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .panel.active {
   display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* Chat */
