@@ -2600,7 +2600,8 @@ function updateDiff(level) {
 // ═══════════════════════════ SNAV (New Sidebar) ═════════════════
 
 const SNAV_SECTION_HEIGHTS = {
-  ai: 4, academics: 3, planner: 4, assessments: 3, insights: 3
+  ai: 4, academics: 3, planner: 6, assessments: 3, insights: 3,
+  spaces: 2, 'personal-space': 4, 'organization-space': 8
 };
 
 function snavToggle(sectionId, btn) {
@@ -2610,14 +2611,21 @@ function snavToggle(sectionId, btn) {
   const isOpen = items.classList.contains('open');
   if (isOpen) {
     items.style.maxHeight = '0px';
+    items.style.opacity   = '0';
     items.classList.remove('open');
     if (secBtn) secBtn.classList.remove('open');
   } else {
-    const count = SNAV_SECTION_HEIGHTS[sectionId] || 5;
-    items.style.maxHeight = (count * 34) + 'px';
+    // Use scrollHeight for exact fit — no guessing
+    items.style.maxHeight = 'none';
+    const fullH = items.scrollHeight;
+    items.style.maxHeight = '0px';
+    // Force reflow then animate
+    requestAnimationFrame(() => {
+      items.style.maxHeight = fullH + 'px';
+      items.style.opacity   = '1';
+    });
     items.classList.add('open');
     if (secBtn) secBtn.classList.add('open');
-    // Update icon background
     const icon = secBtn ? secBtn.querySelector('.snav-section-icon') : null;
     if (icon) icon.style.background = getSectionColor(sectionId, true);
   }
@@ -5129,4 +5137,5 @@ async function shareResult(score, topic) {
 window._altHeld = false;
 document.addEventListener('keydown', e => { if (e.key === 'Alt') window._altHeld = true; });
 document.addEventListener('keyup',   e => { if (e.key === 'Alt') window._altHeld = false; });
+
 
