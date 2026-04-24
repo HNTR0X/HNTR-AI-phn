@@ -2642,36 +2642,41 @@ const SNAV_ROUTE = {
     const ci = $('ci'); if (ci) { ci.value = 'Help me build a study plan and break down my tasks'; ci.focus(); }
   }, 300); },
   // Academics
-  'courses':         () => { nav('courses', null); },
-  'materials':       () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
   'courses':         () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
+  'materials':       () => nav('learninghub', null),
   'announcements':   () => nav('announcements', null),
   // Planner
   'tasks':           () => nav('flux', null),
   'notes':           () => nav('notes', null),
   'study-deck':      () => nav('lab', null),
-  'studyplan':      () => nav('studyplan', null),
+  'study-plan':      () => nav('studyplan', null),
+  'studyplan':       () => nav('studyplan', null),
+  'pomodoro':        () => nav('pomodoro', null),
+  'study-timer':     () => nav('pomodoro', null),
   // Assessments
   'quizzes':         () => nav('quiz', null),
   'exams':           () => { nav('courses', null); setTimeout(() => {
     const examBtn = document.querySelector('.ctab[onclick*="exam-entry"]'); if (examBtn) examBtn.click();
   }, 350); },
-  'results':         () => { nav('stats', null); },
+  'results':         () => nav('stats', null),
   // Insights
-  'progress':        () => nav('stats', null),
-  'weak-areas':      () => { nav('stats', null); setTimeout(() => {
+  'progress':        () => nav('progress', null),
+  'weak-areas':      () => { nav('progress', null); setTimeout(() => {
     const wa = $('weak-section'); if (wa) wa.scrollIntoView({ behavior: 'smooth' });
   }, 400); },
   'recommendations': () => { nav('chat', null); setTimeout(() => getSuggestions(), 400); },
-'content-hub':     () => nav('contenthub', null),
+  // Spaces
+  'content-hub':     () => nav('contenthub', null),
   'goals':           () => nav('goals', null),
   'document-hub':    () => nav('documenthub', null),
-  'materials':       () => nav('learninghub', null),
+  'task-tracker':    () => nav('flux', null),
   'study-groups':    () => nav('studygroups', null),
-  'pomodoro':        () => nav('pomodoro', null),
+  'knowledge':       () => nav('notes', null),
+  'meetings':        () => nav('studygroups', null),
+  // Global
   'create-new':      () => { cnOpen(); },
   'settings':        () => nav('settings', null),
-  };
+};
 
 let SNAV_ACTIVE = 'chat';
 
