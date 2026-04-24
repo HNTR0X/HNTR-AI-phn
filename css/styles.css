@@ -464,9 +464,15 @@ body.dashboard-active { overflow: hidden; }
   min-height: 0;
   overflow: hidden;
   width: 100%;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
 }
 
-.panel.active { display: flex; }
+.panel.active {
+  display: flex;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
 
 /* Chat */
 .chat-msgs {
@@ -2518,3 +2524,4 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   .snav-section-btn:hover {
   background: rgba(255,255,255,0.04);
   }
+
