@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c0d10">
 <title>Sivarr AI — Your Learning Companion</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
@@ -199,29 +202,34 @@
 
   <!-- Scrollable Tab Bar (mobile only) -->
 <div class="tab-bar" id="tab-bar">
+  <!-- Primary 5 always visible -->
   <button class="tab-pill active" id="tab-chat" onclick="navTab('chat',this)">
     <span class="tp-icon">💬</span> Chat
   </button>
   <button class="tab-pill" id="tab-quiz" onclick="navTab('quiz',this)">
     <span class="tp-icon">📝</span> Quiz
   </button>
+  <button class="tab-pill" id="tab-courses" onclick="navTab('courses',this)">
+    <span class="tp-icon">🏫</span> Courses
+  </button>
+  <button class="tab-pill" id="tab-flux" onclick="navTab('flux',this)">
+    <span class="tp-icon">✅</span> Tasks
+  </button>
   <button class="tab-pill" id="tab-progress" onclick="navTab('progress',this)">
     <span class="tp-icon">📊</span> Progress
   </button>
-  <button class="tab-pill" id="tab-courses" onclick="navTab('courses',this)">
-    <span class="tp-icon">🏫</span> Classes
-  </button>
-  <button class="tab-pill" id="tab-studyplan" onclick="navTab('studyplan',this)">
-    <span class="tp-icon">🗺️</span> Study Plan
-  </button>
+  <!-- Secondary — still in bar, scrollable -->
   <button class="tab-pill" id="tab-notes" onclick="navTab('notes',this)">
     <span class="tp-icon">📓</span> Notes
   </button>
   <button class="tab-pill" id="tab-lab" onclick="navTab('lab',this)">
     <span class="tp-icon">🧪</span> Study Deck
   </button>
-  <button class="tab-pill" id="tab-flux" onclick="navTab('flux',this)">
-    <span class="tp-icon">🗂️</span> Tasks
+  <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements',this)">
+    <span class="tp-icon">📢</span> Notices
+  </button>
+  <button class="tab-pill" id="tab-studyplan" onclick="navTab('studyplan',this)">
+    <span class="tp-icon">🗺️</span> Study Plan
   </button>
   <button class="tab-pill" id="tab-goals" onclick="navTab('goals',this)">
     <span class="tp-icon">🎯</span> Goals
@@ -240,9 +248,6 @@
   </button>
   <button class="tab-pill" id="tab-contenthub" onclick="navTab('contenthub',this)">
     <span class="tp-icon">🧠</span> Content
-  </button>
-  <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements',this)">
-    <span class="tp-icon">📢</span> Notices
   </button>
   <button class="tab-pill" id="tab-settings" onclick="navTab('settings',this)">
     <span class="tp-icon">⚙️</span> Settings
