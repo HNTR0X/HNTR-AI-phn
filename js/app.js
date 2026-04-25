@@ -162,8 +162,10 @@ async function doLogin(prefillName, prefillMatric) {
 
     $('tb-av').textContent   = r.name[0].toUpperCase();
     $('tb-name').textContent = r.name;
-    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
-    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
+    const snavAv   = $('snav-av');     if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
+    const snavName = $('snav-name');   if (snavName) snavName.textContent = r.name;
+    const mobAv    = $('mob-snav-av'); if (mobAv)    mobAv.textContent    = r.name[0].toUpperCase();
+    const mobName  = $('mob-snav-name'); if (mobName) mobName.textContent = r.name;
     const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
     const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
     const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
@@ -2604,6 +2606,61 @@ const SNAV_SECTION_HEIGHTS = {
   spaces: 2, 'personal-space': 4, 'organization-space': 8
 };
 
+// ═══════════════════════════ MOBILE SIDEBAR ══════════════════
+
+function openMobileSidebar() {
+  const panel   = $('mob-sidebar-panel');
+  const overlay = $('mob-sidebar-overlay');
+  if (panel)   panel.classList.add('open');
+  if (overlay) overlay.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  // Sync user info
+  const av   = $('mob-snav-av');   const tbAv   = $('tb-av');
+  const name = $('mob-snav-name'); const tbName = $('tb-name');
+  if (av && tbAv)     av.textContent   = tbAv.textContent;
+  if (name && tbName) name.textContent = tbName.textContent;
+}
+
+function closeMobileSidebar() {
+  const panel   = $('mob-sidebar-panel');
+  const overlay = $('mob-sidebar-overlay');
+  if (panel)   panel.classList.remove('open');
+  if (overlay) overlay.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+// Mobile sidebar section toggle (separate from desktop snavToggle)
+const MOB_SNAV_HEIGHTS = { ai: 4, academics: 3, planner: 4, assessments: 3, insights: 3 };
+
+function mobSnavToggle(sectionId, btn) {
+  const items = $(`mob-items-${sectionId}`);
+  const secBtn = $(`mob-sec-${sectionId}`) || btn;
+  if (!items) return;
+  const isOpen = items.classList.contains('open');
+  if (isOpen) {
+    items.style.maxHeight = '0px';
+    items.classList.remove('open');
+    if (secBtn) secBtn.classList.remove('open');
+  } else {
+    const count = MOB_SNAV_HEIGHTS[sectionId] || 5;
+    items.style.maxHeight = (count * 34) + 'px';
+    items.classList.add('open');
+    if (secBtn) secBtn.classList.add('open');
+  }
+}
+
+// Swipe to close mobile sidebar
+(function() {
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    const panel = $('mob-sidebar-panel');
+    if (panel && panel.classList.contains('open') && diff > 60) closeMobileSidebar();
+  }, { passive: true });
+})();
+
+// ═══════════════════════════ SNAV TOGGLE ════════════════════
 function snavToggle(sectionId, btn) {
   const items  = document.getElementById('snav-items-' + sectionId);
   const secBtn = document.getElementById('snav-sec-' + sectionId) || btn;
@@ -5135,5 +5192,6 @@ async function shareResult(score, topic) {
 window._altHeld = false;
 document.addEventListener('keydown', e => { if (e.key === 'Alt') window._altHeld = true; });
 document.addEventListener('keyup',   e => { if (e.key === 'Alt') window._altHeld = false; });
+
 
 
