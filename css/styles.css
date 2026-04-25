@@ -1432,9 +1432,9 @@ body.dashboard-active { overflow: hidden; }
     overflow: hidden;
   }
 
-  /* ── Scroll tab bar sits below topbar ── */
+  /* ── Tab bar hidden — replaced by hamburger sidebar ── */
   .tab-bar {
-    display: flex !important;
+    display: none !important;
     padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     overflow-x: auto;
     overflow-y: hidden;
@@ -1451,7 +1451,7 @@ body.dashboard-active { overflow: hidden; }
   .tab-bar::-webkit-scrollbar { display: none; }
 
   .tab-pill {
-    display: flex !important;
+    display: none !important;
     align-items: center;
     gap: 6px;
     white-space: nowrap;
