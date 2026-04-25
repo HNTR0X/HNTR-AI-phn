@@ -292,14 +292,11 @@ body.dashboard-active { overflow: hidden; }
 .body {
   display: grid;
   grid-template-columns: 200px 1fr;
-  grid-template-rows: 1fr;
   height: calc(100vh - 56px);
   max-height: calc(100vh - 56px);
   overflow: hidden;
   min-height: 0;
 }
-
-.body
 
 /* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
@@ -1102,20 +1099,20 @@ body.dashboard-active { overflow: hidden; }
 .stat-card .sc-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .stat-card .sc-val { font-family: var(--font); font-size: 2rem; font-weight: 800; color: var(--accent); }
 
-/* Toggle button */
-
-/* Hide on mobile */
-@media (max-width: 720px) {
-  /* ── Mobile sidebar toggle ── */
-  .mob-menu-btn { display: flex; }
+/* Right Panel */
 
   /* ── Hide scrollable tab bar — replaced by sidebar ── */
   .tab-bar { display: none !important; }
 
   /* ── Body takes full width with no sidebar column ── */
   .body {
-    grid-template-columns: 1fr !important;
-  }
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
+  overflow: hidden;
+  min-height: 0;
+}
 
   /* ── Desktop sidebar hidden ── */
   .sidebar { display: none !important; }
@@ -1155,7 +1152,7 @@ body.dashboard-active { overflow: hidden; }
 
   
   
-  .body
+  
 }
 
 .r-card {
@@ -1393,21 +1390,19 @@ body.dashboard-active { overflow: hidden; }
 
   /* ── Body below tab bar ── */
   .body {
-    display: block;
+    grid-template-columns: 1fr;
     height: calc(100dvh - 56px - 46px);
-    overflow: hidden;
   }
 
   /* ── Panels fill content area ── */
   .panel {
-    width: 100%;
-    height: 100%;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-    flex: 1;
-  }
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
 
   .panel.active {
   display: flex;
@@ -1416,23 +1411,26 @@ body.dashboard-active { overflow: hidden; }
 }
 
   /* ── Main fills full body ── */
-  .main {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+  /* Main */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+}
 
   /* ── Panels ── */
   .panel {
-    width: 100%;
-    height: 100%;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-  }
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
 
   .panel.active {
   display: flex;
@@ -1480,8 +1478,13 @@ body.dashboard-active { overflow: hidden; }
 
   /* ── Body height with safe areas ── */
   .body {
-    height: calc(100dvh - 56px - 52px - env(safe-area-inset-top, 0px));
-  }
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
+  overflow: hidden;
+  min-height: 0;
+}
 
   /* ── Touch-friendly tab pills ── */
   .tab-pill {
