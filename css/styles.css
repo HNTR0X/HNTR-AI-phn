@@ -291,16 +291,15 @@ body.dashboard-active { overflow: hidden; }
 /* Body layout */
 .body {
   display: grid;
-  grid-template-columns: 200px 1fr 0px;
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: 1fr;
   height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
   overflow: hidden;
   min-height: 0;
-  transition: grid-template-columns .3s cubic-bezier(.4,0,.2,1);
 }
 
-.body.right-open {
-  grid-template-columns: 200px 1fr 300px;
-}
+.body
 
 /* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
@@ -469,19 +468,22 @@ body.dashboard-active { overflow: hidden; }
   height: 100%;
   flex: 1;
   min-width: 0;
-  position: relative;
-  contain: strict;
 }
 
 .panel {
   display: none;
   flex-direction: column;
-  position: absolute;
-  inset: 0;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
+  width: 100%;
 }
 
-.panel.active { display: flex; }
+.panel.active {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
 
 /* Chat */
 .chat-msgs {
@@ -1100,94 +1102,7 @@ body.dashboard-active { overflow: hidden; }
 .stat-card .sc-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .stat-card .sc-val { font-family: var(--font); font-size: 2rem; font-weight: 800; color: var(--accent); }
 
-/* Right Panel */
-.right {
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  width: 0;
-  overflow: hidden;
-  transition: width .3s cubic-bezier(.4,0,.2,1);
-  flex-shrink: 0;
-}
-
-.body.right-open .right {
-  width: 300px;
-  overflow-y: auto;
-}
-
-/* Right panel inner content */
-.right-inner {
-  width: 300px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: .875rem;
-  flex-shrink: 0;
-}
-
 /* Toggle button */
-.right-toggle-btn {
-  position: fixed;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 48px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: .65rem;
-  color: var(--muted);
-  transition: all .2s;
-  z-index: 50;
-}
-
-.right-toggle-btn:hover {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-.right-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: .75rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: .25rem;
-  flex-shrink: 0;
-}
-
-.right-panel-title {
-  font-family: var(--font);
-  font-size: .88rem;
-  font-weight: 700;
-}
-
-.right-close-btn {
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 2px 6px;
-  border-radius: 6px;
-  transition: all .15s;
-}
-
-.right-close-btn:hover { background: var(--card); color: var(--text); }
-
-.right-panel-body {
-  padding-bottom: 0px;
-}
 
 /* Hide on mobile */
 @media (max-width: 720px) {
@@ -1204,7 +1119,6 @@ body.dashboard-active { overflow: hidden; }
 
   /* ── Desktop sidebar hidden ── */
   .sidebar { display: none !important; }
-
 
   /* ── Welcome screen font sizes ── */
   #welcome-greeting,
@@ -1239,12 +1153,9 @@ body.dashboard-active { overflow: hidden; }
   .topbar { height: 52px; padding: 0 10px; }
   .topbar-name { display: none; }
 
-
-  .right-toggle-btn { display: none; }
-  .right { display: none !important; }
-  .body.right-open {
-    grid-template-columns: 1fr !important;
-  }
+  
+  
+  .body
 }
 
 .r-card {
@@ -1417,7 +1328,7 @@ body.dashboard-active { overflow: hidden; }
 
   /* ── Hide desktop sidebars completely ── */
   .sidebar { display: none !important; }
-  .right   { display: none !important; }
+  
   .mobile-nav { display: none !important; }
 
   /* ── Topbar compact ── */
@@ -1498,7 +1409,11 @@ body.dashboard-active { overflow: hidden; }
     flex: 1;
   }
 
-  .panel.active { display: flex; }
+  .panel.active {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
 
   /* ── Main fills full body ── */
   .main {
@@ -1519,7 +1434,11 @@ body.dashboard-active { overflow: hidden; }
     min-height: 0;
   }
 
-  .panel.active { display: flex; }
+  .panel.active {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
 
   /* ── Chat ── */
   .chat-msgs {
@@ -1612,7 +1531,6 @@ body.dashboard-active { overflow: hidden; }
   .cn-item { padding: 10px; }
   .cn-item-label { font-size: .78rem; }
   #panel-more { flex: 1; overflow-y: auto; }
-
 
   /* ── Toast above tab bar ── */
   .toast { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); right: 1rem; left: 1rem; text-align: center; }
@@ -2097,9 +2015,6 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
   background: #0a0a0f; padding: 2rem 1rem;
   display: flex; flex-direction: column; align-items: center;
 }
-
-
-
 
 /* ── Attach menu ──────────────────────────────────────────── */
 .attach-item {
@@ -2614,8 +2529,6 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   background: rgba(255,255,255,0.04);
   }
 
-
-
 /* ═══════════════════════════════════════════════════════════════
    MOBILE SIDEBAR SLIDE-IN
    ═══════════════════════════════════════════════════════════════ */
@@ -2711,6 +2624,5 @@ body.light .mob-sidebar-panel {
   .wa-bubble { max-width: 88%; }
   .quick-action { padding: 8px 14px; font-size: .82rem; }
 }
-
 
 
