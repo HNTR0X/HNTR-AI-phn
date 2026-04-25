@@ -2626,3 +2626,189 @@ body.light .mob-sidebar-panel {
 }
 
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE — ≤720px
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+
+  /* ── 1. Hide desktop sidebar completely ── */
+  .sidebar { display: none !important; }
+
+  /* ── 2. Body: single column, no sidebar space ── */
+  .body {
+    grid-template-columns: 1fr !important;
+    height: calc(100dvh - 52px) !important;
+    max-height: calc(100dvh - 52px) !important;
+    overflow: hidden;
+  }
+
+  /* ── 3. Main fills full width ── */
+  .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* ── 4. Panels fill content area ── */
+  .panel {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    flex: 1;
+  }
+  .panel.active { display: flex; }
+
+  /* ── 5. Hide tab bar completely ── */
+  .tab-bar  { display: none !important; }
+  .tab-pill { display: none !important; }
+
+  /* ── 6. Topbar compact ── */
+  .topbar { height: 52px; padding: 0 10px; }
+  .topbar-name { display: none; }
+
+  /* ── 7. Chat fills width ── */
+  .chat-bar {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 10px;
+  }
+  .chat-input { font-size: 16px !important; }
+  .wa-input   { font-size: 16px !important; }
+
+  /* ── 8. Welcome screen compact ── */
+  #welcome-greeting,
+  .welcome-greeting { font-size: 1.4rem !important; }
+
+  /* ── 9. Exam mobile ── */
+  .exam-option    { padding: 13px 14px; font-size: .9rem; margin-bottom: 7px; }
+  .exam-opt-key   { width: 30px; height: 30px; font-size: .82rem; }
+  .exam-body      { padding: 1rem .875rem; }
+  .exam-topbar    { padding: .625rem .875rem; }
+  .exam-timer-pill { font-size: .95rem; }
+
+  /* ── 10. Misc ── */
+  .sh-col  { min-width: 160px; max-width: 180px; }
+  .wa-bubble { max-width: 88%; }
+  .quick-action { padding: 8px 14px; font-size: .82rem; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE HAMBURGER BUTTON (floating, Notion-style)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hidden on desktop */
+.mob-fab {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  /* Floating action button — bottom left, like Notion mobile */
+  .mob-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    z-index: 990;
+    box-shadow: 0 4px 20px rgba(79,110,247,.45);
+    font-size: 1.3rem;
+    transition: transform .2s, box-shadow .2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-fab:active { transform: scale(.92); }
+  .mob-fab.open   { transform: rotate(45deg); background: var(--accent2); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE SLIDE-IN SIDEBAR PANEL
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Backdrop overlay */
+.mob-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 995;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity .25s;
+}
+.mob-sidebar-overlay.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* Slide-in panel */
+.mob-sidebar-panel {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: min(280px, 85vw);
+  background: var(--sidebar-bg, #0c0d10);
+  border-right: 1px solid var(--border);
+  z-index: 996;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.mob-sidebar-panel.open { transform: translateX(0); }
+
+/* Header */
+.mob-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mob-sidebar-close {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .9rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scrollable nav inside panel */
+.mob-sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px;
+  scrollbar-width: none;
+}
+.mob-sidebar-nav::-webkit-scrollbar { display: none; }
+
+/* Light mode */
+body.light .mob-sidebar-panel {
+  background: var(--sidebar-bg, #f5f6fa);
+  border-right-color: var(--border);
+}
+
+
