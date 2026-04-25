@@ -2445,24 +2445,39 @@ const SNAV_SECTION_HEIGHTS = {
 
 // ═══════════════════════════ MOBILE SIDEBAR ══════════════════
 
+function toggleMobileSidebar() {
+  const panel = $('mob-sidebar-panel');
+  const fab   = $('mob-fab');
+  if (!panel) return;
+  if (panel.classList.contains('open')) {
+    closeMobileSidebar();
+  } else {
+    openMobileSidebar();
+  }
+}
+
 function openMobileSidebar() {
   const panel   = $('mob-sidebar-panel');
   const overlay = $('mob-sidebar-overlay');
+  const fab     = $('mob-fab');
   if (panel)   panel.classList.add('open');
   if (overlay) overlay.classList.add('visible');
+  if (fab)     fab.classList.add('open');
   document.body.style.overflow = 'hidden';
-  // Sync user info
-  const av   = $('mob-snav-av');   const tbAv   = $('tb-av');
-  const name = $('mob-snav-name'); const tbName = $('tb-name');
-  if (av && tbAv)     av.textContent   = tbAv.textContent;
+  // Sync user avatar and name
+  const av     = $('mob-snav-av');   const tbAv   = $('tb-av');
+  const name   = $('mob-snav-name'); const tbName = $('tb-name');
+  if (av && tbAv)     { av.textContent = ''; av.innerHTML = tbAv.innerHTML || tbAv.textContent; }
   if (name && tbName) name.textContent = tbName.textContent;
 }
 
 function closeMobileSidebar() {
   const panel   = $('mob-sidebar-panel');
   const overlay = $('mob-sidebar-overlay');
+  const fab     = $('mob-fab');
   if (panel)   panel.classList.remove('open');
   if (overlay) overlay.classList.remove('visible');
+  if (fab)     fab.classList.remove('open');
   document.body.style.overflow = '';
 }
 
@@ -5013,6 +5028,7 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
 }
+
 
 
 
