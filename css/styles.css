@@ -1,5 +1,7 @@
 /* ── iOS Safe Area ────────────────────────────────────────── */
 :root {
+  --sidebar-bg:     #0c0d10;
+  --sidebar-border: rgba(255,255,255,0.06);
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left:   env(safe-area-inset-left, 0px);
@@ -302,8 +304,8 @@ body.dashboard-active { overflow: hidden; }
 
 /* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
-  background: #0c0d10;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  background: var(--sidebar-bg, #0c0d10);
+  border-right: 1px solid var(--sidebar-border, rgba(255,255,255,0.06));
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1189,6 +1191,55 @@ body.dashboard-active { overflow: hidden; }
 
 /* Hide on mobile */
 @media (max-width: 720px) {
+  /* ── Mobile sidebar toggle ── */
+  .mob-menu-btn { display: flex; }
+
+  /* ── Hide scrollable tab bar — replaced by sidebar ── */
+  .tab-bar { display: none !important; }
+
+  /* ── Body takes full width with no sidebar column ── */
+  .body {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Desktop sidebar hidden ── */
+  .sidebar { display: none !important; }
+
+
+  /* ── Welcome screen font sizes ── */
+  #welcome-greeting,
+  .welcome-greeting { font-size: 1.5rem !important; }
+  .welcome-sub { font-size: .85rem !important; }
+
+  /* ── Quick action pills — 2 per row ── */
+  .quick-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .quick-action {
+    font-size: .8rem;
+    padding: 9px 12px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* ── Chat welcome orb ── */
+  .chat-orb, .sr-orb { width: 60px !important; height: 60px !important; }
+
+  /* ── Chat bar fills full width ── */
+  .chat-bar {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 10px;
+  }
+  .chat-input { font-size: 16px; }
+
+  /* ── Topbar compact ── */
+  .topbar { height: 52px; padding: 0 10px; }
+  .topbar-name { display: none; }
+
+
   .right-toggle-btn { display: none; }
   .right { display: none !important; }
   .body.right-open {
@@ -1589,7 +1640,14 @@ body.light {
   --sidebar-border: #e2e4eb;
 }
 
-body.light .sidebar { color: #111218; }
+body.light .sidebar {
+  color: #111218;
+  background: var(--sidebar-bg);
+  border-right-color: var(--sidebar-border);
+}
+body.light .snav-section-icon { background: rgba(0,0,0,0.06); }
+body.light .snav-col-dot { background: var(--border); }
+body.light .snav-soon-badge { background: rgba(245,158,11,0.12); }
 body.light .snav-section-btn { color: #4b5563; }
 body.light .snav-section-btn:hover { background: rgba(0,0,0,0.05); color: #111218; }
 body.light .snav-item { color: #4b5563; }
@@ -1597,6 +1655,9 @@ body.light .snav-item:hover { background: rgba(0,0,0,0.05); color: #111218; }
 body.light .snav-section-label { color: #374151; }
 body.light .snav-dash-btn { color: #4b5563; border-color: #e2e4eb; }
 body.light .snav-dash-btn:hover { background: rgba(0,0,0,0.04); color: #111218; }
+body.light #sb-stats { background: rgba(0,0,0,0.04); border-color: var(--border); }
+body.light .stat-row .sl { color: var(--muted); }
+body.light .stat-row .sv { color: var(--text); }
 body.light .stat-mini { background: #f0f1f5; border-color: #e2e4eb; }
 body.light .stat-row .sl { color: #8890aa; }
 body.light .msg.sivarr .msg-bub { background: #f0f1f5; border-color: #e2e4eb; color: #111218; }
@@ -2554,6 +2615,92 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   }
 
 
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE SIDEBAR SLIDE-IN
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hamburger button — mobile only */
+.mob-menu-btn {
+  display: none;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.mob-menu-btn:hover { background: var(--surface); }
+
+/* Overlay backdrop */
+.mob-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 998;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.mob-sidebar-overlay.visible { display: block; }
+
+/* Slide-in sidebar panel */
+.mob-sidebar-panel {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 260px;
+  background: var(--sidebar-bg, #0c0d10);
+  border-right: 1px solid var(--sidebar-border, rgba(255,255,255,0.08));
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(-100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.mob-sidebar-panel.open { transform: translateX(0); }
+
+/* Header inside slide-in */
+.mob-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--sidebar-border, rgba(255,255,255,0.06));
+  flex-shrink: 0;
+}
+.mob-sidebar-close {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Nav content inside panel */
+.mob-sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  scrollbar-width: none;
+}
+.mob-sidebar-nav::-webkit-scrollbar { display: none; }
+
+/* Light mode overrides for mobile sidebar */
+body.light .mob-sidebar-panel {
+  background: var(--sidebar-bg);
+  border-right-color: var(--sidebar-border);
+}
+
 @media (max-width: 720px) {
   .exam-option { padding: 14px 14px; font-size: .9rem; margin-bottom: 8px; }
   .exam-opt-key { width: 32px; height: 32px; font-size: .85rem; }
@@ -2564,5 +2711,6 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   .wa-bubble { max-width: 88%; }
   .quick-action { padding: 8px 14px; font-size: .82rem; }
 }
+
 
 
