@@ -2605,8 +2605,8 @@ const SNAV_SECTION_HEIGHTS = {
 };
 
 function snavToggle(sectionId, btn) {
-  const items = $(`snav-items-${sectionId}`);
-  const secBtn = $(`snav-sec-${sectionId}`) || btn;
+  const items  = document.getElementById('snav-items-' + sectionId);
+  const secBtn = document.getElementById('snav-sec-' + sectionId) || btn;
   if (!items) return;
   const isOpen = items.classList.contains('open');
   if (isOpen) {
@@ -2615,19 +2615,17 @@ function snavToggle(sectionId, btn) {
     items.classList.remove('open');
     if (secBtn) secBtn.classList.remove('open');
   } else {
-    // Use scrollHeight for exact fit — no guessing
+    // Temporarily set to auto to measure real height
     items.style.maxHeight = 'none';
-    const fullH = items.scrollHeight;
+    const h = items.scrollHeight;
     items.style.maxHeight = '0px';
-    // Force reflow then animate
+    // Trigger animation on next frame
     requestAnimationFrame(() => {
-      items.style.maxHeight = fullH + 'px';
+      items.style.maxHeight = h + 'px';
       items.style.opacity   = '1';
     });
     items.classList.add('open');
     if (secBtn) secBtn.classList.add('open');
-    const icon = secBtn ? secBtn.querySelector('.snav-section-icon') : null;
-    if (icon) icon.style.background = getSectionColor(sectionId, true);
   }
 }
 
