@@ -74,6 +74,7 @@ function loadProfilePic() {
   if (saved) applyProfilePic(saved);
 }
 
+
 let CURRENT_ROLE = 'student';
 let AUTH_TAB     = 'login';
 
@@ -462,6 +463,7 @@ document.addEventListener('click', e => {
     btn.style.color       = 'var(--muted)';
   }
 });
+
 
 async function send() {
   const ci = $('ci'), msg = ci.value.trim();
@@ -2406,10 +2408,7 @@ function pomInit() {
   pomSetMode('focus', null);
   document.querySelectorAll('.pom-mode-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   pomUpdateStatDisplay();
-  }
-
-  
-// ═══════════════════════════ DIFFICULTY ═════════════════════════
+  }// ═══════════════════════════ DIFFICULTY ═════════════════════════
 function openDiff() { $('diff-modal').classList.add('open'); }
 function closeDiff(e) { if (e.target === $('diff-modal')) $('diff-modal').classList.remove('open'); }
 
@@ -2510,11 +2509,9 @@ function snavToggle(sectionId, btn) {
     items.classList.remove('open');
     if (secBtn) secBtn.classList.remove('open');
   } else {
-    // Temporarily set to auto to measure real height
     items.style.maxHeight = 'none';
     const h = items.scrollHeight;
     items.style.maxHeight = '0px';
-    // Trigger animation on next frame
     requestAnimationFrame(() => {
       items.style.maxHeight = h + 'px';
       items.style.opacity   = '1';
@@ -2831,6 +2828,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+
+
 const SH_KEY  = () => `sivarr_sh_${S.sid || 'guest'}`;
 let SH_DRAG   = null;
 let SH_VIEW   = 'board';
@@ -3055,6 +3054,7 @@ function handleSHAttach(input) {
   if (fn) fn.textContent = file.name;
   input._filename = file.name;
 }
+
 
 function openEditTask(id) {
   const data = getSHData();
@@ -3598,6 +3598,12 @@ async function submitExam() {
   }
   EXAM_STATE.examId = null;
 }
+
+
+
+
+
+
 
 function renderExamResults(d) {
   const takeView = $('exam-take-view');
@@ -4607,6 +4613,8 @@ function renderExamModeUI(overlay) {
     </div>`;
 }
 
+
+
 async function submitAssignment(code, assignId) {
   const ta      = $(`sub-${assignId}`);
   const content = ta?.value.trim();
@@ -4634,6 +4642,7 @@ async function confirmLeaveClass(code) {
   clearInterval(DISCUSS_INTERVAL);
   loadClasses();
 }
+
 
 async function loadLeaderboard() {
   const list = $('leaderboard-list');
@@ -4859,6 +4868,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
 // ═══════════════════════════ PROFILE DROPDOWN ═══════════════════
 function toggleProfile() {
   const trigger  = $('profile-trigger');
@@ -5003,5 +5013,8 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
 }
+
+
+
 
 
