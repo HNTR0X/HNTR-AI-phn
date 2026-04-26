@@ -299,7 +299,13 @@ body.dashboard-active { overflow: hidden; }
   min-height: 0;
 }
 
-.body
+.body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+  min-height: 0;
+}
 
 /* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
@@ -463,10 +469,8 @@ body.dashboard-active { overflow: hidden; }
 .main {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
   height: 100%;
-  width: 100%;
+  min-height: 0;
 }
 
 .panel {
@@ -482,7 +486,7 @@ body.dashboard-active { overflow: hidden; }
   display: flex;
   flex: 1;
   min-height: 0;
-  height: 100%;
+  overflow: hidden;
 }
 
 /* Chat */
