@@ -2851,33 +2851,41 @@ function syncSnavFromPanel(name) {
 // ═══════════════════════════ NAV ════════════════════════════════
 function nav(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn, .mn-btn').forEach(b => b.classList.remove('active'));
-  const p = document.getElementById(`panel-${name}`);
-  if (p) p.classList.add('active');
+  const panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+
+  document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
+  const tabBtn = document.getElementById('tab-' + name);
+  if (tabBtn) {
+    tabBtn.classList.add('active');
+    tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const mob = document.getElementById(`mn-${name}`); if (mob) mob.classList.add('active');
+
   syncSnavFromPanel(name);
-  if (name === 'stats')         loadStats();
-  if (name === 'more')          syncMore();
-  if (name === 'leaderboard')   loadLeaderboard();
-  if (name === 'notes')         loadNotes();
-  if (name === 'flux')          loadStudyHelp();
-  if (name === 'courses')       loadClasses();
-  if (name === 'announcements') loadAllAnnouncements();
+
+  // Panel init triggers
+  if (name === 'stats')          loadStats();
+  if (name === 'progress')       loadProgress();
+  if (name === 'notes')          loadNotes();
+  if (name === 'courses')        loadClasses();
+  if (name === 'announcements')  loadAllAnnouncements();
+  if (name === 'goals')          glLoad();
+  if (name === 'documenthub')    dhInit();
+  if (name === 'learninghub')    lhInit();
+  if (name === 'studygroups')    sgInit();
+  if (name === 'pomodoro')       pomInit();
+  if (name === 'contenthub')     chInit();
+  if (name === 'settings')       stInit();
   if (name === 'studyplan') {
     $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]);
     setTimeout(spLoadSaved, 100);
   }
-  if (name === 'contenthub') chInit();
-  if (name === 'settings')   stInit();
-  if (name === 'progress')    loadProgress();
-  if (name === 'goals')       glLoad();
-  if (name === 'documenthub') dhInit();
-  if (name === 'learninghub') lhInit();
-  if (name === 'studygroups') sgInit();
-  if (name === 'pomodoro')    pomInit();
   if (name === 'quiz' && !S.quizActive) {
-    const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
+    const qd = $('qd-label');
+    if (qd) qd.textContent = S.diff.charAt(0).toUpperCase() + S.diff.slice(1);
   }
 }
 
@@ -5241,6 +5249,7 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
 }
+
 
 
 
