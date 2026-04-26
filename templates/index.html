@@ -400,110 +400,30 @@
           </button>
         </div>
 
-        <!-- ── Spaces ── -->
+<!-- ── Spaces (Dynamic) ── -->
 <button class="snav-section-btn" id="snav-sec-spaces" onclick="snavToggle('spaces',this)">
-  <span class="snav-section-icon">🧩</span>
-  <span class="snav-section-label">Spaces</span>
-  <span class="snav-chevron">▼</span>
+<span class="snav-section-icon">🌐</span>
+<span class="snav-section-label">Spaces</span>
+<span class="snav-chevron">▼</span>
 </button>
-
 <div class="snav-items open" id="snav-items-spaces" style="max-height:500px">
-
-  <!-- Personal Space -->
-  <button class="snav-section-btn nested" onclick="snavToggle('personal',this)">
-    <span class="snav-section-icon">🏠</span>
-    <span class="snav-section-label">Personal Space</span>
-    <span class="snav-chevron">▼</span>
-  </button>
-
-  <div class="snav-items nested" id="snav-items-personal">
-    <button class="snav-item" onclick="snavSelect('task-tracker','spaces',this)">
-      <span class="snav-item-icon">✅</span> Task Tracker
-    </button>
-    <button class="snav-item" onclick="snavSelect('document-hub','spaces',this)">
-      <span class="snav-item-icon">📁</span> Document Hub
-    </button>
-    <button class="snav-item" onclick="snavSelect('meetings','spaces',this)">
-      <span class="snav-item-icon">📅</span> Meetings
-    </button>
-    <button class="snav-item" onclick="snavSelect('content-hub','spaces',this)">
-      <span class="snav-item-icon">🧠</span> Content Hub
-    </button>
+  <div id="dyn-spaces-container">
+    <!-- Spaces injected here dynamically -->
   </div>
-
-  <!-- Organization Space -->
-  <button class="snav-section-btn nested" onclick="snavToggle('org',this)">
-    <span class="snav-section-icon">🏢</span>
-    <span class="snav-section-label">Organization Space</span>
-    <span class="snav-chevron">▼</span>
+  <button class="snav-item" style="color:var(--accent);font-size:.78rem;opacity:.85;margin-top:4px"
+    onclick="cnSwitchAndOpen('space')">
+    <span class="snav-item-icon">➕</span> Create Space
   </button>
-
-  <div class="snav-items nested" id="snav-items-org">
-
-    <!-- Dashboard -->
-    <button class="snav-section-btn nested" onclick="snavToggle('org-dashboard',this)">
-      <span class="snav-section-icon">📊</span>
-      <span class="snav-section-label">Dashboard</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-
-    <div class="snav-items nested" id="snav-items-org-dashboard">
-      <button class="snav-item" onclick="snavSelect('org-overview','spaces',this)">
-        <span class="snav-item-icon">📈</span> Overview
-      </button>
-    </div>
-
-    <!-- Execution -->
-    <button class="snav-section-btn nested" onclick="snavToggle('execution',this)">
-      <span class="snav-section-icon">⚡</span>
-      <span class="snav-section-label">Execution</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-
-    <div class="snav-items nested" id="snav-items-execution">
-      <button class="snav-item" onclick="snavSelect('tasks','spaces',this)">
-        <span class="snav-item-icon">📌</span> Tasks
-      </button>
-      <button class="snav-item" onclick="snavSelect('projects','spaces',this)">
-        <span class="snav-item-icon">📂</span> Projects
-      </button>
-      <button class="snav-item" onclick="snavSelect('workflow','spaces',this)">
-        <span class="snav-item-icon">🔄</span> Workflow
-      </button>
-      <button class="snav-item" onclick="snavSelect('meeting-hub','spaces',this)">
-        <span class="snav-item-icon">📅</span> Meeting Hub
-      </button>
-    </div>
-
-    <!-- Flat items -->
-    <button class="snav-item" onclick="snavSelect('goals','spaces',this)">
-      <span class="snav-item-icon">🎯</span> Goals
-    </button>
-
-    <button class="snav-item" onclick="snavSelect('team','spaces',this)">
-      <span class="snav-item-icon">👥</span> Team
-    </button>
-
-    <button class="snav-item" onclick="snavSelect('knowledge','spaces',this)">
-      <span class="snav-item-icon">📚</span> Knowledge
-    </button>
-
-    <button class="snav-item" onclick="snavSelect('org-insights','spaces',this)">
-      <span class="snav-item-icon">📊</span> Insights
-    </button>
-
-  </div>
-
 </div>
 
 <!-- Bottom Actions -->
 <div style="margin-top:10px;padding:6px 4px;border-top:1px solid rgba(255,255,255,0.05)">
-  <button class="snav-item" onclick="snavSelect('create-new','spaces',this)">
-    <span class="snav-item-icon">➕</span> Create New
-  </button>
-  <button class="snav-item" onclick="snavSelect('settings','spaces',this)">
-    <span class="snav-item-icon">⚙️</span> Settings
-  </button>
+<button class="snav-item" onclick="cnOpen()">
+<span class="snav-item-icon">➕</span> Create New
+</button>
+<button class="snav-item" onclick="snavSelect('settings','spaces',this)">
+<span class="snav-item-icon">⚙️</span> Settings
+</button>
 </div>
 
         <!-- Flux (Planner tasks) kept for backward compat, hidden -->
@@ -1872,40 +1792,123 @@
 <div class="cn-modal-bg" id="cn-modal-bg" onclick="cnClose(event)">
   <div class="cn-modal">
     <div class="cn-handle"></div>
-    <div class="cn-title">✦ Create New</div>
-    <div class="cn-grid">
 
-      <button class="cn-item" style="--cn-color:#4f6ef7" onclick="cnAction('note')">
-        <div class="cn-item-icon">📝</div>
-        <div><div class="cn-item-label">Note</div><div class="cn-item-sub">Quick study note</div></div>
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:6px;margin-bottom:1.1rem;background:var(--card);border-radius:10px;padding:4px">
+      <button id="cn-tab-create" onclick="cnSwitchTab('create')"
+        style="flex:1;padding:7px;border-radius:7px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s">
+        ✦ Create New
       </button>
-
-      <button class="cn-item" style="--cn-color:#22c55e" onclick="cnAction('task')">
-        <div class="cn-item-icon">✅</div>
-        <div><div class="cn-item-label">Task</div><div class="cn-item-sub">Add to Flux board</div></div>
+      <button id="cn-tab-space" onclick="cnSwitchTab('space')"
+        style="flex:1;padding:7px;border-radius:7px;border:none;background:none;color:var(--muted);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s">
+        🌐 Create Space
       </button>
-
-      <button class="cn-item" style="--cn-color:#f59e0b" onclick="cnAction('studyplan')">
-        <div class="cn-item-icon">🗺️</div>
-        <div><div class="cn-item-label">Study Plan</div><div class="cn-item-sub">Exam countdown</div></div>
+      <button id="cn-tab-framework" onclick="cnSwitchTab('framework')"
+        style="flex:1;padding:7px;border-radius:7px;border:none;background:none;color:var(--muted);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s">
+        ⚡ Framework
       </button>
-
-      <button class="cn-item" style="--cn-color:#f472b6" onclick="cnAction('quiz')">
-        <div class="cn-item-icon">📝</div>
-        <div><div class="cn-item-label">Quiz</div><div class="cn-item-sub">Test yourself</div></div>
-      </button>
-
-      <button class="cn-item" style="--cn-color:#a78bfa" onclick="cnAction('studydeck')">
-        <div class="cn-item-icon">🧪</div>
-        <div><div class="cn-item-label">Study Deck</div><div class="cn-item-sub">Upload lecture notes</div></div>
-      </button>
-
-      <button class="cn-item" style="--cn-color:#34d399" onclick="cnAction('ask')">
-        <div class="cn-item-icon">💬</div>
-        <div><div class="cn-item-label">Ask AI</div><div class="cn-item-sub">Chat instantly</div></div>
-      </button>
-
     </div>
+
+    <!-- Create New items -->
+    <div id="cn-pane-create">
+      <div class="cn-title" style="margin-bottom:.875rem">✦ Create New</div>
+      <div class="cn-grid">
+        <button class="cn-item" style="--cn-color:#4f6ef7" onclick="cnAction('note')">
+          <div class="cn-item-icon">📝</div>
+          <div><div class="cn-item-label">Note</div><div class="cn-item-sub">Quick study note</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#22c55e" onclick="cnAction('task')">
+          <div class="cn-item-icon">✅</div>
+          <div><div class="cn-item-label">Task</div><div class="cn-item-sub">Add to Flux board</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#f59e0b" onclick="cnAction('studyplan')">
+          <div class="cn-item-icon">🗺️</div>
+          <div><div class="cn-item-label">Study Plan</div><div class="cn-item-sub">Exam countdown</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#f472b6" onclick="cnAction('quiz')">
+          <div class="cn-item-icon">📝</div>
+          <div><div class="cn-item-label">Quiz</div><div class="cn-item-sub">Test yourself</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#a78bfa" onclick="cnAction('studydeck')">
+          <div class="cn-item-icon">🧪</div>
+          <div><div class="cn-item-label">Study Deck</div><div class="cn-item-sub">Upload lecture notes</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#34d399" onclick="cnAction('ask')">
+          <div class="cn-item-icon">💬</div>
+          <div><div class="cn-item-label">Ask AI</div><div class="cn-item-sub">Chat instantly</div></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Create Space pane -->
+    <div id="cn-pane-space" style="display:none">
+      <div class="cn-title" style="margin-bottom:.875rem">🌐 Create a Space</div>
+
+      <!-- Step 1: Pick type -->
+      <div id="sp-step-1">
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Choose space type:</div>
+        <button class="sp-type-btn" id="sp-type-personal" onclick="spSelectType('personal')">
+          <div class="sp-type-icon" style="background:#4f6ef720">👤</div>
+          <div>
+            <div class="sp-type-label">Personal Space</div>
+            <div class="sp-type-sub">Tasks, notes, docs, content hub and more</div>
+          </div>
+        </button>
+        <button class="sp-type-btn" id="sp-type-org" onclick="spSelectType('org')">
+          <div class="sp-type-icon" style="background:#7c3aed20">🏢</div>
+          <div>
+            <div class="sp-type-label">Organization Space</div>
+            <div class="sp-type-sub">Team goals, projects, workflows, meetings</div>
+          </div>
+        </button>
+        <div class="sp-btn-row">
+          <button class="sp-btn-secondary" onclick="cnClose({target:$('cn-modal-bg')})">Cancel</button>
+          <button class="sp-btn-primary" onclick="spNextStep()">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Name + members -->
+      <div id="sp-step-2" style="display:none">
+        <div id="sp-step-2-label" style="font-size:.78rem;color:var(--muted);margin-bottom:.625rem">Space name:</div>
+        <input class="sp-input" id="sp-name-input" placeholder="e.g. My Personal Space, MTH301 Team...">
+        <div id="sp-members-section" style="display:none">
+          <div style="font-size:.78rem;color:var(--muted);margin-bottom:.375rem">Add members (optional):</div>
+          <input class="sp-input" id="sp-members-input" placeholder="Enter names or matric numbers, comma-separated">
+        </div>
+        <div id="sp-err" style="color:var(--red);font-size:.75rem;min-height:16px"></div>
+        <div class="sp-btn-row">
+          <button class="sp-btn-secondary" onclick="spBackStep()">← Back</button>
+          <button class="sp-btn-primary" onclick="spCreateSpace()">✦ Create Space</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Framework pane -->
+    <div id="cn-pane-framework" style="display:none">
+      <div class="cn-title" style="margin-bottom:.875rem">⚡ Create Framework</div>
+      <div style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1rem">
+        Frameworks are structured templates for recurring workflows — study routines, project pipelines, team processes.
+      </div>
+      <div class="cn-grid">
+        <button class="cn-item" style="--cn-color:#f59e0b" onclick="cnClose({target:$('cn-modal-bg')});toast('Study Routine framework coming soon 🔥')">
+          <div class="cn-item-icon">📅</div>
+          <div><div class="cn-item-label">Study Routine</div><div class="cn-item-sub">Daily study schedule</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#4f6ef7" onclick="cnClose({target:$('cn-modal-bg')});toast('Project Pipeline coming soon 🔥')">
+          <div class="cn-item-icon">📊</div>
+          <div><div class="cn-item-label">Project Pipeline</div><div class="cn-item-sub">Track deliverables</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#34d399" onclick="cnClose({target:$('cn-modal-bg')});toast('Exam Prep framework coming soon 🔥')">
+          <div class="cn-item-icon">🎯</div>
+          <div><div class="cn-item-label">Exam Prep</div><div class="cn-item-sub">Structured revision</div></div>
+        </button>
+        <button class="cn-item" style="--cn-color:#7c3aed" onclick="cnClose({target:$('cn-modal-bg')});toast('Team Sprint framework coming soon 🔥')">
+          <div class="cn-item-icon">⚡</div>
+          <div><div class="cn-item-label">Team Sprint</div><div class="cn-item-sub">Weekly team goals</div></div>
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2052,4 +2055,5 @@
 <script src="/js/app.js" defer></script>
 </body>
 </html>
+
 
