@@ -189,6 +189,7 @@ async function doLogin(prefillName, prefillMatric) {
       greet.textContent = `${tod}, ${r.name.split(' ')[0]}`;
     }
     loadAnnouncements();
+    spRenderSidebar();
 
     try {
       const ann = await fetch('/api/lecturer/announcements');
@@ -1676,6 +1677,7 @@ function chGenerateInsight(m, engRate, platform) {
 // ═══════════════════════ CREATE NEW ═════════════════════════
 
 function cnOpen() {
+  cnSwitchTab('create');
   $('cn-modal-bg').classList.add('open');
 }
 function cnClose(e) {
@@ -2409,6 +2411,217 @@ function pomInit() {
   document.querySelectorAll('.pom-mode-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   pomUpdateStatDisplay();
   }// ═══════════════════════════ DIFFICULTY ═════════════════════════
+
+// ═══════════════════ CREATE NEW TABS ════════════════════════
+
+function cnSwitchTab(tab) {
+  ['create','space','framework'].forEach(t => {
+    const pane = $('cn-pane-' + t);
+    const btn  = $('cn-tab-' + t);
+    if (pane) pane.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.background = t === tab
+        ? 'linear-gradient(135deg,var(--accent),var(--accent2))'
+        : 'none';
+      btn.style.color = t === tab ? '#fff' : 'var(--muted)';
+    }
+  });
+  if (tab === 'space') spResetSteps();
+}
+
+function cnOpenTab(tab) {
+  cnSwitchTab(tab);
+  $('cn-modal-bg').classList.add('open');
+}
+
+function cnSwitchAndOpen(tab) {
+  cnOpenTab(tab);
+}
+
+// ═══════════════════ SPACES SYSTEM ══════════════════════════
+
+const SP_KEY = () => `sivarr_spaces_${S.sid || 'guest'}`;
+let SP_SELECTED_TYPE = null;
+
+const SP_PERSONAL_TABS = [
+  { id:'task-tracker',  icon:'✅', label:'Task Tracker',  route:'flux'        },
+  { id:'document-hub',  icon:'📄', label:'Document Hub',  route:'documenthub' },
+  { id:'meetings',      icon:'📅', label:'Meetings',       route:'studygroups' },
+  { id:'content-hub',   icon:'🧠', label:'Content Hub',   route:'contenthub'  },
+];
+const SP_ORG_TABS = [
+  { id:'goals',      icon:'🎯', label:'Goals',      route:'goals'       },
+  { id:'team',       icon:'👥', label:'Team',        route:'studygroups' },
+  { id:'knowledge',  icon:'📚', label:'Knowledge',   route:'notes'       },
+  { id:'org-insights',icon:'📊',label:'Insights',    route:'progress'    },
+];
+
+function spLoadSpaces() {
+  try { return JSON.parse(localStorage.getItem(SP_KEY()) || '[]'); }
+  catch { return []; }
+}
+function spSaveSpaces(spaces) {
+  localStorage.setItem(SP_KEY(), JSON.stringify(spaces));
+}
+
+function spSelectType(type) {
+  SP_SELECTED_TYPE = type;
+  ['personal','org'].forEach(t => {
+    const btn = $('sp-type-' + t);
+    if (btn) btn.classList.toggle('selected', t === type);
+  });
+}
+
+function spNextStep() {
+  if (!SP_SELECTED_TYPE) { toast('Please select a space type.'); return; }
+  $('sp-step-1').style.display = 'none';
+  $('sp-step-2').style.display = 'block';
+  const label = $('sp-step-2-label');
+  if (label) label.textContent = SP_SELECTED_TYPE === 'personal'
+    ? 'Name your personal space:'
+    : 'Name your organization space:';
+  const membersSection = $('sp-members-section');
+  if (membersSection) membersSection.style.display = SP_SELECTED_TYPE === 'org' ? 'block' : 'none';
+  const nameInput = $('sp-name-input');
+  if (nameInput) { nameInput.value = ''; nameInput.focus(); }
+}
+
+function spBackStep() {
+  $('sp-step-2').style.display = 'none';
+  $('sp-step-1').style.display = 'block';
+}
+
+function spResetSteps() {
+  SP_SELECTED_TYPE = null;
+  ['personal','org'].forEach(t => {
+    const btn = $('sp-type-' + t);
+    if (btn) btn.classList.remove('selected');
+  });
+  const s1 = $('sp-step-1'); if (s1) s1.style.display = 'block';
+  const s2 = $('sp-step-2'); if (s2) s2.style.display = 'none';
+  const err = $('sp-err');   if (err) err.textContent = '';
+  const ni = $('sp-name-input'); if (ni) ni.value = '';
+  const mi = $('sp-members-input'); if (mi) mi.value = '';
+}
+
+function spCreateSpace() {
+  const name = $('sp-name-input')?.value.trim();
+  if (!name) { const e = $('sp-err'); if(e) e.textContent = 'Please enter a space name.'; return; }
+  const members = SP_SELECTED_TYPE === 'org'
+    ? ($('sp-members-input')?.value.trim().split(',').map(m=>m.trim()).filter(Boolean) || [])
+    : [];
+
+  const spaces  = spLoadSpaces();
+  const newSpace = {
+    id:      Date.now().toString(36),
+    type:    SP_SELECTED_TYPE,
+    name:    name,
+    members: members,
+    created: new Date().toISOString(),
+  };
+  spaces.push(newSpace);
+  spSaveSpaces(spaces);
+
+  // Close modal and re-render sidebar
+  $('cn-modal-bg').classList.remove('open');
+  spResetSteps();
+  spRenderSidebar();
+  toast(`"${name}" created! 🎉`);
+}
+
+function spRenderSidebar() {
+  const container = $('dyn-spaces-container');
+  if (!container) return;
+  const spaces = spLoadSpaces();
+
+  if (!spaces.length) {
+    container.innerHTML = '<div style="font-size:.72rem;color:var(--muted);padding:4px 8px;opacity:.7">No spaces yet</div>';
+    return;
+  }
+
+  container.innerHTML = spaces.map(sp => {
+    const tabs = sp.type === 'personal' ? SP_PERSONAL_TABS : SP_ORG_TABS;
+    const icon = sp.type === 'personal' ? '👤' : '🏢';
+    return `
+      <div class="dyn-space-section" data-space-id="${sp.id}">
+        <div class="dyn-space-header" onclick="spToggleSpace('${sp.id}')">
+          <span style="font-size:.85rem;margin-right:5px">${icon}</span>
+          <span class="dyn-space-name">${esc(sp.name)}</span>
+          <div style="position:relative">
+            <button class="dyn-space-ellipsis" onclick="event.stopPropagation();spToggleMenu('${sp.id}')" title="Options">···</button>
+            <div class="dyn-space-menu" id="sp-menu-${sp.id}">
+              <button class="dyn-space-menu-item" onclick="spEditSpace('${sp.id}')">✏️ Rename</button>
+              ${sp.type === 'org' ? `<button class="dyn-space-menu-item" onclick="spAddMember('${sp.id}')">👥 Add Member</button>` : ''}
+              <button class="dyn-space-menu-item danger" onclick="spDeleteSpace('${sp.id}')">🗑 Delete</button>
+            </div>
+          </div>
+        </div>
+        <div class="snav-items" id="sp-items-${sp.id}" style="max-height:none;opacity:1">
+          ${tabs.map(t => `
+            <button class="snav-item" onclick="snavSelect('${t.id}','spaces',this)">
+              <span class="snav-item-icon">${t.icon}</span> ${t.label}
+            </button>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function spToggleSpace(id) {
+  const items = $('sp-items-' + id);
+  if (!items) return;
+  const open = items.style.maxHeight !== '0px' && items.style.maxHeight !== '';
+  items.style.maxHeight  = open ? '0px'  : 'none';
+  items.style.opacity    = open ? '0'    : '1';
+}
+
+function spToggleMenu(id) {
+  document.querySelectorAll('.dyn-space-menu').forEach(m => {
+    if (m.id !== 'sp-menu-' + id) m.classList.remove('open');
+  });
+  const menu = $('sp-menu-' + id);
+  if (menu) menu.classList.toggle('open');
+}
+
+function spEditSpace(id) {
+  const spaces = spLoadSpaces();
+  const sp = spaces.find(s => s.id === id);
+  if (!sp) return;
+  const newName = prompt('Rename space:', sp.name);
+  if (!newName?.trim()) return;
+  sp.name = newName.trim();
+  spSaveSpaces(spaces);
+  spRenderSidebar();
+  document.querySelectorAll('.dyn-space-menu').forEach(m => m.classList.remove('open'));
+}
+
+function spAddMember(id) {
+  const spaces = spLoadSpaces();
+  const sp = spaces.find(s => s.id === id);
+  if (!sp) return;
+  const member = prompt('Add member (name or matric):');
+  if (!member?.trim()) return;
+  sp.members = sp.members || [];
+  sp.members.push(member.trim());
+  spSaveSpaces(spaces);
+  toast(`Added ${member.trim()} to ${sp.name}`);
+  document.querySelectorAll('.dyn-space-menu').forEach(m => m.classList.remove('open'));
+}
+
+function spDeleteSpace(id) {
+  if (!confirm('Delete this space? This cannot be undone.')) return;
+  const spaces = spLoadSpaces().filter(s => s.id !== id);
+  spSaveSpaces(spaces);
+  spRenderSidebar();
+  toast('Space deleted');
+}
+
+// Close menus on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dyn-space-ellipsis') && !e.target.closest('.dyn-space-menu')) {
+    document.querySelectorAll('.dyn-space-menu').forEach(m => m.classList.remove('open'));
+  }
+});
+
 function openDiff() { $('diff-modal').classList.add('open'); }
 function closeDiff(e) { if (e.target === $('diff-modal')) $('diff-modal').classList.remove('open'); }
 
@@ -5028,6 +5241,7 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
 }
+
 
 
 
