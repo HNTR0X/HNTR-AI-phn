@@ -1,3 +1,4 @@
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -281,15 +282,10 @@ body.dashboard-active { overflow: hidden; }
 /* Body layout */
 .body {
   display: grid;
-  grid-template-columns: 200px 1fr 0px;
+  grid-template-columns: 200px 1fr;
   height: calc(100vh - 56px);
   overflow: hidden;
   min-height: 0;
-  transition: grid-template-columns .3s cubic-bezier(.4,0,.2,1);
-}
-
-.body.right-open {
-  grid-template-columns: 200px 1fr 300px;
 }
 
 /* ── Sidebar ─────────────────────────────────────────── */
@@ -1085,97 +1081,14 @@ body.dashboard-active { overflow: hidden; }
 .stat-card .sc-val { font-family: var(--font); font-size: 2rem; font-weight: 800; color: var(--accent); }
 
 /* Right Panel */
-.right {
+.right { display: none !important;
   background: var(--surface);
   border-left: 1px solid var(--border);
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  width: 0;
-  overflow: hidden;
-  transition: width .3s cubic-bezier(.4,0,.2,1);
-  flex-shrink: 0;
-}
-
-.body.right-open .right {
-  width: 300px;
-  overflow-y: auto;
-}
-
-/* Right panel inner content */
-.right-inner {
-  width: 300px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: .875rem;
-  flex-shrink: 0;
-}
-
-/* Toggle button */
-.right-toggle-btn {
-  position: fixed;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 48px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: .65rem;
-  color: var(--muted);
-  transition: all .2s;
-  z-index: 50;
-}
-
-.right-toggle-btn:hover {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-.right-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: .75rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: .25rem;
-  flex-shrink: 0;
-}
-
-.right-panel-title {
-  font-family: var(--font);
-  font-size: .88rem;
-  font-weight: 700;
-}
-
-.right-close-btn {
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 2px 6px;
-  border-radius: 6px;
-  transition: all .15s;
-}
-
-.right-close-btn:hover { background: var(--card); color: var(--text); }
-
-/* Hide on mobile */
-@media (max-width: 720px) {
-  .right-toggle-btn { display: none; }
-  .right { display: none !important; }
-  .body.right-open {
-    grid-template-columns: 1fr !important;
-  }
+  gap: 1rem;
 }
 
 .r-card {
@@ -1465,66 +1378,6 @@ body.dashboard-active { overflow: hidden; }
   /* ── Other panels ── */
   .quiz-wrap  { flex: 1; overflow-y: auto; padding: 1rem; }
   .stats-wrap { flex: 1; overflow-y: auto; padding: 1rem; }
-  /* ── New panels on mobile ── */
-  #panel-progress    { flex: 1; overflow-y: auto; }
-  #panel-goals       { flex: 1; overflow-y: auto; }
-  #panel-documenthub { flex: 1; overflow: hidden; }
-  #panel-learninghub { flex: 1; overflow-y: auto; }
-  #panel-studygroups { flex: 1; overflow: hidden; }
-  #panel-pomodoro    { flex: 1; overflow-y: auto; }
-  #panel-contenthub  { flex: 1; overflow-y: auto; }
-  #panel-settings    { flex: 1; overflow-y: auto; }
-  #panel-studyplan   { flex: 1; overflow-y: auto; }
-
-  /* ── Fix tab bar height calculation ── */
-  .body {
-    height: calc(100dvh - 56px - 52px);
-  }
-
-  /* ── Touch-friendly tab pills ── */
-  .tab-pill {
-    padding: 8px 16px;
-    font-size: .8rem;
-  }
-
-  /* ── Goals on mobile ── */
-  .gl-add-form { border-radius: 10px; }
-
-  /* ── Document hub on mobile ── */
-  .dh-toolbar { gap: 2px; padding: .4rem .5rem; }
-  .dh-tool-btn { width: 30px; height: 30px; font-size: .78rem; }
-
-  /* ── Study groups chat on mobile ── */
-  .sg-msg-wrap { padding: .625rem; }
-
-  /* ── Pomodoro on mobile ── */
-  .pom-ring { width: 180px; height: 180px; }
-  .pom-time { font-size: 2rem; }
-
-  /* ── Learning hub grid on mobile ── */
-  #lh-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
-  .lh-course-thumb { height: 90px; }
-  .lh-course-title { font-size: .8rem; }
-
-  /* ── Content hub on mobile ── */
-  .ch-metric-val { font-size: 1.3rem; }
-  #ch-metrics-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
-
-  /* ── Settings on mobile ── */
-  .st-section-body { padding: .75rem; }
-  .st-accent-dot { width: 28px; height: 28px; }
-
-  /* ── Study plan on mobile ── */
-  .sp-hrs-btn { padding: 7px 2px; font-size: .72rem; }
-
-  /* ── Progress dashboard on mobile ── */
-  .pr-stat-row { grid-template-columns: 1fr 1fr; }
-  .pr-stat-val { font-size: 1.3rem; }
-
-  /* ── Create New modal on mobile ── */
-  .cn-grid { grid-template-columns: 1fr 1fr; gap: .5rem; }
-  .cn-item { padding: 10px; }
-  .cn-item-label { font-size: .78rem; }
   #panel-more { flex: 1; overflow-y: auto; }
 
   /* ── Login ── */
@@ -1545,20 +1398,8 @@ body.light {
   --text:    #111218;
   --muted:   #8890aa;
   --muted2:  #b0b5c8;
-  --sidebar-bg:     #f0f1f5;
-  --sidebar-border: #e2e4eb;
 }
 
-body.light .sidebar { color: #111218; }
-body.light .snav-section-btn { color: #4b5563; }
-body.light .snav-section-btn:hover { background: rgba(0,0,0,0.05); color: #111218; }
-body.light .snav-item { color: #4b5563; }
-body.light .snav-item:hover { background: rgba(0,0,0,0.05); color: #111218; }
-body.light .snav-section-label { color: #374151; }
-body.light .snav-dash-btn { color: #4b5563; border-color: #e2e4eb; }
-body.light .snav-dash-btn:hover { background: rgba(0,0,0,0.04); color: #111218; }
-body.light .stat-mini { background: #f0f1f5; border-color: #e2e4eb; }
-body.light .stat-row .sl { color: #8890aa; }
 body.light .msg.sivarr .msg-bub { background: #f0f1f5; border-color: #e2e4eb; color: #111218; }
 body.light .opt-btn { background: #f4f5f7; border-color: #e2e4eb; color: #111218; }
 body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111218; }
@@ -1573,7 +1414,7 @@ body.light .chat-input { background: #f0f1f5; border-color: #e2e4eb; color: #111
   transition: border-color .2s, background .2s;
   margin-bottom: 1rem;
 }
-}
+
 .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: #4f6ef708; }
 .upload-zone .uz-icon { font-size: 2rem; margin-bottom: .5rem; }
 .upload-zone .uz-text { font-size: .85rem; color: var(--muted); }
@@ -2512,4 +2353,4 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
 
   .snav-section-btn:hover {
   background: rgba(255,255,255,0.04);
-  }
+    }
