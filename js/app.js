@@ -162,10 +162,8 @@ async function doLogin(prefillName, prefillMatric) {
 
     $('tb-av').textContent   = r.name[0].toUpperCase();
     $('tb-name').textContent = r.name;
-    const snavAv   = $('snav-av');     if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
-    const snavName = $('snav-name');   if (snavName) snavName.textContent = r.name;
-    const mobAv    = $('mob-snav-av'); if (mobAv)    mobAv.textContent    = r.name[0].toUpperCase();
-    const mobName  = $('mob-snav-name'); if (mobName) mobName.textContent = r.name;
+    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
+    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
     const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
     const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
     const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
@@ -189,7 +187,6 @@ async function doLogin(prefillName, prefillMatric) {
       greet.textContent = `${tod}, ${r.name.split(' ')[0]}`;
     }
     loadAnnouncements();
-    spRenderSidebar();
 
     try {
       const ann = await fetch('/api/lecturer/announcements');
@@ -1677,7 +1674,6 @@ function chGenerateInsight(m, engRate, platform) {
 // ═══════════════════════ CREATE NEW ═════════════════════════
 
 function cnOpen() {
-  cnSwitchTab('create');
   $('cn-modal-bg').classList.add('open');
 }
 function cnClose(e) {
@@ -2410,218 +2406,9 @@ function pomInit() {
   pomSetMode('focus', null);
   document.querySelectorAll('.pom-mode-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   pomUpdateStatDisplay();
-  }// ═══════════════════════════ DIFFICULTY ═════════════════════════
-
-// ═══════════════════ CREATE NEW TABS ════════════════════════
-
-function cnSwitchTab(tab) {
-  ['create','space','framework'].forEach(t => {
-    const pane = $('cn-pane-' + t);
-    const btn  = $('cn-tab-' + t);
-    if (pane) pane.style.display = t === tab ? 'block' : 'none';
-    if (btn) {
-      btn.style.background = t === tab
-        ? 'linear-gradient(135deg,var(--accent),var(--accent2))'
-        : 'none';
-      btn.style.color = t === tab ? '#fff' : 'var(--muted)';
-    }
-  });
-  if (tab === 'space') spResetSteps();
-}
-
-function cnOpenTab(tab) {
-  cnSwitchTab(tab);
-  $('cn-modal-bg').classList.add('open');
-}
-
-function cnSwitchAndOpen(tab) {
-  cnOpenTab(tab);
-}
-
-// ═══════════════════ SPACES SYSTEM ══════════════════════════
-
-const SP_KEY = () => `sivarr_spaces_${S.sid || 'guest'}`;
-let SP_SELECTED_TYPE = null;
-
-const SP_PERSONAL_TABS = [
-  { id:'task-tracker',  icon:'✅', label:'Task Tracker',  route:'flux'        },
-  { id:'document-hub',  icon:'📄', label:'Document Hub',  route:'documenthub' },
-  { id:'meetings',      icon:'📅', label:'Meetings',       route:'studygroups' },
-  { id:'content-hub',   icon:'🧠', label:'Content Hub',   route:'contenthub'  },
-];
-const SP_ORG_TABS = [
-  { id:'goals',      icon:'🎯', label:'Goals',      route:'goals'       },
-  { id:'team',       icon:'👥', label:'Team',        route:'studygroups' },
-  { id:'knowledge',  icon:'📚', label:'Knowledge',   route:'notes'       },
-  { id:'org-insights',icon:'📊',label:'Insights',    route:'progress'    },
-];
-
-function spLoadSpaces() {
-  try { return JSON.parse(localStorage.getItem(SP_KEY()) || '[]'); }
-  catch { return []; }
-}
-function spSaveSpaces(spaces) {
-  localStorage.setItem(SP_KEY(), JSON.stringify(spaces));
-}
-
-function spSelectType(type) {
-  SP_SELECTED_TYPE = type;
-  ['personal','org'].forEach(t => {
-    const btn = $('sp-type-' + t);
-    if (btn) btn.classList.toggle('selected', t === type);
-  });
-}
-
-function spNextStep() {
-  if (!SP_SELECTED_TYPE) { toast('Please select a space type.'); return; }
-  $('sp-step-1').style.display = 'none';
-  $('sp-step-2').style.display = 'block';
-  const label = $('sp-step-2-label');
-  if (label) label.textContent = SP_SELECTED_TYPE === 'personal'
-    ? 'Name your personal space:'
-    : 'Name your organization space:';
-  const membersSection = $('sp-members-section');
-  if (membersSection) membersSection.style.display = SP_SELECTED_TYPE === 'org' ? 'block' : 'none';
-  const nameInput = $('sp-name-input');
-  if (nameInput) { nameInput.value = ''; nameInput.focus(); }
-}
-
-function spBackStep() {
-  $('sp-step-2').style.display = 'none';
-  $('sp-step-1').style.display = 'block';
-}
-
-function spResetSteps() {
-  SP_SELECTED_TYPE = null;
-  ['personal','org'].forEach(t => {
-    const btn = $('sp-type-' + t);
-    if (btn) btn.classList.remove('selected');
-  });
-  const s1 = $('sp-step-1'); if (s1) s1.style.display = 'block';
-  const s2 = $('sp-step-2'); if (s2) s2.style.display = 'none';
-  const err = $('sp-err');   if (err) err.textContent = '';
-  const ni = $('sp-name-input'); if (ni) ni.value = '';
-  const mi = $('sp-members-input'); if (mi) mi.value = '';
-}
-
-function spCreateSpace() {
-  const name = $('sp-name-input')?.value.trim();
-  if (!name) { const e = $('sp-err'); if(e) e.textContent = 'Please enter a space name.'; return; }
-  const members = SP_SELECTED_TYPE === 'org'
-    ? ($('sp-members-input')?.value.trim().split(',').map(m=>m.trim()).filter(Boolean) || [])
-    : [];
-
-  const spaces  = spLoadSpaces();
-  const newSpace = {
-    id:      Date.now().toString(36),
-    type:    SP_SELECTED_TYPE,
-    name:    name,
-    members: members,
-    created: new Date().toISOString(),
-  };
-  spaces.push(newSpace);
-  spSaveSpaces(spaces);
-
-  // Close modal and re-render sidebar
-  $('cn-modal-bg').classList.remove('open');
-  spResetSteps();
-  spRenderSidebar();
-  toast(`"${name}" created! 🎉`);
-}
-
-function spRenderSidebar() {
-  const container = $('dyn-spaces-container');
-  if (!container) return;
-  const spaces = spLoadSpaces();
-
-  if (!spaces.length) {
-    container.innerHTML = '<div style="font-size:.72rem;color:var(--muted);padding:4px 8px;opacity:.7">No spaces yet</div>';
-    return;
   }
-
-  container.innerHTML = spaces.map(sp => {
-    const tabs = sp.type === 'personal' ? SP_PERSONAL_TABS : SP_ORG_TABS;
-    const icon = sp.type === 'personal' ? '👤' : '🏢';
-    return `
-      <div class="dyn-space-section" data-space-id="${sp.id}">
-        <div class="dyn-space-header" onclick="spToggleSpace('${sp.id}')">
-          <span style="font-size:.85rem;margin-right:5px">${icon}</span>
-          <span class="dyn-space-name">${esc(sp.name)}</span>
-          <div style="position:relative">
-            <button class="dyn-space-ellipsis" onclick="event.stopPropagation();spToggleMenu('${sp.id}')" title="Options">···</button>
-            <div class="dyn-space-menu" id="sp-menu-${sp.id}">
-              <button class="dyn-space-menu-item" onclick="spEditSpace('${sp.id}')">✏️ Rename</button>
-              ${sp.type === 'org' ? `<button class="dyn-space-menu-item" onclick="spAddMember('${sp.id}')">👥 Add Member</button>` : ''}
-              <button class="dyn-space-menu-item danger" onclick="spDeleteSpace('${sp.id}')">🗑 Delete</button>
-            </div>
-          </div>
-        </div>
-        <div class="snav-items" id="sp-items-${sp.id}" style="max-height:none;opacity:1">
-          ${tabs.map(t => `
-            <button class="snav-item" onclick="snavSelect('${t.id}','spaces',this)">
-              <span class="snav-item-icon">${t.icon}</span> ${t.label}
-            </button>`).join('')}
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function spToggleSpace(id) {
-  const items = $('sp-items-' + id);
-  if (!items) return;
-  const open = items.style.maxHeight !== '0px' && items.style.maxHeight !== '';
-  items.style.maxHeight  = open ? '0px'  : 'none';
-  items.style.opacity    = open ? '0'    : '1';
-}
-
-function spToggleMenu(id) {
-  document.querySelectorAll('.dyn-space-menu').forEach(m => {
-    if (m.id !== 'sp-menu-' + id) m.classList.remove('open');
-  });
-  const menu = $('sp-menu-' + id);
-  if (menu) menu.classList.toggle('open');
-}
-
-function spEditSpace(id) {
-  const spaces = spLoadSpaces();
-  const sp = spaces.find(s => s.id === id);
-  if (!sp) return;
-  const newName = prompt('Rename space:', sp.name);
-  if (!newName?.trim()) return;
-  sp.name = newName.trim();
-  spSaveSpaces(spaces);
-  spRenderSidebar();
-  document.querySelectorAll('.dyn-space-menu').forEach(m => m.classList.remove('open'));
-}
-
-function spAddMember(id) {
-  const spaces = spLoadSpaces();
-  const sp = spaces.find(s => s.id === id);
-  if (!sp) return;
-  const member = prompt('Add member (name or matric):');
-  if (!member?.trim()) return;
-  sp.members = sp.members || [];
-  sp.members.push(member.trim());
-  spSaveSpaces(spaces);
-  toast(`Added ${member.trim()} to ${sp.name}`);
-  document.querySelectorAll('.dyn-space-menu').forEach(m => m.classList.remove('open'));
-}
-
-function spDeleteSpace(id) {
-  if (!confirm('Delete this space? This cannot be undone.')) return;
-  const spaces = spLoadSpaces().filter(s => s.id !== id);
-  spSaveSpaces(spaces);
-  spRenderSidebar();
-  toast('Space deleted');
-}
-
-// Close menus on outside click
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.dyn-space-ellipsis') && !e.target.closest('.dyn-space-menu')) {
-    document.querySelectorAll('.dyn-space-menu').forEach(m => m.classList.remove('open'));
-  }
-});
-
+  
+// ═══════════════════════════ DIFFICULTY ═════════════════════════
 function openDiff() { $('diff-modal').classList.add('open'); }
 function closeDiff(e) { if (e.target === $('diff-modal')) $('diff-modal').classList.remove('open'); }
 
@@ -2652,54 +2439,12 @@ function updateDiff(level) {
 // ═══════════════════════════ SNAV (New Sidebar) ═════════════════
 
 const SNAV_SECTION_HEIGHTS = {
-  ai: 4, academics: 3, planner: 6, assessments: 3, insights: 3,
-  spaces: 2, 'personal-space': 4, 'organization-space': 8
+  ai: 4, academics: 3, planner: 4, assessments: 3, insights: 3
 };
 
-// ═══════════════════════════ MOBILE SIDEBAR ══════════════════
-
-function toggleMobileSidebar() {
-  const panel = $('mob-sidebar-panel');
-  const fab   = $('mob-fab');
-  if (!panel) return;
-  if (panel.classList.contains('open')) {
-    closeMobileSidebar();
-  } else {
-    openMobileSidebar();
-  }
-}
-
-function openMobileSidebar() {
-  const panel   = $('mob-sidebar-panel');
-  const overlay = $('mob-sidebar-overlay');
-  const fab     = $('mob-fab');
-  if (panel)   panel.classList.add('open');
-  if (overlay) overlay.classList.add('visible');
-  if (fab)     fab.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  // Sync user avatar and name
-  const av     = $('mob-snav-av');   const tbAv   = $('tb-av');
-  const name   = $('mob-snav-name'); const tbName = $('tb-name');
-  if (av && tbAv)     { av.textContent = ''; av.innerHTML = tbAv.innerHTML || tbAv.textContent; }
-  if (name && tbName) name.textContent = tbName.textContent;
-}
-
-function closeMobileSidebar() {
-  const panel   = $('mob-sidebar-panel');
-  const overlay = $('mob-sidebar-overlay');
-  const fab     = $('mob-fab');
-  if (panel)   panel.classList.remove('open');
-  if (overlay) overlay.classList.remove('visible');
-  if (fab)     fab.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// Mobile sidebar section toggle (separate from desktop snavToggle)
-const MOB_SNAV_HEIGHTS = { ai: 4, academics: 3, planner: 4, assessments: 3, insights: 3 };
-
-function mobSnavToggle(sectionId, btn) {
-  const items = $(`mob-items-${sectionId}`);
-  const secBtn = $(`mob-sec-${sectionId}`) || btn;
+function snavToggle(sectionId, btn) {
+  const items = $(`snav-items-${sectionId}`);
+  const secBtn = $(`snav-sec-${sectionId}`) || btn;
   if (!items) return;
   const isOpen = items.classList.contains('open');
   if (isOpen) {
@@ -2707,45 +2452,13 @@ function mobSnavToggle(sectionId, btn) {
     items.classList.remove('open');
     if (secBtn) secBtn.classList.remove('open');
   } else {
-    const count = MOB_SNAV_HEIGHTS[sectionId] || 5;
+    const count = SNAV_SECTION_HEIGHTS[sectionId] || 5;
     items.style.maxHeight = (count * 34) + 'px';
     items.classList.add('open');
     if (secBtn) secBtn.classList.add('open');
-  }
-}
-
-// Swipe to close mobile sidebar
-(function() {
-  let startX = 0;
-  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-  document.addEventListener('touchend', e => {
-    const diff = startX - e.changedTouches[0].clientX;
-    const panel = $('mob-sidebar-panel');
-    if (panel && panel.classList.contains('open') && diff > 60) closeMobileSidebar();
-  }, { passive: true });
-})();
-
-// ═══════════════════════════ SNAV TOGGLE ════════════════════
-function snavToggle(sectionId, btn) {
-  const items  = document.getElementById('snav-items-' + sectionId);
-  const secBtn = document.getElementById('snav-sec-' + sectionId) || btn;
-  if (!items) return;
-  const isOpen = items.classList.contains('open');
-  if (isOpen) {
-    items.style.maxHeight = '0px';
-    items.style.opacity   = '0';
-    items.classList.remove('open');
-    if (secBtn) secBtn.classList.remove('open');
-  } else {
-    items.style.maxHeight = 'none';
-    const h = items.scrollHeight;
-    items.style.maxHeight = '0px';
-    requestAnimationFrame(() => {
-      items.style.maxHeight = h + 'px';
-      items.style.opacity   = '1';
-    });
-    items.classList.add('open');
-    if (secBtn) secBtn.classList.add('open');
+    // Update icon background
+    const icon = secBtn ? secBtn.querySelector('.snav-section-icon') : null;
+    if (icon) icon.style.background = getSectionColor(sectionId, true);
   }
 }
 
@@ -2768,46 +2481,40 @@ const SNAV_ROUTE = {
     const ci = $('ci'); if (ci) { ci.value = 'Help me build a study plan and break down my tasks'; ci.focus(); }
   }, 300); },
   // Academics
+  'courses':         () => { nav('courses', null); },
+  'materials':       () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
   'courses':         () => { nav('courses', null); setTimeout(() => loadClasses(), 200); },
-  'materials':       () => nav('learninghub', null),
   'announcements':   () => nav('announcements', null),
   // Planner
   'tasks':           () => nav('flux', null),
   'notes':           () => nav('notes', null),
   'study-deck':      () => nav('lab', null),
-  'study-plan':      () => nav('studyplan', null),
-  'studyplan':       () => nav('studyplan', null),
-  'pomodoro':        () => nav('pomodoro', null),
-  'study-timer':     () => nav('pomodoro', null),
+  'studyplan':      () => nav('studyplan', null),
   // Assessments
   'quizzes':         () => nav('quiz', null),
   'exams':           () => { nav('courses', null); setTimeout(() => {
     const examBtn = document.querySelector('.ctab[onclick*="exam-entry"]'); if (examBtn) examBtn.click();
   }, 350); },
-  'results':         () => nav('stats', null),
+  'results':         () => { nav('stats', null); },
   // Insights
-  'progress':        () => nav('progress', null),
-  'weak-areas':      () => { nav('progress', null); setTimeout(() => {
+  'progress':        () => nav('stats', null),
+  'weak-areas':      () => { nav('stats', null); setTimeout(() => {
     const wa = $('weak-section'); if (wa) wa.scrollIntoView({ behavior: 'smooth' });
   }, 400); },
   'recommendations': () => { nav('chat', null); setTimeout(() => getSuggestions(), 400); },
-  // Spaces
-  'content-hub':     () => nav('contenthub', null),
+'content-hub':     () => nav('contenthub', null),
   'goals':           () => nav('goals', null),
   'document-hub':    () => nav('documenthub', null),
-  'task-tracker':    () => nav('flux', null),
+  'materials':       () => nav('learninghub', null),
   'study-groups':    () => nav('studygroups', null),
-  'knowledge':       () => nav('notes', null),
-  'meetings':        () => nav('studygroups', null),
-  // Global
+  'pomodoro':        () => nav('pomodoro', null),
   'create-new':      () => { cnOpen(); },
   'settings':        () => nav('settings', null),
-};
+  };
 
 let SNAV_ACTIVE = 'chat';
 
 function snavSelect(itemId, sectionId, btnEl) {
-
   // Clear all active states
   document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
   const dash = $('snav-dash'); if (dash) dash.classList.remove('active');
@@ -2851,41 +2558,33 @@ function syncSnavFromPanel(name) {
 // ═══════════════════════════ NAV ════════════════════════════════
 function nav(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const panel = document.getElementById('panel-' + name);
-  if (panel) panel.classList.add('active');
-
-  document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
-  const tabBtn = document.getElementById('tab-' + name);
-  if (tabBtn) {
-    tabBtn.classList.add('active');
-    tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  }
-
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn, .mn-btn').forEach(b => b.classList.remove('active'));
+  const p = document.getElementById(`panel-${name}`);
+  if (p) p.classList.add('active');
   if (btn) btn.classList.add('active');
-
+  const mob = document.getElementById(`mn-${name}`); if (mob) mob.classList.add('active');
   syncSnavFromPanel(name);
-
-  // Panel init triggers
-  if (name === 'stats')          loadStats();
-  if (name === 'progress')       loadProgress();
-  if (name === 'notes')          loadNotes();
-  if (name === 'courses')        loadClasses();
-  if (name === 'announcements')  loadAllAnnouncements();
-  if (name === 'goals')          glLoad();
-  if (name === 'documenthub')    dhInit();
-  if (name === 'learninghub')    lhInit();
-  if (name === 'studygroups')    sgInit();
-  if (name === 'pomodoro')       pomInit();
-  if (name === 'contenthub')     chInit();
-  if (name === 'settings')       stInit();
+  if (name === 'stats')         loadStats();
+  if (name === 'more')          syncMore();
+  if (name === 'leaderboard')   loadLeaderboard();
+  if (name === 'notes')         loadNotes();
+  if (name === 'flux')          loadStudyHelp();
+  if (name === 'courses')       loadClasses();
+  if (name === 'announcements') loadAllAnnouncements();
   if (name === 'studyplan') {
     $('sp-date') && ($('sp-date').min = new Date().toISOString().split('T')[0]);
     setTimeout(spLoadSaved, 100);
   }
+  if (name === 'contenthub') chInit();
+  if (name === 'settings')   stInit();
+  if (name === 'progress')    loadProgress();
+  if (name === 'goals')       glLoad();
+  if (name === 'documenthub') dhInit();
+  if (name === 'learninghub') lhInit();
+  if (name === 'studygroups') sgInit();
+  if (name === 'pomodoro')    pomInit();
   if (name === 'quiz' && !S.quizActive) {
-    const qd = $('qd-label');
-    if (qd) qd.textContent = S.diff.charAt(0).toUpperCase() + S.diff.slice(1);
+    const qd = $('qd-label'); if (qd) qd.textContent = S.diff.charAt(0).toUpperCase()+S.diff.slice(1);
   }
 }
 
@@ -3835,11 +3534,138 @@ async function submitExam() {
   EXAM_STATE.examId = null;
 }
 
+function renderExamResults(d, container) {
+  const wrap = container || $('exam-fullscreen-overlay');
+  if (!wrap) return;
+  wrap.style.display = 'flex';
 
+  const grade  = d.grade || 'F';
+  const score  = d.score || 0;
+  const emoji  = score >= 70 ? '🏆' : score >= 50 ? '👍' : '📚';
+  const msg    = score >= 70 ? 'Excellent work!' : score >= 50 ? 'Good effort!' : 'Keep practising!';
+  const gColor = grade==='A'?'#22c55e':grade==='B'?'#4f6ef7':grade==='C'?'#f59e0b':'#ef4444';
 
+  wrap.innerHTML = `
+    <div class="exam-results-wrap">
+      <div style="width:100%;max-width:600px">
 
+        <!-- Score card -->
+        <div style="background:#13151c;border:1px solid rgba(255,255,255,0.08);border-radius:20px;
+                    padding:2rem;text-align:center;margin-bottom:1.25rem">
+          <div style="font-size:3rem;margin-bottom:.5rem">${emoji}</div>
+          <div style="font-family:var(--font);font-size:3.5rem;font-weight:800;line-height:1;
+                      background:linear-gradient(135deg,var(--accent),var(--accent2));
+                      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+            ${score}%
+          </div>
+          <div style="font-size:1.3rem;font-weight:800;margin:.4rem 0;color:${gColor}">Grade ${grade}</div>
+          <div style="color:#9ca3af;font-size:.88rem;margin-bottom:1rem">${msg}</div>
+          <div style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap">
+            <div style="text-align:center">
+              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#e5e7eb">${d.correct||0}/${d.total||0}</div>
+              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Correct</div>
+            </div>
+            ${d.time_taken ? `<div style="text-align:center">
+              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#e5e7eb">${d.time_taken}</div>
+              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Time</div>
+            </div>` : ''}
+            ${(d.tab_switches||EXAM_STATE?.tabSwitches||0) > 0 ? `<div style="text-align:center">
+              <div style="font-family:var(--font);font-size:1.4rem;font-weight:800;color:#ef4444">${d.tab_switches||EXAM_STATE?.tabSwitches||0}</div>
+              <div style="font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em">Tab switches</div>
+            </div>` : ''}
+          </div>
+        </div>
 
+        <!-- Question breakdown -->
+        <div style="font-family:var(--font);font-weight:700;font-size:.9rem;color:#e5e7eb;margin-bottom:.75rem">
+          Question Breakdown
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem">
+          ${(d.breakdown||[]).map((b, i) => `
+            <div style="background:${b.is_correct?'#22c55e0d':'#ef44440d'};
+                        border:1px solid ${b.is_correct?'#22c55e25':'#ef444425'};
+                        border-radius:12px;padding:12px 14px">
+              <div style="display:flex;align-items:flex-start;gap:8px">
+                <span style="font-size:.9rem;flex-shrink:0">${b.is_correct?'✅':'❌'}</span>
+                <div style="flex:1">
+                  <div style="font-size:.84rem;font-weight:600;color:#e5e7eb;margin-bottom:4px">
+                    Q${i+1}: ${esc(b.question)}
+                  </div>
+                  ${!b.is_correct ? `
+                    <div style="font-size:.75rem;color:#9ca3af">
+                      Your answer: <span style="color:#ef4444;font-weight:600">${b.your_answer||'Not answered'}</span>
+                      &nbsp;·&nbsp; Correct: <span style="color:#22c55e;font-weight:600">${b.correct}</span>
+                    </div>
+                    ${b.explanation ? `<div style="font-size:.75rem;color:#6b7280;margin-top:4px;font-style:italic">💡 ${esc(b.explanation)}</div>` : ''}
+                  ` : ''}
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>
 
+        <button onclick="closeExamMode()"
+          style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;
+                 border-radius:10px;font-family:var(--font);font-weight:700;font-size:.9rem;cursor:pointer">
+          ← Back to Courses
+        </button>
+      </div>
+    </div>`;
+}
+
+async function viewMyExamResult(examId) {
+  // Show results in the fullscreen overlay
+  let overlay = $('exam-fullscreen-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'exam-fullscreen-overlay';
+    overlay.className = 'exam-fullscreen';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+    <div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div>
+    <div style="color:#9ca3af;font-size:.88rem">Loading results...</div>
+  </div>`;
+  overlay.style.display = 'flex';
+
+  try {
+    const r = await fetch(`/api/exam/student-results?sid=${encodeURIComponent(S.sid)}`);
+    const d = await r.json();
+    const result = (d.results || []).find(res => res.exam_id === examId);
+    if (!result) {
+      overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">📝</div>
+        <div style="color:#9ca3af;margin-bottom:1.5rem">No submission found for this exam.</div>
+        <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
+      </div>`;
+      return;
+    }
+    renderExamResults(result, overlay);
+  } catch {
+    overlay.innerHTML = `<div class="exam-body" style="text-align:center;padding-top:3rem">
+      <div style="font-size:2rem;margin-bottom:.5rem">⚠️</div>
+      <div style="color:#9ca3af;margin-bottom:1.5rem">Could not load results.</div>
+      <button onclick="closeExamMode()" class="btn-start" style="padding:10px 28px">← Back</button>
+    </div>`;
+  }
+}
+
+async function enterExamById() {
+  const inp = $('exam-id-input');
+  const err = $('exam-entry-err');
+  const btn = $('exam-entry-btn');
+  const id  = inp?.value.trim();
+
+  if (!id) { if (err) err.textContent = 'Enter an Exam ID.'; return; }
+  if (err) err.textContent = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+
+  try {
+    await launchExamMode(id, CURRENT_CLASS?.code || '');
+  } catch(e) {
+    if (err) err.textContent = e.message || 'Could not start exam.';
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '▶ Start Exam'; }
+}
 
 function renderExamResults(d) {
   const takeView = $('exam-take-view');
@@ -5248,12 +5074,4 @@ async function shareResult(score, topic) {
   } catch(e) {
     toast('Could not create share link — try again.');
   }
-}
-
-
-
-
-
-
-
-
+        }y
