@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0c0d10">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sivarr AI — Your Learning Companion</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
@@ -202,34 +199,29 @@
 
   <!-- Scrollable Tab Bar (mobile only) -->
 <div class="tab-bar" id="tab-bar">
-  <!-- Primary 5 always visible -->
   <button class="tab-pill active" id="tab-chat" onclick="navTab('chat',this)">
     <span class="tp-icon">💬</span> Chat
   </button>
   <button class="tab-pill" id="tab-quiz" onclick="navTab('quiz',this)">
     <span class="tp-icon">📝</span> Quiz
   </button>
-  <button class="tab-pill" id="tab-courses" onclick="navTab('courses',this)">
-    <span class="tp-icon">🏫</span> Courses
-  </button>
-  <button class="tab-pill" id="tab-flux" onclick="navTab('flux',this)">
-    <span class="tp-icon">✅</span> Tasks
-  </button>
   <button class="tab-pill" id="tab-progress" onclick="navTab('progress',this)">
     <span class="tp-icon">📊</span> Progress
   </button>
-  <!-- Secondary — still in bar, scrollable -->
+  <button class="tab-pill" id="tab-courses" onclick="navTab('courses',this)">
+    <span class="tp-icon">🏫</span> Classes
+  </button>
+  <button class="tab-pill" id="tab-studyplan" onclick="navTab('studyplan',this)">
+    <span class="tp-icon">🗺️</span> Study Plan
+  </button>
   <button class="tab-pill" id="tab-notes" onclick="navTab('notes',this)">
     <span class="tp-icon">📓</span> Notes
   </button>
   <button class="tab-pill" id="tab-lab" onclick="navTab('lab',this)">
     <span class="tp-icon">🧪</span> Study Deck
   </button>
-  <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements',this)">
-    <span class="tp-icon">📢</span> Notices
-  </button>
-  <button class="tab-pill" id="tab-studyplan" onclick="navTab('studyplan',this)">
-    <span class="tp-icon">🗺️</span> Study Plan
+  <button class="tab-pill" id="tab-flux" onclick="navTab('flux',this)">
+    <span class="tp-icon">🗂️</span> Tasks
   </button>
   <button class="tab-pill" id="tab-goals" onclick="navTab('goals',this)">
     <span class="tp-icon">🎯</span> Goals
@@ -248,6 +240,9 @@
   </button>
   <button class="tab-pill" id="tab-contenthub" onclick="navTab('contenthub',this)">
     <span class="tp-icon">🧠</span> Content
+  </button>
+  <button class="tab-pill" id="tab-announcements" onclick="navTab('announcements',this)">
+    <span class="tp-icon">📢</span> Notices
   </button>
   <button class="tab-pill" id="tab-settings" onclick="navTab('settings',this)">
     <span class="tp-icon">⚙️</span> Settings
@@ -270,6 +265,25 @@
           <div style="font-size:9px;color:#4b5563;letter-spacing:.1em;text-transform:uppercase;margin-top:2px">Student</div>
         </div>
       </div>
+
+      <!-- Right Sidebar -->
+<div class="right" id="right-sidebar">
+  <div class="right-inner">
+    <div class="right-panel-header">
+      <div class="right-panel-title" id="right-panel-title">📌 Quick View</div>
+      <button class="right-close-btn" onclick="closeRightPanel()">✕</button>
+    </div>
+    <div id="right-panel-body">
+      <div style="text-align:center;padding:2rem 1rem;color:var(--muted)">
+        <div style="font-size:2rem;margin-bottom:.5rem">📌</div>
+        <div style="font-size:.82rem">Click any sidebar item while holding <kbd style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:.75rem">Alt</kbd> to pin it here</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Right toggle button -->
+<button class="right-toggle-btn" id="right-toggle-btn" onclick="toggleRightPanel()" title="Open side panel">❮</button>
 
       
       <!-- Nav content -->
@@ -400,30 +414,110 @@
           </button>
         </div>
 
-<!-- ── Spaces (Dynamic) ── -->
+        <!-- ── Spaces ── -->
 <button class="snav-section-btn" id="snav-sec-spaces" onclick="snavToggle('spaces',this)">
-<span class="snav-section-icon">🌐</span>
-<span class="snav-section-label">Spaces</span>
-<span class="snav-chevron">▼</span>
+  <span class="snav-section-icon">🧩</span>
+  <span class="snav-section-label">Spaces</span>
+  <span class="snav-chevron">▼</span>
 </button>
+
 <div class="snav-items open" id="snav-items-spaces" style="max-height:500px">
-  <div id="dyn-spaces-container">
-    <!-- Spaces injected here dynamically -->
-  </div>
-  <button class="snav-item" style="color:var(--accent);font-size:.78rem;opacity:.85;margin-top:4px"
-    onclick="cnSwitchAndOpen('space')">
-    <span class="snav-item-icon">➕</span> Create Space
+
+  <!-- Personal Space -->
+  <button class="snav-section-btn nested" onclick="snavToggle('personal',this)">
+    <span class="snav-section-icon">🏠</span>
+    <span class="snav-section-label">Personal Space</span>
+    <span class="snav-chevron">▼</span>
   </button>
+
+  <div class="snav-items nested" id="snav-items-personal">
+    <button class="snav-item" onclick="snavSelect('task-tracker','spaces',this)">
+      <span class="snav-item-icon">✅</span> Task Tracker
+    </button>
+    <button class="snav-item" onclick="snavSelect('document-hub','spaces',this)">
+      <span class="snav-item-icon">📁</span> Document Hub
+    </button>
+    <button class="snav-item" onclick="snavSelect('meetings','spaces',this)">
+      <span class="snav-item-icon">📅</span> Meetings
+    </button>
+    <button class="snav-item" onclick="snavSelect('content-hub','spaces',this)">
+      <span class="snav-item-icon">🧠</span> Content Hub
+    </button>
+  </div>
+
+  <!-- Organization Space -->
+  <button class="snav-section-btn nested" onclick="snavToggle('org',this)">
+    <span class="snav-section-icon">🏢</span>
+    <span class="snav-section-label">Organization Space</span>
+    <span class="snav-chevron">▼</span>
+  </button>
+
+  <div class="snav-items nested" id="snav-items-org">
+
+    <!-- Dashboard -->
+    <button class="snav-section-btn nested" onclick="snavToggle('org-dashboard',this)">
+      <span class="snav-section-icon">📊</span>
+      <span class="snav-section-label">Dashboard</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+
+    <div class="snav-items nested" id="snav-items-org-dashboard">
+      <button class="snav-item" onclick="snavSelect('org-overview','spaces',this)">
+        <span class="snav-item-icon">📈</span> Overview
+      </button>
+    </div>
+
+    <!-- Execution -->
+    <button class="snav-section-btn nested" onclick="snavToggle('execution',this)">
+      <span class="snav-section-icon">⚡</span>
+      <span class="snav-section-label">Execution</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+
+    <div class="snav-items nested" id="snav-items-execution">
+      <button class="snav-item" onclick="snavSelect('tasks','spaces',this)">
+        <span class="snav-item-icon">📌</span> Tasks
+      </button>
+      <button class="snav-item" onclick="snavSelect('projects','spaces',this)">
+        <span class="snav-item-icon">📂</span> Projects
+      </button>
+      <button class="snav-item" onclick="snavSelect('workflow','spaces',this)">
+        <span class="snav-item-icon">🔄</span> Workflow
+      </button>
+      <button class="snav-item" onclick="snavSelect('meeting-hub','spaces',this)">
+        <span class="snav-item-icon">📅</span> Meeting Hub
+      </button>
+    </div>
+
+    <!-- Flat items -->
+    <button class="snav-item" onclick="snavSelect('goals','spaces',this)">
+      <span class="snav-item-icon">🎯</span> Goals
+    </button>
+
+    <button class="snav-item" onclick="snavSelect('team','spaces',this)">
+      <span class="snav-item-icon">👥</span> Team
+    </button>
+
+    <button class="snav-item" onclick="snavSelect('knowledge','spaces',this)">
+      <span class="snav-item-icon">📚</span> Knowledge
+    </button>
+
+    <button class="snav-item" onclick="snavSelect('org-insights','spaces',this)">
+      <span class="snav-item-icon">📊</span> Insights
+    </button>
+
+  </div>
+
 </div>
 
 <!-- Bottom Actions -->
 <div style="margin-top:10px;padding:6px 4px;border-top:1px solid rgba(255,255,255,0.05)">
-<button class="snav-item" onclick="cnOpen()">
-<span class="snav-item-icon">➕</span> Create New
-</button>
-<button class="snav-item" onclick="snavSelect('settings','spaces',this)">
-<span class="snav-item-icon">⚙️</span> Settings
-</button>
+  <button class="snav-item" onclick="snavSelect('create-new','spaces',this)">
+    <span class="snav-item-icon">➕</span> Create New
+  </button>
+  <button class="snav-item" onclick="snavSelect('settings','spaces',this)">
+    <span class="snav-item-icon">⚙️</span> Settings
+  </button>
 </div>
 
         <!-- Flux (Planner tasks) kept for backward compat, hidden -->
@@ -438,7 +532,6 @@
           <div class="stat-row"><span class="sl">Sessions</span><span class="sv" id="sq-s">0</span></div>
           <div class="stat-row"><span class="sl">Revision</span><span class="sv" id="sq-w">0</span></div>
         </div>
-                          </div>
       </div>
 
       <!-- User footer -->
@@ -657,6 +750,7 @@
           </div>
         </div>
       </div>
+
 
       <!-- Flux Panel -->
       <!-- Flux Panel — Notion-style -->
@@ -1771,7 +1865,8 @@
         </div>
       </div>
       
-    </main>  </div>
+    </main>
+  </div>
 
   
 
@@ -1792,123 +1887,40 @@
 <div class="cn-modal-bg" id="cn-modal-bg" onclick="cnClose(event)">
   <div class="cn-modal">
     <div class="cn-handle"></div>
+    <div class="cn-title">✦ Create New</div>
+    <div class="cn-grid">
 
-    <!-- Tab switcher -->
-    <div style="display:flex;gap:6px;margin-bottom:1.1rem;background:var(--card);border-radius:10px;padding:4px">
-      <button id="cn-tab-create" onclick="cnSwitchTab('create')"
-        style="flex:1;padding:7px;border-radius:7px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s">
-        ✦ Create New
+      <button class="cn-item" style="--cn-color:#4f6ef7" onclick="cnAction('note')">
+        <div class="cn-item-icon">📝</div>
+        <div><div class="cn-item-label">Note</div><div class="cn-item-sub">Quick study note</div></div>
       </button>
-      <button id="cn-tab-space" onclick="cnSwitchTab('space')"
-        style="flex:1;padding:7px;border-radius:7px;border:none;background:none;color:var(--muted);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s">
-        🌐 Create Space
+
+      <button class="cn-item" style="--cn-color:#22c55e" onclick="cnAction('task')">
+        <div class="cn-item-icon">✅</div>
+        <div><div class="cn-item-label">Task</div><div class="cn-item-sub">Add to Flux board</div></div>
       </button>
-      <button id="cn-tab-framework" onclick="cnSwitchTab('framework')"
-        style="flex:1;padding:7px;border-radius:7px;border:none;background:none;color:var(--muted);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s">
-        ⚡ Framework
+
+      <button class="cn-item" style="--cn-color:#f59e0b" onclick="cnAction('studyplan')">
+        <div class="cn-item-icon">🗺️</div>
+        <div><div class="cn-item-label">Study Plan</div><div class="cn-item-sub">Exam countdown</div></div>
       </button>
+
+      <button class="cn-item" style="--cn-color:#f472b6" onclick="cnAction('quiz')">
+        <div class="cn-item-icon">📝</div>
+        <div><div class="cn-item-label">Quiz</div><div class="cn-item-sub">Test yourself</div></div>
+      </button>
+
+      <button class="cn-item" style="--cn-color:#a78bfa" onclick="cnAction('studydeck')">
+        <div class="cn-item-icon">🧪</div>
+        <div><div class="cn-item-label">Study Deck</div><div class="cn-item-sub">Upload lecture notes</div></div>
+      </button>
+
+      <button class="cn-item" style="--cn-color:#34d399" onclick="cnAction('ask')">
+        <div class="cn-item-icon">💬</div>
+        <div><div class="cn-item-label">Ask AI</div><div class="cn-item-sub">Chat instantly</div></div>
+      </button>
+
     </div>
-
-    <!-- Create New items -->
-    <div id="cn-pane-create">
-      <div class="cn-title" style="margin-bottom:.875rem">✦ Create New</div>
-      <div class="cn-grid">
-        <button class="cn-item" style="--cn-color:#4f6ef7" onclick="cnAction('note')">
-          <div class="cn-item-icon">📝</div>
-          <div><div class="cn-item-label">Note</div><div class="cn-item-sub">Quick study note</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#22c55e" onclick="cnAction('task')">
-          <div class="cn-item-icon">✅</div>
-          <div><div class="cn-item-label">Task</div><div class="cn-item-sub">Add to Flux board</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#f59e0b" onclick="cnAction('studyplan')">
-          <div class="cn-item-icon">🗺️</div>
-          <div><div class="cn-item-label">Study Plan</div><div class="cn-item-sub">Exam countdown</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#f472b6" onclick="cnAction('quiz')">
-          <div class="cn-item-icon">📝</div>
-          <div><div class="cn-item-label">Quiz</div><div class="cn-item-sub">Test yourself</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#a78bfa" onclick="cnAction('studydeck')">
-          <div class="cn-item-icon">🧪</div>
-          <div><div class="cn-item-label">Study Deck</div><div class="cn-item-sub">Upload lecture notes</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#34d399" onclick="cnAction('ask')">
-          <div class="cn-item-icon">💬</div>
-          <div><div class="cn-item-label">Ask AI</div><div class="cn-item-sub">Chat instantly</div></div>
-        </button>
-      </div>
-    </div>
-
-    <!-- Create Space pane -->
-    <div id="cn-pane-space" style="display:none">
-      <div class="cn-title" style="margin-bottom:.875rem">🌐 Create a Space</div>
-
-      <!-- Step 1: Pick type -->
-      <div id="sp-step-1">
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">Choose space type:</div>
-        <button class="sp-type-btn" id="sp-type-personal" onclick="spSelectType('personal')">
-          <div class="sp-type-icon" style="background:#4f6ef720">👤</div>
-          <div>
-            <div class="sp-type-label">Personal Space</div>
-            <div class="sp-type-sub">Tasks, notes, docs, content hub and more</div>
-          </div>
-        </button>
-        <button class="sp-type-btn" id="sp-type-org" onclick="spSelectType('org')">
-          <div class="sp-type-icon" style="background:#7c3aed20">🏢</div>
-          <div>
-            <div class="sp-type-label">Organization Space</div>
-            <div class="sp-type-sub">Team goals, projects, workflows, meetings</div>
-          </div>
-        </button>
-        <div class="sp-btn-row">
-          <button class="sp-btn-secondary" onclick="cnClose({target:$('cn-modal-bg')})">Cancel</button>
-          <button class="sp-btn-primary" onclick="spNextStep()">Continue →</button>
-        </div>
-      </div>
-
-      <!-- Step 2: Name + members -->
-      <div id="sp-step-2" style="display:none">
-        <div id="sp-step-2-label" style="font-size:.78rem;color:var(--muted);margin-bottom:.625rem">Space name:</div>
-        <input class="sp-input" id="sp-name-input" placeholder="e.g. My Personal Space, MTH301 Team...">
-        <div id="sp-members-section" style="display:none">
-          <div style="font-size:.78rem;color:var(--muted);margin-bottom:.375rem">Add members (optional):</div>
-          <input class="sp-input" id="sp-members-input" placeholder="Enter names or matric numbers, comma-separated">
-        </div>
-        <div id="sp-err" style="color:var(--red);font-size:.75rem;min-height:16px"></div>
-        <div class="sp-btn-row">
-          <button class="sp-btn-secondary" onclick="spBackStep()">← Back</button>
-          <button class="sp-btn-primary" onclick="spCreateSpace()">✦ Create Space</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Create Framework pane -->
-    <div id="cn-pane-framework" style="display:none">
-      <div class="cn-title" style="margin-bottom:.875rem">⚡ Create Framework</div>
-      <div style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1rem">
-        Frameworks are structured templates for recurring workflows — study routines, project pipelines, team processes.
-      </div>
-      <div class="cn-grid">
-        <button class="cn-item" style="--cn-color:#f59e0b" onclick="cnClose({target:$('cn-modal-bg')});toast('Study Routine framework coming soon 🔥')">
-          <div class="cn-item-icon">📅</div>
-          <div><div class="cn-item-label">Study Routine</div><div class="cn-item-sub">Daily study schedule</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#4f6ef7" onclick="cnClose({target:$('cn-modal-bg')});toast('Project Pipeline coming soon 🔥')">
-          <div class="cn-item-icon">📊</div>
-          <div><div class="cn-item-label">Project Pipeline</div><div class="cn-item-sub">Track deliverables</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#34d399" onclick="cnClose({target:$('cn-modal-bg')});toast('Exam Prep framework coming soon 🔥')">
-          <div class="cn-item-icon">🎯</div>
-          <div><div class="cn-item-label">Exam Prep</div><div class="cn-item-sub">Structured revision</div></div>
-        </button>
-        <button class="cn-item" style="--cn-color:#7c3aed" onclick="cnClose({target:$('cn-modal-bg')});toast('Team Sprint framework coming soon 🔥')">
-          <div class="cn-item-icon">⚡</div>
-          <div><div class="cn-item-label">Team Sprint</div><div class="cn-item-sub">Weekly team goals</div></div>
-        </button>
-      </div>
-    </div>
-
   </div>
 </div>
 
@@ -1930,131 +1942,6 @@
     </div>
   </div>
 </div>
-<!-- ── Mobile FAB (Notion-style floating menu button) ── -->
-<button class="mob-fab" id="mob-fab" onclick="toggleMobileSidebar()" aria-label="Menu">
-  ☰
-</button>
-
-<!-- ── Mobile sidebar overlay ── -->
-<div class="mob-sidebar-overlay" id="mob-sidebar-overlay" onclick="closeMobileSidebar()"></div>
-
-<!-- ── Mobile slide-in sidebar panel ── -->
-<div class="mob-sidebar-panel" id="mob-sidebar-panel">
-
-  <!-- Header -->
-  <div class="mob-sidebar-header">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:26px;height:26px;border-radius:7px;
-                  background:linear-gradient(135deg,var(--accent),var(--accent2));
-                  display:flex;align-items:center;justify-content:center;
-                  font-family:var(--font);font-weight:800;font-size:11px;color:#fff">Sr</div>
-      <span style="font-family:var(--font);font-weight:800;font-size:.88rem;color:var(--text)">
-        Sivarr <span style="color:var(--accent)">AI</span>
-      </span>
-    </div>
-    <button class="mob-sidebar-close" onclick="closeMobileSidebar()">✕</button>
-  </div>
-
-  <!-- Nav -->
-  <div class="mob-sidebar-nav">
-
-    <!-- Dashboard -->
-    <button class="snav-dash-btn" style="width:100%;margin-bottom:6px"
-      onclick="snavSelect('chat','ai',null);closeMobileSidebar()">
-      <span style="font-size:.82rem">⊞</span> Dashboard
-    </button>
-    <div style="height:1px;background:var(--border);margin:4px 4px 8px"></div>
-
-    <!-- AI -->
-    <button class="snav-section-btn open" id="mob-sec-ai" onclick="mobSnavToggle('ai',this)">
-      <span class="snav-section-icon" style="background:rgba(129,140,248,0.15)">🧠</span>
-      <span class="snav-section-label">AI</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-    <div class="snav-items open" id="mob-items-ai" style="max-height:160px">
-      <button class="snav-item" style="--item-accent:#818cf8" onclick="snavSelect('chat','ai',null);closeMobileSidebar()"><span class="snav-item-icon">💬</span> Chat</button>
-      <button class="snav-item" style="--item-accent:#818cf8" onclick="snavSelect('ask-notes','ai',null);closeMobileSidebar()"><span class="snav-item-icon">📄</span> Ask from Notes</button>
-      <button class="snav-item" style="--item-accent:#818cf8" onclick="snavSelect('generate-quiz','ai',null);closeMobileSidebar()"><span class="snav-item-icon">✨</span> Generate Quiz</button>
-      <button class="snav-item" style="--item-accent:#818cf8" onclick="snavSelect('study-help-ai','ai',null);closeMobileSidebar()"><span class="snav-item-icon">💡</span> Study Help</button>
-    </div>
-
-    <!-- Academics -->
-    <button class="snav-section-btn" id="mob-sec-academics" onclick="mobSnavToggle('academics',this)">
-      <span class="snav-section-icon">🎓</span>
-      <span class="snav-section-label">Academics</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-    <div class="snav-items" id="mob-items-academics">
-      <button class="snav-item" style="--item-accent:#34d399" onclick="snavSelect('courses','academics',null);closeMobileSidebar()"><span class="snav-item-icon">📚</span> Courses</button>
-      <button class="snav-item" style="--item-accent:#34d399" onclick="snavSelect('materials','academics',null);closeMobileSidebar()"><span class="snav-item-icon">📂</span> Materials</button>
-      <button class="snav-item" style="--item-accent:#34d399" onclick="snavSelect('announcements','academics',null);closeMobileSidebar()"><span class="snav-item-icon">📢</span> Announcements</button>
-    </div>
-
-    <!-- Planner -->
-    <button class="snav-section-btn" id="mob-sec-planner" onclick="mobSnavToggle('planner',this)">
-      <span class="snav-section-icon">📅</span>
-      <span class="snav-section-label">Planner</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-    <div class="snav-items" id="mob-items-planner">
-      <button class="snav-item" style="--item-accent:#fb923c" onclick="snavSelect('tasks','planner',null);closeMobileSidebar()"><span class="snav-item-icon">✅</span> Tasks</button>
-      <button class="snav-item" style="--item-accent:#fb923c" onclick="snavSelect('notes','planner',null);closeMobileSidebar()"><span class="snav-item-icon">📓</span> Notes</button>
-      <button class="snav-item" style="--item-accent:#fb923c" onclick="snavSelect('study-deck','planner',null);closeMobileSidebar()"><span class="snav-item-icon">🧪</span> Study Deck</button>
-      <button class="snav-item" style="--item-accent:#fb923c" onclick="snavSelect('study-plan','planner',null);closeMobileSidebar()"><span class="snav-item-icon">🗺️</span> Study Plan</button>
-    </div>
-
-    <!-- Assessments -->
-    <button class="snav-section-btn" id="mob-sec-assessments" onclick="mobSnavToggle('assessments',this)">
-      <span class="snav-section-icon">🧪</span>
-      <span class="snav-section-label">Assessments</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-    <div class="snav-items" id="mob-items-assessments">
-      <button class="snav-item" style="--item-accent:#f472b6" onclick="snavSelect('quizzes','assessments',null);closeMobileSidebar()"><span class="snav-item-icon">📝</span> Quizzes</button>
-      <button class="snav-item" style="--item-accent:#f472b6" onclick="snavSelect('exams','assessments',null);closeMobileSidebar()"><span class="snav-item-icon">📋</span> Exams</button>
-      <button class="snav-item" style="--item-accent:#f472b6" onclick="snavSelect('results','assessments',null);closeMobileSidebar()"><span class="snav-item-icon">🏆</span> Results</button>
-    </div>
-
-    <!-- Insights -->
-    <button class="snav-section-btn" id="mob-sec-insights" onclick="mobSnavToggle('insights',this)">
-      <span class="snav-section-icon">📊</span>
-      <span class="snav-section-label">Insights</span>
-      <span class="snav-chevron">▼</span>
-    </button>
-    <div class="snav-items" id="mob-items-insights">
-      <button class="snav-item" style="--item-accent:#60a5fa" onclick="snavSelect('progress','insights',null);closeMobileSidebar()"><span class="snav-item-icon">📈</span> Progress</button>
-      <button class="snav-item" style="--item-accent:#60a5fa" onclick="snavSelect('weak-areas','insights',null);closeMobileSidebar()"><span class="snav-item-icon">🎯</span> Weak Areas</button>
-      <button class="snav-item" style="--item-accent:#60a5fa" onclick="snavSelect('recommendations','insights',null);closeMobileSidebar()"><span class="snav-item-icon">💡</span> Recommendations</button>
-    </div>
-
-    <div style="height:1px;background:var(--border);margin:8px 4px"></div>
-    <button class="snav-item" style="--item-accent:#818cf8"
-      onclick="navTab('settings',null);closeMobileSidebar()">
-      <span class="snav-item-icon">⚙️</span> Settings
-    </button>
-
-  </div><!-- end mob-sidebar-nav -->
-
-  <!-- User footer -->
-  <div style="padding:10px 8px;border-top:1px solid var(--border);flex-shrink:0">
-    <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:9px">
-      <div id="mob-snav-av"
-        style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;
-               background:linear-gradient(135deg,var(--accent),var(--accent2));
-               display:flex;align-items:center;justify-content:center;
-               font-weight:700;font-size:11px;color:#fff">?</div>
-      <div>
-        <div id="mob-snav-name" style="font-size:12px;font-weight:600;color:var(--text)">Student</div>
-        <div style="font-size:10px;color:var(--muted)">Student</div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- end mob-sidebar-panel -->
-
 <script src="/js/app.js" defer></script>
 </body>
-</html>
-
-
-
+  </html>
