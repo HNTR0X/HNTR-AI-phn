@@ -183,6 +183,7 @@ body.dashboard-active { overflow: hidden; }
 #dashboard {
   display: none;
   height: 100vh;
+  max-height: 100vh;
   width: 100%;
   flex-direction: column;
   overflow: hidden;
@@ -293,19 +294,12 @@ body.dashboard-active { overflow: hidden; }
   display: grid;
   grid-template-columns: 200px 1fr;
   grid-template-rows: 1fr;
-  height: calc(100vh - 56px);
-  max-height: calc(100vh - 56px);
-  overflow: hidden;
+  flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
-.body {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  height: calc(100vh - 56px);
-  overflow: hidden;
-  min-height: 0;
-}
+.body
 
 /* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
@@ -315,6 +309,7 @@ body.dashboard-active { overflow: hidden; }
   display: flex;
   flex-direction: column;
   scrollbar-width: none;
+  align-self: stretch;
 }
 .sidebar::-webkit-scrollbar { display: none; }
 
@@ -469,24 +464,26 @@ body.dashboard-active { overflow: hidden; }
 .main {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  overflow: hidden;
   min-height: 0;
+  min-width: 0;
+  align-self: stretch;
 }
 
 .panel {
   display: none;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
-  flex-shrink: 0;
+  width: 100%;
 }
 
 .panel.active {
   display: flex;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  width: 100%;
 }
 
 /* Chat */
@@ -1119,6 +1116,7 @@ body.dashboard-active { overflow: hidden; }
   /* ── Body takes full width with no sidebar column ── */
   .body {
     grid-template-columns: 1fr !important;
+    height: calc(100dvh - 56px - 46px);
   }
 
   /* ── Desktop sidebar hidden ── */
@@ -1417,7 +1415,7 @@ body.dashboard-active { overflow: hidden; }
   display: flex;
   flex: 1;
   min-height: 0;
-  height: 100%;
+  width: 100%;
 }
 
   /* ── Main fills full body ── */
@@ -1443,7 +1441,7 @@ body.dashboard-active { overflow: hidden; }
   display: flex;
   flex: 1;
   min-height: 0;
-  height: 100%;
+  width: 100%;
 }
 
   /* ── Chat ── */
