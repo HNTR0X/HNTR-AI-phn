@@ -162,11 +162,13 @@ async function doLogin(prefillName, prefillMatric) {
 
     $('tb-av').textContent   = r.name[0].toUpperCase();
     $('tb-name').textContent = r.name;
-    const snavAv   = $('snav-av');   if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
-    const snavName = $('snav-name'); if (snavName) snavName.textContent = r.name;
-    const pdName   = $('pd-name');   if (pdName)   pdName.textContent   = r.name;
-    const pdMatric = $('pd-matric'); if (pdMatric) pdMatric.textContent = r.matric;
-    const tbAvBig  = $('tb-av-big'); if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
+    const snavAv   = $('snav-av');     if (snavAv)   snavAv.textContent   = r.name[0].toUpperCase();
+    const snavName = $('snav-name');   if (snavName) snavName.textContent = r.name;
+    const pdName   = $('pd-name');     if (pdName)   pdName.textContent   = r.name;
+    const pdMatric = $('pd-matric');   if (pdMatric) pdMatric.textContent = r.matric;
+    const tbAvBig  = $('tb-av-big');   if (tbAvBig)  tbAvBig.textContent  = r.name[0].toUpperCase();
+    const mobAv    = $('mob-snav-av'); if (mobAv)    mobAv.textContent    = r.name[0].toUpperCase();
+    const mobName  = $('mob-snav-name'); if (mobName) mobName.textContent = r.name;
     loadProfilePic();
     snavToggle('ai', $('snav-sec-ai'));
     updateDiff(r.difficulty);
@@ -2442,6 +2444,123 @@ const SNAV_SECTION_HEIGHTS = {
   ai: 4, academics: 3, planner: 4, assessments: 3, insights: 3
 };
 
+// ═══════════════════════════ MOBILE SIDEBAR ══════════════════
+
+const MOB_SNAV_HEIGHTS = {
+  ai: 4, academics: 2, planner: 4,
+  assessments: 3, insights: 3, spaces: 2
+};
+
+function toggleMobileSidebar() {
+  const panel = $('mob-sidebar-panel');
+  if (!panel) return;
+  panel.classList.contains('open') ? closeMobileSidebar() : openMobileSidebar();
+}
+
+function openMobileSidebar() {
+  const panel   = $('mob-sidebar-panel');
+  const overlay = $('mob-sidebar-overlay');
+  const fab     = $('mob-fab');
+  if (panel)   panel.classList.add('open');
+  if (overlay) overlay.classList.add('visible');
+  if (fab)     fab.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Sync avatar + name from topbar
+  const av   = $('mob-snav-av');   const tbAv   = $('tb-av');
+  const name = $('mob-snav-name'); const tbName = $('tb-name');
+  if (av && tbAv) {
+    av.innerHTML  = tbAv.innerHTML || '';
+    av.textContent = av.innerHTML ? '' : (tbAv.textContent || '?');
+    if (tbAv.querySelector('img')) av.innerHTML = tbAv.innerHTML;
+    else av.textContent = tbAv.textContent;
+  }
+  if (name && tbName) name.textContent = tbName.textContent;
+}
+
+function closeMobileSidebar() {
+  const panel   = $('mob-sidebar-panel');
+  const overlay = $('mob-sidebar-overlay');
+  const fab     = $('mob-fab');
+  if (panel)   panel.classList.remove('open');
+  if (overlay) overlay.classList.remove('visible');
+  if (fab)     fab.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function mobSnavToggle(sectionId, btn) {
+  const items  = $(`mob-items-${sectionId}`);
+  const secBtn = $(`mob-sec-${sectionId}`) || btn;
+  if (!items) return;
+  const isOpen = items.classList.contains('open');
+  if (isOpen) {
+    items.style.maxHeight = '0px';
+    items.classList.remove('open');
+    if (secBtn) secBtn.classList.remove('open');
+  } else {
+    const count = MOB_SNAV_HEIGHTS[sectionId] || 5;
+    items.style.maxHeight = (count * 34) + 'px';
+    items.classList.add('open');
+    if (secBtn) secBtn.classList.add('open');
+  }
+}
+
+// Navigate and close sidebar
+function navMob(panelName) {
+  nav(panelName, null);
+  closeMobileSidebar();
+}
+
+// Navigate to AI chat with a prefilled prompt
+function navMobAI(feature) {
+  nav('chat', null);
+  closeMobileSidebar();
+  const prompts = {
+    'ask-notes':       () => { setTimeout(() => $('attach-btn')?.click(), 300); },
+    'study-help':      () => { setTimeout(() => { const ci = $('ci'); if (ci) { ci.value = 'Help me plan and structure my study tasks'; ci.focus(); }}, 300); },
+    'study-plan':      () => { setTimeout(() => { const ci = $('ci'); if (ci) { ci.value = 'Create a personalised weekly study plan for me'; ci.focus(); }}, 300); },
+    'weak-areas':      () => { setTimeout(() => getSuggestions && getSuggestions(), 400); },
+    'recommendations': () => { setTimeout(() => getSuggestions && getSuggestions(), 400); },
+  };
+  if (prompts[feature]) prompts[feature]();
+}
+
+// Navigate to courses and open exam entry tab
+function navMobExamEntry() {
+  nav('courses', null);
+  closeMobileSidebar();
+  setTimeout(() => {
+    const examTab = document.querySelector('.ctab[onclick*="exam-entry"]');
+    if (examTab) examTab.click();
+  }, 350);
+}
+
+// Swipe left to close sidebar
+(function() {
+  let startX = 0, startY = 0;
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = startX - e.changedTouches[0].clientX;
+    const dy = Math.abs(startY - e.changedTouches[0].clientY);
+    const panel = $('mob-sidebar-panel');
+    if (panel && panel.classList.contains('open') && dx > 55 && dy < 40) {
+      closeMobileSidebar();
+    }
+  }, { passive: true });
+})();
+
+// Auto-open AI section on first load
+document.addEventListener('DOMContentLoaded', () => {
+  const aiItems  = $('mob-items-ai');
+  const aiBtn    = $('mob-sec-ai');
+  const count    = MOB_SNAV_HEIGHTS['ai'] || 4;
+  if (aiItems) { aiItems.style.maxHeight = (count * 34) + 'px'; aiItems.classList.add('open'); }
+  if (aiBtn)   aiBtn.classList.add('open');
+});
+
+// ═══════════════════════════ SNAV TOGGLE ═════════════════════
 function snavToggle(sectionId, btn) {
   const items = $(`snav-items-${sectionId}`);
   const secBtn = $(`snav-sec-${sectionId}`) || btn;
@@ -5071,3 +5190,4 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
       }
+
