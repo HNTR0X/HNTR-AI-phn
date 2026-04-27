@@ -2447,7 +2447,7 @@ const SNAV_SECTION_HEIGHTS = {
 // ═══════════════════════════ MOBILE SIDEBAR ══════════════════
 
 const MOB_SNAV_HEIGHTS = {
-  ai: 4, academics: 2, planner: 4,
+  ai: 4, academics: 2, planner: 6,
   assessments: 3, insights: 3, spaces: 2
 };
 
