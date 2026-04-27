@@ -1,7 +1,12 @@
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  --sidebar-bg:     #0c0d10;
+  --sidebar-border: rgba(255,255,255,0.06);
+  --sidebar-text:   #9ca3af;
+  --snav-item-bg:   transparent;
+  --snav-hover:     rgba(255,255,255,0.04);
+
   --bg:        #08090d;
   --surface:   #0f1117;
   --card:      #13151c;
@@ -290,8 +295,8 @@ body.dashboard-active { overflow: hidden; }
 
 /* ── Sidebar ─────────────────────────────────────────── */
 .sidebar {
-  background: #0c0d10;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -311,7 +316,7 @@ body.dashboard-active { overflow: hidden; }
   background: none;
   cursor: pointer;
   font-family: var(--font-body);
-  color: #9ca3af;
+  color: var(--sidebar-text);
   transition: background .12s, color .12s;
   text-align: left;
   margin-bottom: 1px;
@@ -363,8 +368,8 @@ body.dashboard-active { overflow: hidden; }
   padding: 6px 10px 6px 11px;
   border: none;
   border-radius: 7px;
-  background: none;
-  color: #6b7280;
+  background: var(--snav-item-bg);
+  color: var(--sidebar-text);
   font-family: var(--font-body);
   font-size: .8rem;
   cursor: pointer;
@@ -373,7 +378,7 @@ body.dashboard-active { overflow: hidden; }
   position: relative;
   margin-bottom: 1px;
 }
-.snav-item:hover { background: rgba(255,255,255,0.04); color: #d1d5db; }
+.snav-item:hover { background: var(--snav-hover); color: var(--text); }
 .snav-item.active { color: var(--item-accent, #818cf8); background: rgba(129,140,248,0.1); }
 .snav-item.active::before {
   content: '';
@@ -395,9 +400,9 @@ body.dashboard-active { overflow: hidden; }
 .snav-dash-btn {
   display: flex; align-items: center; gap: 9px;
   width: 100%; padding: 8px 10px;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 9px; background: rgba(255,255,255,0.03);
-  color: #6b7280; font-family: var(--font-body); font-size: .82rem;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 9px; background: var(--snav-item-bg);
+  color: var(--sidebar-text); font-family: var(--font-body); font-size: .82rem;
   cursor: pointer; transition: all .12s; margin-bottom: 1px;
 }
 .snav-dash-btn:hover { background: rgba(255,255,255,0.06); color: #d1d5db; border-color: rgba(255,255,255,0.1); }
@@ -1391,6 +1396,11 @@ body.dashboard-active { overflow: hidden; }
 /* ── Light Mode ───────────────────────────────────────────── */
 body.light {
   --bg:      #f4f5f7;
+  --sidebar-bg:     #ffffff;
+  --sidebar-border: #e2e4eb;
+  --sidebar-text:   #6b7280;
+  --snav-item-bg:   transparent;
+  --snav-hover:     rgba(0,0,0,0.04);
   --surface: #ffffff;
   --card:    #ffffff;
   --border:  #e2e4eb;
@@ -2354,3 +2364,163 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   .snav-section-btn:hover {
   background: rgba(255,255,255,0.04);
     }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE OVERRIDES (max-width: 720px)
+   replaces the tab bar with a slide-in hamburger sidebar
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Floating hamburger button (Notion-style) ── */
+.mob-fab {
+  display: none;
+}
+
+@media (max-width: 720px) {
+
+  /* 1. Hide desktop sidebar */
+  .sidebar { display: none !important; }
+
+  /* 2. Hide scrolling tab bar — replaced by hamburger */
+  .tab-bar  { display: none !important; }
+  .tab-pill { display: none !important; }
+
+  /* 3. Body: single column, full height */
+  .body {
+    grid-template-columns: 1fr !important;
+    height: calc(100dvh - 52px) !important;
+    max-height: calc(100dvh - 52px) !important;
+    overflow: hidden;
+  }
+
+  /* 4. Main fills full width */
+  .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* 5. Panels fill content area */
+  .panel {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    flex: 1;
+  }
+  .panel.active { display: flex; }
+
+  /* 6. Topbar compact */
+  .topbar { height: 52px !important; padding: 0 10px !important; }
+  .topbar-name { display: none; }
+
+  /* 7. Fonts reduced */
+  #welcome-greeting,
+  .welcome-greeting { font-size: 1.4rem !important; }
+  .chat-msgs { padding: .75rem !important; }
+  .chat-input { font-size: 16px !important; padding: 9px 11px !important; }
+  .wa-input   { font-size: 16px !important; }
+
+  /* 8. Chat bar full width, no centering gap */
+  .chat-bar {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+  }
+
+  /* 9. Quick action pills smaller */
+  .quick-action { font-size: .78rem !important; padding: 7px 13px !important; }
+
+  /* 10. Login box fits phone */
+  #login-screen { align-items: flex-start !important; padding: 1rem !important; }
+  .login-box    { padding: 1.5rem 1.25rem !important; margin: 1rem 0 !important; }
+
+  /* 11. Exam mobile */
+  .exam-option    { padding: 12px 12px !important; font-size: .88rem !important; }
+  .exam-body      { padding: .875rem !important; }
+  .exam-topbar    { padding: .625rem .875rem !important; }
+
+  /* 12. Floating hamburger FAB */
+  .mob-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    left: 14px;
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    z-index: 990;
+    box-shadow: 0 4px 18px rgba(79,110,247,.4);
+    font-size: 1.2rem;
+    transition: transform .2s, background .2s;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1;
+  }
+  .mob-fab:active { transform: scale(.9); }
+  .mob-fab.open   { transform: rotate(90deg); background: var(--accent2); }
+}
+
+/* ── Mobile sidebar overlay ── */
+.mob-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.52);
+  z-index: 995;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity .22s;
+}
+.mob-sidebar-overlay.visible { display: block; opacity: 1; }
+
+/* ── Mobile slide-in sidebar ── */
+.mob-sidebar-panel {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: min(272px, 82vw);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  z-index: 996;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform .26s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.mob-sidebar-panel.open { transform: translateX(0); }
+
+/* Header inside panel */
+.mob-sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 14px 9px;
+  border-bottom: 1px solid var(--sidebar-border);
+  flex-shrink: 0;
+}
+.mob-sidebar-close {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); font-size: .85rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scrollable nav */
+.mob-sidebar-nav {
+  flex: 1; overflow-y: auto; padding: 8px 8px;
+  scrollbar-width: none;
+}
+.mob-sidebar-nav::-webkit-scrollbar { display: none; }
