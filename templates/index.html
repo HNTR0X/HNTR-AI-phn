@@ -1846,5 +1846,137 @@
   </div>
 </div>
 <script src="/js/app.js" defer></script>
+<!-- ═══ MOBILE FAB + SLIDE-IN SIDEBAR ═══ -->
+
+<!-- Floating hamburger button -->
+<button class="mob-fab" id="mob-fab" onclick="toggleMobileSidebar()" aria-label="Menu">☰</button>
+
+<!-- Backdrop overlay -->
+<div class="mob-sidebar-overlay" id="mob-sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- Slide-in sidebar panel -->
+<div class="mob-sidebar-panel" id="mob-sidebar-panel">
+
+  <!-- Header -->
+  <div class="mob-sidebar-header">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;overflow:hidden;
+                  background:linear-gradient(135deg,var(--accent),var(--accent2));
+                  display:flex;align-items:center;justify-content:center;
+                  font-weight:800;font-size:11px;color:#fff">Sr</div>
+      <span style="font-family:var(--font);font-weight:800;font-size:.88rem;color:var(--text)">
+        Sivarr <span style="color:var(--accent)">AI</span>
+      </span>
+    </div>
+    <button class="mob-sidebar-close" onclick="closeMobileSidebar()">✕</button>
+  </div>
+
+  <!-- Scrollable nav -->
+  <div class="mob-sidebar-nav">
+
+    <button class="snav-dash-btn" style="width:100%;margin-bottom:6px;font-family:var(--font-body);font-size:.82rem;color:var(--sidebar-text);cursor:pointer;transition:background .12s"
+      onclick="nav('chat',null);closeMobileSidebar()">
+      <span style="font-size:.82rem">⊞</span> Dashboard
+    </button>
+    <div style="height:1px;background:var(--sidebar-border);margin:4px 4px 8px"></div>
+
+    <!-- AI -->
+    <button class="snav-section-btn" id="mob-sec-ai" onclick="mobSnavToggle('ai',this)">
+      <span class="snav-section-icon" style="background:rgba(129,140,248,0.15)">🧠</span>
+      <span class="snav-section-label">AI</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+    <div class="snav-items" id="mob-items-ai">
+      <button class="snav-item" style="--item-accent:#818cf8" onclick="navMob('chat')"><span class="snav-item-icon">💬</span> Chat</button>
+      <button class="snav-item" style="--item-accent:#818cf8" onclick="navMobAI('ask-notes')"><span class="snav-item-icon">📄</span> Ask from Notes</button>
+      <button class="snav-item" style="--item-accent:#818cf8" onclick="navMob('quiz')"><span class="snav-item-icon">✨</span> Generate Quiz</button>
+      <button class="snav-item" style="--item-accent:#818cf8" onclick="navMobAI('study-help')"><span class="snav-item-icon">💡</span> Study Help</button>
+    </div>
+
+    <!-- Academics -->
+    <button class="snav-section-btn" id="mob-sec-academics" onclick="mobSnavToggle('academics',this)">
+      <span class="snav-section-icon">🎓</span>
+      <span class="snav-section-label">Academics</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+    <div class="snav-items" id="mob-items-academics">
+      <button class="snav-item" style="--item-accent:#34d399" onclick="navMob('courses')"><span class="snav-item-icon">📚</span> Courses</button>
+      <button class="snav-item" style="--item-accent:#34d399" onclick="navMob('announcements')"><span class="snav-item-icon">📢</span> Announcements</button>
+    </div>
+
+    <!-- Planner -->
+    <button class="snav-section-btn" id="mob-sec-planner" onclick="mobSnavToggle('planner',this)">
+      <span class="snav-section-icon">📅</span>
+      <span class="snav-section-label">Planner</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+    <div class="snav-items" id="mob-items-planner">
+      <button class="snav-item" style="--item-accent:#fb923c" onclick="navMob('flux')"><span class="snav-item-icon">✅</span> Tasks (Flux)</button>
+      <button class="snav-item" style="--item-accent:#fb923c" onclick="navMob('notes')"><span class="snav-item-icon">📓</span> Notes</button>
+      <button class="snav-item" style="--item-accent:#fb923c" onclick="navMob('lab')"><span class="snav-item-icon">🧪</span> Study Deck</button>
+      <button class="snav-item" style="--item-accent:#fb923c" onclick="navMobAI('study-plan')"><span class="snav-item-icon">🗺️</span> Study Plan</button>
+    </div>
+
+    <!-- Assessments -->
+    <button class="snav-section-btn" id="mob-sec-assessments" onclick="mobSnavToggle('assessments',this)">
+      <span class="snav-section-icon">📋</span>
+      <span class="snav-section-label">Assessments</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+    <div class="snav-items" id="mob-items-assessments">
+      <button class="snav-item" style="--item-accent:#f472b6" onclick="navMob('quiz')"><span class="snav-item-icon">📝</span> Quizzes</button>
+      <button class="snav-item" style="--item-accent:#f472b6" onclick="navMobExamEntry()"><span class="snav-item-icon">📋</span> Exams</button>
+      <button class="snav-item" style="--item-accent:#f472b6" onclick="navMob('stats')"><span class="snav-item-icon">🏆</span> Results</button>
+    </div>
+
+    <!-- Insights -->
+    <button class="snav-section-btn" id="mob-sec-insights" onclick="mobSnavToggle('insights',this)">
+      <span class="snav-section-icon">📊</span>
+      <span class="snav-section-label">Insights</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+    <div class="snav-items" id="mob-items-insights">
+      <button class="snav-item" style="--item-accent:#60a5fa" onclick="navMob('stats')"><span class="snav-item-icon">📈</span> Progress</button>
+      <button class="snav-item" style="--item-accent:#60a5fa" onclick="navMobAI('weak-areas')"><span class="snav-item-icon">🎯</span> Weak Areas</button>
+      <button class="snav-item" style="--item-accent:#60a5fa" onclick="navMobAI('recommendations')"><span class="snav-item-icon">💡</span> Recommendations</button>
+    </div>
+
+    <div style="height:1px;background:var(--sidebar-border);margin:8px 4px"></div>
+
+    <!-- Spaces -->
+    <button class="snav-section-btn" id="mob-sec-spaces" onclick="mobSnavToggle('spaces',this)">
+      <span class="snav-section-icon">🏠</span>
+      <span class="snav-section-label">Spaces</span>
+      <span class="snav-chevron">▼</span>
+    </button>
+    <div class="snav-items" id="mob-items-spaces">
+      <button class="snav-item" style="--item-accent:#a78bfa" onclick="navMob('personal-space')"><span class="snav-item-icon">👤</span> Personal Space</button>
+      <button class="snav-item" style="--item-accent:#a78bfa" onclick="navMob('organization-space')"><span class="snav-item-icon">🏢</span> Organization Space</button>
+    </div>
+
+    <div style="height:1px;background:var(--sidebar-border);margin:8px 4px"></div>
+
+    <button class="snav-item" style="--item-accent:#818cf8;margin-top:4px" onclick="navMob('settings')">
+      <span class="snav-item-icon">⚙️</span> Settings
+    </button>
+
+  </div><!-- end mob-sidebar-nav -->
+
+  <!-- User footer — mobile sidebar only -->
+  <div style="padding:8px;border-top:1px solid var(--sidebar-border);flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px">
+      <div id="mob-snav-av"
+        style="width:24px;height:24px;border-radius:50%;flex-shrink:0;overflow:hidden;
+               background:linear-gradient(135deg,var(--accent),var(--accent2));
+               display:flex;align-items:center;justify-content:center;
+               font-weight:700;font-size:10px;color:#fff">?</div>
+      <div style="flex:1;min-width:0">
+        <div id="mob-snav-name" style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Student</div>
+        <div style="font-size:9.5px;color:var(--muted)">Student account</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mob-sidebar-panel -->
 </body>
 </html>
