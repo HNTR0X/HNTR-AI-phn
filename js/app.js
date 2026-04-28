@@ -2600,6 +2600,150 @@ document.addEventListener('click', e => {
     document.querySelectorAll('.dsp-menu').forEach(m => m.classList.remove('open'));
 });
 
+// ═══════════════════════ COMMAND PALETTE ════════════════════
+
+const CMD_ITEMS = [
+  // Panels
+  { icon:'💬', label:'Chat',          tag:'AI',        action:() => nav('chat',null) },
+  { icon:'📝', label:'Quiz',          tag:'AI',        action:() => nav('quiz',null) },
+  { icon:'🧪', label:'Study Deck',    tag:'AI',        action:() => nav('lab',null) },
+  { icon:'📚', label:'Courses',       tag:'Academics', action:() => { nav('courses',null); loadClasses(); } },
+  { icon:'🎓', label:'Learning Hub',  tag:'Academics', action:() => nav('learninghub',null) },
+  { icon:'📢', label:'Announcements', tag:'Academics', action:() => nav('announcements',null) },
+  { icon:'✅', label:'Tasks',         tag:'Planner',   action:() => nav('flux',null) },
+  { icon:'📓', label:'Notes',         tag:'Planner',   action:() => nav('notes',null) },
+  { icon:'🗺️', label:'Study Plan',   tag:'Planner',   action:() => nav('studyplan',null) },
+  { icon:'⏱', label:'Study Timer',   tag:'Planner',   action:() => nav('pomodoro',null) },
+  { icon:'👥', label:'Study Groups',  tag:'Planner',   action:() => nav('studygroups',null) },
+  { icon:'📝', label:'Quizzes',       tag:'Assessments',action:() => nav('quiz',null) },
+  { icon:'📊', label:'Progress',      tag:'Insights',  action:() => nav('progress',null) },
+  { icon:'🎯', label:'Goals',         tag:'Spaces',    action:() => nav('goals',null) },
+  { icon:'📄', label:'Document Hub',  tag:'Spaces',    action:() => nav('documenthub',null) },
+  { icon:'🧠', label:'Content Hub',   tag:'Spaces',    action:() => nav('contenthub',null) },
+  { icon:'⚙️', label:'Settings',      tag:'',          action:() => nav('settings',null) },
+  { icon:'➕', label:'Create New',    tag:'',          action:() => cnOpen() },
+  // Actions
+  { icon:'🎤', label:'Voice Input',   tag:'Action',    action:() => { nav('chat',null); setTimeout(toggleVoice, 300); } },
+  { icon:'🌙', label:'Toggle Theme',  tag:'Action',    action:() => toggleThemeFromMenu() },
+  { icon:'🚪', label:'Sign Out',      tag:'Action',    action:() => logout() },
+];
+
+let CMD_OPEN    = false;
+let CMD_IDX     = -1;
+let CMD_VISIBLE = [];
+
+function cmdOpen() {
+  if (!S.sid) return;
+  CMD_OPEN = true;
+  $('cmd-bg').classList.add('open');
+  const inp = $('cmd-input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  cmdSearch();
+}
+
+function cmdClose(e) {
+  if (e && e.target !== $('cmd-bg')) return;
+  cmdDismiss();
+}
+
+function cmdDismiss() {
+  CMD_OPEN = false;
+  $('cmd-bg').classList.remove('open');
+}
+
+function cmdSearch() {
+  const q    = ($('cmd-input')?.value || '').toLowerCase().trim();
+  const res  = $('cmd-results');
+  if (!res) return;
+  CMD_IDX = -1;
+
+  // Get notes from localStorage
+  const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]');
+
+  // Filter panels
+  let items = CMD_ITEMS.filter(item =>
+    !q || item.label.toLowerCase().includes(q) || item.tag.toLowerCase().includes(q)
+  );
+
+  // Filter notes
+  const matchedNotes = q
+    ? notes.filter(n => n.text.toLowerCase().includes(q) || (n.tag||'').toLowerCase().includes(q)).slice(0, 4)
+    : notes.slice(0, 3);
+
+  CMD_VISIBLE = [
+    ...items.map(i => ({ ...i, type: 'panel' })),
+    ...matchedNotes.map(n => ({
+      icon: '📓',
+      label: n.text.split('\n')[0].slice(0, 50) || 'Note',
+      tag: n.tag || 'Note',
+      type: 'note',
+      action: () => { nav('notes', null); }
+    }))
+  ];
+
+  if (!CMD_VISIBLE.length) {
+    res.innerHTML = `<div class="cmd-empty">No results for "<strong>${esc(q)}</strong>"</div>`;
+    return;
+  }
+
+  // Group by tag
+  const groups = {};
+  CMD_VISIBLE.forEach((item, idx) => {
+    const g = item.type === 'note' ? 'Notes' : (item.tag || 'Actions');
+    if (!groups[g]) groups[g] = [];
+    groups[g].push({ ...item, _idx: idx });
+  });
+
+  res.innerHTML = Object.entries(groups).map(([group, groupItems]) => `
+    <div class="cmd-section-label">${group}</div>
+    ${groupItems.map(item => `
+      <button class="cmd-item" data-idx="${item._idx}" onclick="cmdRun(${item._idx})">
+        <div class="cmd-item-icon">${item.icon}</div>
+        <span class="cmd-item-label">${esc(item.label)}</span>
+        ${item.tag ? `<span class="cmd-item-tag">${esc(item.tag)}</span>` : ''}
+      </button>`).join('')}
+  `).join('');
+}
+
+function cmdRun(idx) {
+  const item = CMD_VISIBLE[idx];
+  if (!item) return;
+  cmdDismiss();
+  setTimeout(() => item.action(), 50);
+}
+
+function cmdKey(e) {
+  const items = $('cmd-results')?.querySelectorAll('.cmd-item');
+  if (!items?.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    CMD_IDX = Math.min(CMD_IDX + 1, items.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    CMD_IDX = Math.max(CMD_IDX - 1, 0);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (CMD_IDX >= 0) cmdRun(parseInt(items[CMD_IDX].dataset.idx));
+    else if (CMD_VISIBLE.length) cmdRun(0);
+    return;
+  } else if (e.key === 'Escape') {
+    cmdDismiss(); return;
+  } else { return; }
+
+  items.forEach((el, i) => el.classList.toggle('active', i === CMD_IDX));
+  items[CMD_IDX]?.scrollIntoView({ block: 'nearest' });
+}
+
+// Global keyboard shortcut — Cmd+K or Ctrl+K
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    CMD_OPEN ? cmdDismiss() : cmdOpen();
+  }
+  if (e.key === 'Escape' && CMD_OPEN) cmdDismiss();
+});
+
 function openDiff() { $('diff-modal').classList.add('open'); }
 function closeDiff(e) { if (e.target === $('diff-modal')) $('diff-modal').classList.remove('open'); }
 
