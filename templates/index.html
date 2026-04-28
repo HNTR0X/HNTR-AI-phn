@@ -125,7 +125,15 @@
     </div>
 
     <!-- Right: Profile dropdown -->
-    <div class="topbar-right">
+    <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
+  <button onclick="cmdOpen()"
+    style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-family:var(--font);font-size:.75rem;cursor:pointer;transition:all .2s"
+    onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--text)'"
+    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+    <span>🔍</span>
+    <span>Search</span>
+    <kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.65rem;margin-left:4px">⌘K</kbd>
+  </button>
       <div class="profile-menu" id="profile-menu">
         <button class="profile-trigger" id="profile-trigger" onclick="toggleProfile()">
           <div class="pa" id="tb-av" style="overflow:hidden">?</div>
@@ -1701,6 +1709,24 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+  <!-- ── Command Palette ── -->
+<div class="cmd-bg" id="cmd-bg" onclick="cmdClose(event)">
+  <div class="cmd-box">
+    <div class="cmd-input-wrap">
+      <span class="cmd-icon">⌘</span>
+      <input class="cmd-input" id="cmd-input" placeholder="Search panels, notes, actions..."
+        oninput="cmdSearch()" onkeydown="cmdKey(event)" autocomplete="off" spellcheck="false">
+      <span class="cmd-hint">ESC</span>
+    </div>
+    <div class="cmd-results" id="cmd-results"></div>
+    <div class="cmd-footer">
+      <div class="cmd-footer-hint"><kbd>↑↓</kbd> navigate</div>
+      <div class="cmd-footer-hint"><kbd>↵</kbd> open</div>
+      <div class="cmd-footer-hint"><kbd>ESC</kbd> close</div>
+    </div>
+  </div>
+</div>
 
   <!-- ── Create New Modal ── -->
 <div class="cn-modal-bg" id="cn-modal-bg" onclick="cnClose(event)">
