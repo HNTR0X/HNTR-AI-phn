@@ -2731,3 +2731,195 @@ body.light .quick-action:hover { background: #4f6ef710; border-color: var(--acce
   transition:max-height .25s ease, opacity .2s ease;
 }
 .dsp-items.open { max-height:400px;opacity:1; }
+
+
+/* ── Home Panel ── */
+.home-greeting {
+  font-family: var(--font);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  margin-bottom: 2px;
+}
+.home-sub {
+  font-size: .8rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.home-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .625rem;
+  margin-bottom: 1.25rem;
+}
+.home-stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .875rem;
+  text-align: center;
+  transition: border-color .15s;
+}
+.home-stat:hover { border-color: var(--border2); }
+.home-stat-val {
+  font-family: var(--font);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--accent);
+}
+.home-stat-lbl {
+  font-size: .68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-top: 2px;
+}
+.home-section-title {
+  font-family: var(--font);
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: .625rem;
+}
+.home-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all .15s;
+  margin-bottom: .5rem;
+  text-align: left;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: .85rem;
+}
+.home-quick-btn:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.home-quick-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .95rem;
+  flex-shrink: 0;
+}
+.home-note-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .75rem;
+  margin-bottom: .5rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.home-note-card:hover { border-color: var(--border2); }
+.home-note-title { font-size: .82rem; font-weight: 600; margin-bottom: 2px; }
+.home-note-meta  { font-size: .68rem; color: var(--muted); }
+.home-goal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.home-goal-row:last-child { border: none; }
+.home-goal-name { font-size: .82rem; flex: 1; }
+.home-goal-bar-wrap { width: 60px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.home-goal-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; }
+.home-goal-pct { font-size: .7rem; color: var(--muted); width: 28px; text-align: right; }
+
+/* ── Templates Panel ── */
+.tpl-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-bottom: .75rem;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.tpl-card:hover { border-color: var(--border2); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.tpl-card.custom { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.tpl-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: .5rem;
+}
+.tpl-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.tpl-name { font-family: var(--font); font-size: .9rem; font-weight: 700; }
+.tpl-author { font-size: .7rem; color: var(--muted); margin-top: 1px; }
+.tpl-desc { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+.tpl-tag {
+  display: inline-block; padding: 2px 9px; border-radius: 20px;
+  font-size: .65rem; font-weight: 700; font-family: var(--font);
+  margin-top: .5rem;
+}
+.tpl-use-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 7px; padding: 4px 12px;
+  color: #fff; font-family: var(--font); font-size: .72rem;
+  font-weight: 700; cursor: pointer; transition: opacity .15s;
+}
+.tpl-use-btn:hover { opacity: .85; }
+.tpl-delete-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: none; border: 1px solid var(--border); border-radius: 7px; padding: 4px 10px;
+  color: var(--red); font-size: .72rem; cursor: pointer; transition: all .15s;
+}
+.tpl-delete-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.tpl-filter-bar {
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+  padding-bottom: 2px; margin-bottom: 1rem;
+}
+.tpl-filter-bar::-webkit-scrollbar { display: none; }
+.tpl-filter {
+  padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+  background: none; color: var(--muted); font-family: var(--font);
+  font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.tpl-filter.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-color: transparent; color: #fff;
+}
+/* Create template form */
+.tpl-form {
+  background: var(--card); border: 1px solid var(--accent);
+  border-radius: 14px; padding: 1rem; margin-bottom: 1rem;
+  display: none;
+}
+.tpl-form.open { display: block; }
+.tpl-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 9px; padding: 8px 12px; color: var(--text);
+  font-family: var(--font-body); font-size: .85rem; outline: none;
+  transition: border-color .2s; margin-bottom: .5rem;
+}
+.tpl-input:focus { border-color: var(--accent); }
+.tpl-textarea {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 9px; padding: 8px 12px; color: var(--text);
+  font-family: var(--font-body); font-size: .85rem; outline: none;
+  resize: vertical; min-height: 80px; line-height: 1.6;
+  transition: border-color .2s; margin-bottom: .5rem;
+}
+.tpl-textarea:focus { border-color: var(--accent); }
+
