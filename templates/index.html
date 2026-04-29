@@ -125,53 +125,53 @@
     </div>
 
     <!-- Right: Profile dropdown -->
-    
-          <div class="topbar-right">
-
-      <!-- Search / Command Palette button -->
-      <button onclick="cmdOpen()"
-        style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-family:var(--font);font-size:.75rem;cursor:pointer;transition:all .2s"
-        onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--text)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-        <span>🔍</span>
-        <span>Search</span>
-        <kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.65rem;margin-left:4px">⌘K</kbd>
-      </button>
-
+    <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
+  <button onclick="cmdOpen()"
+    style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-family:var(--font);font-size:.75rem;cursor:pointer;transition:all .2s"
+    onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--text)'"
+    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+    <span>🔍</span>
+    <span>Search</span>
+    <kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.65rem;margin-left:4px">⌘K</kbd>
+  </button>
       <div class="profile-menu" id="profile-menu">
         <button class="profile-trigger" id="profile-trigger" onclick="toggleProfile()">
           <div class="pa" id="tb-av" style="overflow:hidden">?</div>
           <span class="pn" id="tb-name">Student</span>
           <span class="pa-arrow">▼</span>
         </button>
+        </div>
+      <!-- end topbar-right -->
 
         <div class="profile-dropdown" id="profile-dropdown">
+          <!-- Header with avatar + upload -->
           <div class="pd-header" style="text-align:center;padding:14px 10px 14px">
-            <div style="position:relative;display:inline-block;margin-bottom:8px" onclick="$('pfp-input').click()">
+            <div style="position:relative;display:inline-block;margin-bottom:8px" onclick="$('pfp-input').click()" title="Change photo">
               <div class="pa" id="tb-av-big"
                 style="width:56px;height:56px;font-size:1.2rem;border-radius:50%;
-                background:linear-gradient(135deg,var(--accent),var(--accent2));
-                display:flex;align-items:center;justify-content:center;
-                font-family:var(--font);font-weight:700;color:#fff;
-                cursor:pointer;overflow:hidden;margin:0 auto;
-                box-shadow:0 0 0 3px var(--border)">?</div>
-              <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;border-radius:5px;
-                background:var(--accent);display:flex;align-items:center;justify-content:center;
-                font-size:.6rem;cursor:pointer;border:2px solid var(--card)">✏️</div>
+                       background:linear-gradient(135deg,var(--accent),var(--accent2));
+                       display:flex;align-items:center;justify-content:center;
+                       font-family:var(--font);font-weight:700;color:#fff;
+                       cursor:pointer;overflow:hidden;margin:0 auto;
+                       box-shadow:0 0 0 3px var(--border)">?</div>
+              <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;border-radius:50%;
+                          background:var(--accent);display:flex;align-items:center;justify-content:center;
+                          font-size:.6rem;cursor:pointer;border:2px solid var(--card)">✏️</div>
             </div>
             <input type="file" id="pfp-input" accept="image/*" style="display:none" onchange="uploadProfilePic(this)">
             <div class="pd-name" id="pd-name">Student</div>
             <div class="pd-matric" id="pd-matric">Matric</div>
             <button onclick="$('pfp-input').click()"
               style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:7px;
-              padding:3px 10px;color:var(--muted);font-size:.7rem;cursor:pointer;
-              font-family:var(--font-body);transition:all .15s"
+                     padding:3px 10px;color:var(--muted);font-size:.7rem;cursor:pointer;
+                     font-family:var(--font-body);transition:all .15s"
               onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
               📷 Change photo
             </button>
           </div>
 
+          <!-- View Profile -->
           <button class="pd-item" onclick="nav('stats', null); closeProfile()">
             <span class="pd-icon">📊</span> My Progress
           </button>
@@ -187,6 +187,7 @@
 
           <div class="pd-divider"></div>
 
+          <!-- Dark/Light toggle -->
           <div class="pd-toggle" onclick="toggleThemeFromMenu()">
             <div class="pd-toggle-left">
               <span class="pd-icon" id="pd-theme-icon">🌙</span>
@@ -197,12 +198,12 @@
 
           <div class="pd-divider"></div>
 
+          <!-- Sign out -->
           <button class="pd-item danger" onclick="logout()">
             <span class="pd-icon">🚪</span> Sign out
           </button>
         </div>
       </div>
-
     </div>
   </header>
 
@@ -258,7 +259,7 @@
       <div style="flex:1;overflow-y:auto;padding:10px 8px;scrollbar-width:none">
 
         <!-- Dashboard shortcut -->
-        <button class="snav-dash-btn" id="snav-dash" onclick="snavSelect('chat','ai',this)">
+        <button class="snav-dash-btn" id="snav-dash" onclick="nav('home',null);document.querySelectorAll('.snav-item,.snav-dash-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
           <span style="font-size:.82rem">⊞</span> Dashboard
         </button>
 
@@ -341,7 +342,25 @@
         </div>
 
         <!-- ── Assessments ── -->
-        <button class="snav-section-btn" id="snav-sec-assessments" onclick="snavToggle('assessments',this)">
+        <!-- Templates -->
+<button class="snav-section-btn" id="snav-sec-templates" onclick="snavToggle('templates',this)">
+  <span class="snav-section-icon" style="background:rgba(245,158,11,0.15)">⚡</span>
+  <span class="snav-section-label">Templates</span>
+  <span class="snav-chevron">▼</span>
+</button>
+<div class="snav-items" id="snav-items-templates">
+  <button class="snav-item" onclick="snavSelect('templates','templates',this)">
+    <span class="snav-item-icon">📋</span> All Templates
+  </button>
+  <button class="snav-item" onclick="snavSelect('my-templates','templates',this)">
+    <span class="snav-item-icon">⭐</span> My Templates
+  </button>
+  <button class="snav-item" onclick="snavSelect('new-template','templates',this)">
+    <span class="snav-item-icon">➕</span> Create Template
+  </button>
+</div>
+
+<button class="snav-section-btn" id="snav-sec-assessments" onclick="snavToggle('assessments',this)">
           <span class="snav-section-icon">🧪</span>
           <span class="snav-section-label">Assessments</span>
           <span class="snav-chevron">▼</span>
@@ -1693,7 +1712,156 @@
         </div>
       </div>
       
-    </main>
+    
+      <!-- ── Home Panel ── -->
+      <div class="panel" id="panel-home">
+        <div style="flex:1;overflow-y:auto;padding:1.5rem 1.25rem">
+          <!-- Greeting -->
+          <div style="margin-bottom:1.5rem">
+            <div class="home-greeting" id="home-greeting">Good morning</div>
+            <div class="home-sub" id="home-sub">Here's your overview for today.</div>
+          </div>
+
+          <!-- Stat cards -->
+          <div class="home-stat-grid">
+            <div class="home-stat">
+              <div class="home-stat-val" id="home-questions">0</div>
+              <div class="home-stat-lbl">Questions</div>
+            </div>
+            <div class="home-stat">
+              <div class="home-stat-val" id="home-quizzes">0</div>
+              <div class="home-stat-lbl">Quizzes</div>
+            </div>
+            <div class="home-stat">
+              <div class="home-stat-val" id="home-sessions">0</div>
+              <div class="home-stat-lbl">Sessions</div>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div style="margin-bottom:1.5rem">
+            <div class="home-section-title">Quick Actions</div>
+            <button class="home-quick-btn" onclick="nav('chat',null)">
+              <div class="home-quick-icon" style="background:#4f6ef720">💬</div>
+              <div>
+                <div style="font-weight:600;font-size:.85rem">Ask AI</div>
+                <div style="font-size:.72rem;color:var(--muted)">Chat with your learning assistant</div>
+              </div>
+              <span style="color:var(--muted);margin-left:auto">→</span>
+            </button>
+            <button class="home-quick-btn" onclick="nav('quiz',null)">
+              <div class="home-quick-icon" style="background:#f472b620">📝</div>
+              <div>
+                <div style="font-weight:600;font-size:.85rem">Start a Quiz</div>
+                <div style="font-size:.72rem;color:var(--muted)">Test your knowledge</div>
+              </div>
+              <span style="color:var(--muted);margin-left:auto">→</span>
+            </button>
+            <button class="home-quick-btn" onclick="nav('studyplan',null)">
+              <div class="home-quick-icon" style="background:#f59e0b20">🗺️</div>
+              <div>
+                <div style="font-weight:600;font-size:.85rem">Study Plan</div>
+                <div style="font-size:.72rem;color:var(--muted)">Plan your exam prep</div>
+              </div>
+              <span style="color:var(--muted);margin-left:auto">→</span>
+            </button>
+            <button class="home-quick-btn" onclick="nav('templates',null)">
+              <div class="home-quick-icon" style="background:#f59e0b20">⚡</div>
+              <div>
+                <div style="font-weight:600;font-size:.85rem">Templates</div>
+                <div style="font-size:.72rem;color:var(--muted)">Browse & create frameworks</div>
+              </div>
+              <span style="color:var(--muted);margin-left:auto">→</span>
+            </button>
+          </div>
+
+          <!-- Active Goals -->
+          <div id="home-goals-section" style="margin-bottom:1.5rem;display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.625rem">
+              <div class="home-section-title">Active Goals</div>
+              <button onclick="nav('goals',null)" style="background:none;border:none;color:var(--accent);font-size:.75rem;cursor:pointer;font-family:var(--font);font-weight:700">View all →</button>
+            </div>
+            <div id="home-goals-list"></div>
+          </div>
+
+          <!-- Recent Notes -->
+          <div id="home-notes-section" style="margin-bottom:1.5rem;display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.625rem">
+              <div class="home-section-title">Recent Notes</div>
+              <button onclick="nav('notes',null)" style="background:none;border:none;color:var(--accent);font-size:.75rem;cursor:pointer;font-family:var(--font);font-weight:700">View all →</button>
+            </div>
+            <div id="home-notes-list"></div>
+          </div>
+
+          <!-- Recent Templates -->
+          <div style="margin-bottom:1.5rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.625rem">
+              <div class="home-section-title">Featured Templates</div>
+              <button onclick="nav('templates',null)" style="background:none;border:none;color:var(--accent);font-size:.75rem;cursor:pointer;font-family:var(--font);font-weight:700">Browse all →</button>
+            </div>
+            <div id="home-templates-list"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Templates Panel ── -->
+      <div class="panel" id="panel-templates">
+        <div style="flex:1;overflow-y:auto;padding:1.25rem">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div>
+              <h2 style="font-family:var(--font);font-size:1.2rem;font-weight:800;letter-spacing:-.02em">⚡ Templates</h2>
+              <p style="font-size:.78rem;color:var(--muted);margin-top:2px">Ready-made frameworks to accelerate your work.</p>
+            </div>
+            <button onclick="tplToggleForm()"
+              style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:7px 14px;color:#fff;font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer">
+              + Create
+            </button>
+          </div>
+
+          <!-- Create form -->
+          <div class="tpl-form" id="tpl-form">
+            <div style="font-family:var(--font);font-size:.85rem;font-weight:700;margin-bottom:.75rem">✦ New Template</div>
+            <input class="tpl-input" id="tpl-name" placeholder="Template name e.g. Weekly Study Routine">
+            <select class="tpl-input" id="tpl-category" style="cursor:pointer">
+              <option value="study">📚 Study</option>
+              <option value="productivity">⚡ Productivity</option>
+              <option value="project">📊 Project</option>
+              <option value="team">👥 Team</option>
+              <option value="personal">👤 Personal</option>
+            </select>
+            <textarea class="tpl-textarea" id="tpl-desc-input" placeholder="Describe what this template does and how to use it..."></textarea>
+            <input class="tpl-input" id="tpl-steps" placeholder="Steps (comma-separated) e.g. Set goals, Review notes, Take quiz">
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button onclick="tplCreate()"
+                style="flex:1;padding:9px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer">
+                Save Template
+              </button>
+              <button onclick="tplToggleForm()"
+                style="flex:1;padding:9px;border-radius:9px;background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter bar -->
+          <div class="tpl-filter-bar" id="tpl-filters">
+            <button class="tpl-filter active" onclick="tplSetCat('all',this)">All</button>
+            <button class="tpl-filter" onclick="tplSetCat('study',this)">📚 Study</button>
+            <button class="tpl-filter" onclick="tplSetCat('productivity',this)">⚡ Productivity</button>
+            <button class="tpl-filter" onclick="tplSetCat('project',this)">📊 Project</button>
+            <button class="tpl-filter" onclick="tplSetCat('team',this)">👥 Team</button>
+            <button class="tpl-filter" onclick="tplSetCat('personal',this)">👤 Personal</button>
+          </div>
+
+          <!-- Templates grid -->
+          <div id="tpl-list"></div>
+
+        </div>
+      </div>
+</main>
   </div>
 
   
@@ -2029,4 +2197,5 @@
 </div><!-- end mob-sidebar-panel -->
 </body>
 </html>
+
 
