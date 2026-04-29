@@ -125,53 +125,53 @@
     </div>
 
     <!-- Right: Profile dropdown -->
-    <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
-  <button onclick="cmdOpen()"
-    style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-family:var(--font);font-size:.75rem;cursor:pointer;transition:all .2s"
-    onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--text)'"
-    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-    <span>🔍</span>
-    <span>Search</span>
-    <kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.65rem;margin-left:4px">⌘K</kbd>
-  </button>
+    
+          <div class="topbar-right">
+
+      <!-- Search / Command Palette button -->
+      <button onclick="cmdOpen()"
+        style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-family:var(--font);font-size:.75rem;cursor:pointer;transition:all .2s"
+        onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--text)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        <span>🔍</span>
+        <span>Search</span>
+        <kbd style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.65rem;margin-left:4px">⌘K</kbd>
+      </button>
+
       <div class="profile-menu" id="profile-menu">
         <button class="profile-trigger" id="profile-trigger" onclick="toggleProfile()">
           <div class="pa" id="tb-av" style="overflow:hidden">?</div>
           <span class="pn" id="tb-name">Student</span>
           <span class="pa-arrow">▼</span>
         </button>
-        </div>
-      <!-- end topbar-right -->
 
         <div class="profile-dropdown" id="profile-dropdown">
-          <!-- Header with avatar + upload -->
           <div class="pd-header" style="text-align:center;padding:14px 10px 14px">
-            <div style="position:relative;display:inline-block;margin-bottom:8px" onclick="$('pfp-input').click()" title="Change photo">
+            <div style="position:relative;display:inline-block;margin-bottom:8px" onclick="$('pfp-input').click()">
               <div class="pa" id="tb-av-big"
                 style="width:56px;height:56px;font-size:1.2rem;border-radius:50%;
-                       background:linear-gradient(135deg,var(--accent),var(--accent2));
-                       display:flex;align-items:center;justify-content:center;
-                       font-family:var(--font);font-weight:700;color:#fff;
-                       cursor:pointer;overflow:hidden;margin:0 auto;
-                       box-shadow:0 0 0 3px var(--border)">?</div>
-              <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;border-radius:50%;
-                          background:var(--accent);display:flex;align-items:center;justify-content:center;
-                          font-size:.6rem;cursor:pointer;border:2px solid var(--card)">✏️</div>
+                background:linear-gradient(135deg,var(--accent),var(--accent2));
+                display:flex;align-items:center;justify-content:center;
+                font-family:var(--font);font-weight:700;color:#fff;
+                cursor:pointer;overflow:hidden;margin:0 auto;
+                box-shadow:0 0 0 3px var(--border)">?</div>
+              <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;border-radius:5px;
+                background:var(--accent);display:flex;align-items:center;justify-content:center;
+                font-size:.6rem;cursor:pointer;border:2px solid var(--card)">✏️</div>
             </div>
             <input type="file" id="pfp-input" accept="image/*" style="display:none" onchange="uploadProfilePic(this)">
             <div class="pd-name" id="pd-name">Student</div>
             <div class="pd-matric" id="pd-matric">Matric</div>
             <button onclick="$('pfp-input').click()"
               style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:7px;
-                     padding:3px 10px;color:var(--muted);font-size:.7rem;cursor:pointer;
-                     font-family:var(--font-body);transition:all .15s"
+              padding:3px 10px;color:var(--muted);font-size:.7rem;cursor:pointer;
+              font-family:var(--font-body);transition:all .15s"
               onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
               📷 Change photo
             </button>
           </div>
 
-          <!-- View Profile -->
           <button class="pd-item" onclick="nav('stats', null); closeProfile()">
             <span class="pd-icon">📊</span> My Progress
           </button>
@@ -187,7 +187,6 @@
 
           <div class="pd-divider"></div>
 
-          <!-- Dark/Light toggle -->
           <div class="pd-toggle" onclick="toggleThemeFromMenu()">
             <div class="pd-toggle-left">
               <span class="pd-icon" id="pd-theme-icon">🌙</span>
@@ -198,12 +197,12 @@
 
           <div class="pd-divider"></div>
 
-          <!-- Sign out -->
           <button class="pd-item danger" onclick="logout()">
             <span class="pd-icon">🚪</span> Sign out
           </button>
         </div>
       </div>
+
     </div>
   </header>
 
