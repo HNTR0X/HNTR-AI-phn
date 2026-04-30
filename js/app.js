@@ -2744,6 +2744,283 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && CMD_OPEN) cmdDismiss();
 });
 
+
+// ═══════════════════════ HOME PANEL ═════════════════════════
+
+async function loadHome() {
+  // Greeting
+  const hr  = new Date().getHours();
+  const tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  const greet = $('home-greeting');
+  if (greet) greet.textContent = `${tod}, ${S.name.split(' ')[0] || 'there'} 👋`;
+  const sub = $('home-sub');
+  if (sub) {
+    const day = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+    sub.textContent = day;
+  }
+
+  // Stats from S object (already loaded on login)
+  const hq = $('home-questions'); if (hq) hq.textContent = S.stats?.questions || 0;
+  const hqz= $('home-quizzes');   if (hqz) hqz.textContent = S.stats?.quizzes || 0;
+  const hs = $('home-sessions');  if (hs) hs.textContent = S.stats?.sessions || 1;
+
+  // Goals
+  try {
+    const goals = JSON.parse(localStorage.getItem(`sivarr_goals_${S.sid}`) || '[]')
+      .filter(g => !g.completed).slice(0, 3);
+    const gs = $('home-goals-section');
+    const gl = $('home-goals-list');
+    if (goals.length && gs && gl) {
+      gs.style.display = 'block';
+      gl.innerHTML = goals.map(g => {
+        const pct = g.progress || 0;
+        const daysLeft = g.deadline
+          ? Math.ceil((new Date(g.deadline) - new Date()) / 86400000) : null;
+        return `<div class="home-goal-row">
+          <span class="home-goal-name">${esc(g.title)}</span>
+          ${daysLeft !== null ? `<span style="font-size:.68rem;color:${daysLeft<=3?'var(--red)':'var(--muted)'}">${daysLeft}d</span>` : ''}
+          <div class="home-goal-bar-wrap"><div class="home-goal-bar" style="width:${pct}%"></div></div>
+          <span class="home-goal-pct">${pct}%</span>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) {}
+
+  // Recent notes
+  try {
+    const notes = JSON.parse(localStorage.getItem(`sivarr_notes_${S.sid}`) || '[]').slice(0, 3);
+    const ns = $('home-notes-section');
+    const nl = $('home-notes-list');
+    if (notes.length && ns && nl) {
+      ns.style.display = 'block';
+      nl.innerHTML = notes.map(n => `
+        <div class="home-note-card" onclick="nav('notes',null)">
+          ${n.tag ? `<span style="background:#4f6ef715;border:1px solid #4f6ef730;border-radius:10px;padding:1px 8px;font-size:.65rem;color:var(--accent);font-weight:700;display:inline-block;margin-bottom:4px">${esc(n.tag)}</span>` : ''}
+          <div class="home-note-title">${esc(n.text.split('\n')[0].slice(0,60))}</div>
+          <div class="home-note-meta">${n.date || ''}</div>
+        </div>`).join('');
+    }
+  } catch(e) {}
+
+  // Featured templates (first 2 built-in)
+  const htl = $('home-templates-list');
+  if (htl) {
+    const featured = TPL_BUILTIN.slice(0, 2);
+    htl.innerHTML = featured.map(t => `
+      <div class="home-quick-btn" onclick="nav('templates',null)" style="margin-bottom:.5rem">
+        <div class="home-quick-icon" style="background:${t.color}20">${t.icon}</div>
+        <div>
+          <div style="font-weight:600;font-size:.85rem">${esc(t.name)}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${esc(t.desc)}</div>
+        </div>
+        <span style="color:var(--muted);margin-left:auto">→</span>
+      </div>`).join('');
+  }
+}
+
+// ═══════════════════════ TEMPLATES SYSTEM ════════════════════
+
+const TPL_KEY = () => `sivarr_tpl_${S.sid || 'guest'}`;
+let TPL_CAT = 'all';
+
+const TPL_BUILTIN = [
+  {
+    id: "tpl-study-routine",
+    name: "Daily Study Routine",
+    icon: "📅",
+    color: "#f59e0b",
+    category: "study",
+    author: "Sivarr",
+    desc: "A structured daily study schedule to build consistent habits.",
+    steps: ["Set 3 study goals for today","Review yesterdays notes (15 min)","Deep study session (45 min)","Take a 10-min break","Quiz yourself on todays topics","Update your progress"],
+    builtin: true,
+  },
+  {
+    id: "tpl-exam-prep",
+    name: "Exam Preparation",
+    icon: "🎯",
+    color: "#4f6ef7",
+    category: "study",
+    author: "Sivarr",
+    desc: "2-week exam countdown with daily focus areas.",
+    steps: ["Generate a study plan (2 weeks out)","Identify weak areas","Create flashcards for weak topics","Do practice quizzes daily","Review wrong answers","Final revision day before exam"],
+    builtin: true,
+  },
+  {
+    id: "tpl-project-pipeline",
+    name: "Project Pipeline",
+    icon: "📊",
+    color: "#7c3aed",
+    category: "project",
+    author: "Sivarr",
+    desc: "Track a project from ideation to delivery.",
+    steps: ["Define project scope","Break into tasks in Flux","Assign deadlines","Weekly progress check","Review and adjust","Final delivery"],
+    builtin: true,
+  },
+  {
+    id: "tpl-weekly-review",
+    name: "Weekly Review",
+    icon: "🔄",
+    color: "#34d399",
+    category: "productivity",
+    author: "Sivarr",
+    desc: "A weekly reflection and planning template.",
+    steps: ["Review what you accomplished this week","Note what did not get done and why","Set 3 priorities for next week","Update your goals progress","Plan study sessions for the week"],
+    builtin: true,
+  },
+  {
+    id: "tpl-team-sprint",
+    name: "Team Sprint",
+    icon: "⚡",
+    color: "#f472b6",
+    category: "team",
+    author: "Sivarr",
+    desc: "A week-long team sprint for collaborative projects.",
+    steps: ["Sprint planning: set team goals","Assign tasks to members","Daily 5-min standup","Mid-sprint check-in","Sprint review and retrospective"],
+    builtin: true,
+  },
+  {
+    id: "tpl-reading-list",
+    name: "Reading and Research",
+    icon: "📖",
+    color: "#06b6d4",
+    category: "personal",
+    author: "Sivarr",
+    desc: "Organise your reading list and capture key insights.",
+    steps: ["List books or papers to read this month","Allocate 30 min per day for reading","Take notes in Document Hub","Summarise key insights","Share or apply what you learned"],
+    builtin: true,
+  },
+];
+
+function tplGetCustom() {
+  try { return JSON.parse(localStorage.getItem(TPL_KEY()) || '[]'); }
+  catch { return []; }
+}
+function tplSaveCustom(list) { localStorage.setItem(TPL_KEY(), JSON.stringify(list)); }
+
+function tplSetCat(cat, btn) {
+  TPL_CAT = cat;
+  document.querySelectorAll('.tpl-filter').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  tplRender();
+}
+
+function tplToggleForm() {
+  const form = $('tpl-form');
+  if (!form) return;
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) $('tpl-name')?.focus();
+}
+
+function tplCreate() {
+  const name  = $('tpl-name')?.value.trim();
+  const cat   = $('tpl-category')?.value || 'study';
+  const desc  = $('tpl-desc-input')?.value.trim();
+  const steps = $('tpl-steps')?.value.trim().split(',').map(s=>s.trim()).filter(Boolean);
+
+  if (!name) { toast('Please enter a template name.'); return; }
+  if (!desc) { toast('Please add a description.'); return; }
+
+  const custom = tplGetCustom();
+  custom.push({
+    id:       'custom-' + Date.now().toString(36),
+    name,
+    icon:     '⭐',
+    color:    '#4f6ef7',
+    category: cat,
+    author:   S.name || 'You',
+    desc,
+    steps:    steps.length ? steps : ['Step 1','Step 2','Step 3'],
+    builtin:  false,
+    created:  new Date().toISOString(),
+  });
+  tplSaveCustom(custom);
+
+  // Reset form
+  ['tpl-name','tpl-desc-input','tpl-steps'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  $('tpl-form')?.classList.remove('open');
+  tplRender();
+  toast('Template created! ⚡');
+}
+
+function tplDelete(id) {
+  if (!confirm('Delete this template?')) return;
+  tplSaveCustom(tplGetCustom().filter(t => t.id !== id));
+  tplRender();
+  toast('Template deleted.');
+}
+
+function tplUse(id) {
+  const all = [...TPL_BUILTIN, ...tplGetCustom()];
+  const t   = all.find(x => x.id === id);
+  if (!t) return;
+
+  // Show a toast and open chat with template as prompt
+  const prompt = `I want to follow the "${t.name}" template. Here are the steps:\n${t.steps.map((s,i)=>`${i+1}. ${s}`).join('\n')}\n\nHelp me get started on step 1.`;
+  nav('chat', null);
+  setTimeout(() => {
+    const ci = $('ci');
+    if (ci) { ci.value = prompt; ci.focus(); }
+  }, 300);
+  toast(`"${t.name}" template loaded in chat ✓`);
+}
+
+function tplRender() {
+  const list = $('tpl-list');
+  if (!list) return;
+
+  const custom  = tplGetCustom();
+  const all     = [...TPL_BUILTIN, ...custom];
+  const display = TPL_CAT === 'all' ? all : all.filter(t => t.category === TPL_CAT);
+
+  if (!display.length) {
+    list.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:.5rem">⚡</div>
+      <div style="font-size:.85rem">No templates in this category yet.</div>
+      <button onclick="tplToggleForm()" style="margin-top:.75rem;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;padding:8px 18px;color:#fff;font-family:var(--font);font-size:.8rem;font-weight:700;cursor:pointer">
+        + Create one
+      </button>
+    </div>`;
+    return;
+  }
+
+  const catIcons = { study:'📚', productivity:'⚡', project:'📊', team:'👥', personal:'👤' };
+  const catColors = { study:'#4f6ef7', productivity:'#f59e0b', project:'#7c3aed', team:'#34d399', personal:'#f472b6' };
+
+  list.innerHTML = display.map(t => {
+    const tagColor = catColors[t.category] || '#4f6ef7';
+    const tagIcon  = catIcons[t.category] || '📋';
+    return `
+      <div class="tpl-card ${t.builtin ? '' : 'custom'}">
+        <div class="tpl-card-header">
+          <div class="tpl-icon" style="background:${t.color}20">${t.icon}</div>
+          <div style="flex:1">
+            <div class="tpl-name">${esc(t.name)}</div>
+            <div class="tpl-author">by ${esc(t.author)}</div>
+          </div>
+        </div>
+        <div class="tpl-desc">${esc(t.desc)}</div>
+        ${t.steps?.length ? `
+          <div style="margin-top:.625rem;display:flex;flex-direction:column;gap:3px">
+            ${t.steps.slice(0,3).map((s,i)=>`
+              <div style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted)">
+                <span style="width:16px;height:16px;border-radius:50%;background:${t.color}20;color:${t.color};display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;flex-shrink:0">${i+1}</span>
+                ${esc(s)}
+              </div>`).join('')}
+            ${t.steps.length > 3 ? `<div style="font-size:.7rem;color:var(--muted);padding-left:22px">+${t.steps.length-3} more steps</div>` : ''}
+          </div>` : ''}
+        <span class="tpl-tag" style="background:${tagColor}18;color:${tagColor};border:1px solid ${tagColor}30">${tagIcon} ${t.category}</span>
+        ${t.builtin
+          ? `<button class="tpl-use-btn" onclick="tplUse('${t.id}')">Use Template</button>`
+          : `<button class="tpl-delete-btn" onclick="tplDelete('${t.id}')">🗑 Delete</button>`
+        }
+      </div>`;
+  }).join('');
+}
+
+function tplInit() {
+  tplRender();
+}
 function openDiff() { $('diff-modal').classList.add('open'); }
 function closeDiff(e) { if (e.target === $('diff-modal')) $('diff-modal').classList.remove('open'); }
 
@@ -2964,6 +3241,9 @@ const SNAV_ROUTE = {
   // Global
   'create-new':      () => { cnOpen(); },
   'settings':        () => nav('settings', null),
+  'templates':       () => nav('templates', null),
+  'my-templates':    () => { nav('templates', null); setTimeout(() => tplSetCat('personal', document.querySelector('.tpl-filter[onclick*="personal"]')), 200); },
+  'new-template':    () => { nav('templates', null); setTimeout(() => tplToggleForm(), 200); },
 };
 
 let SNAV_ACTIVE = 'chat';
@@ -3018,6 +3298,9 @@ function nav(name, btn) {
   if (btn) btn.classList.add('active');
   const mob = document.getElementById(`mn-${name}`); if (mob) mob.classList.add('active');
   syncSnavFromPanel(name);
+
+  if (name === 'home')      { loadHome(); return; }
+  if (name === 'templates') { tplInit(); return; }
   if (name === 'stats')         loadStats();
   if (name === 'more')          syncMore();
   if (name === 'leaderboard')   loadLeaderboard();
@@ -5525,5 +5808,6 @@ async function shareResult(score, topic) {
     toast('Could not create share link — try again.');
   }
       }
+
 
 
