@@ -552,7 +552,28 @@
   margin-bottom: 14px;
 }
 
-/* ── Sivarr Brief ───────────────────────────────────────────── */
+/* ── Home greeting (plain, centered, no card) ────────────────── */
+.home-greet-plain {
+  text-align: center;
+  padding: 6px 0 26px;
+}
+.home-greet-plain-name {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text1);
+  margin-bottom: 6px;
+}
+.home-greet-plain-date {
+  font-size: 0.86rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ── Sivarr Brief (retired — Home now uses .home-greet-plain above;
+   left in place as it's still referenced by a few dead-code selectors
+   elsewhere, e.g. mobile/density overrides) ─────────────────────── */
 .siva-brief {
   background: var(--card, var(--bg2));
   border: 1px solid var(--border);

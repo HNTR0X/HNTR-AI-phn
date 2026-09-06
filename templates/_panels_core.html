@@ -6,60 +6,11 @@ content-loss issue found in the prior split.
 #}
 <div class="panel" id="panel-home">
   <div class="home-wrap">
-    <!-- Sivarr AI Briefing card -->
-    <div class="siva-brief">
-      <!-- Personalized decoration layer (scattered icons) -->
-      <div
-        class="siva-brief-decor"
-        id="siva-brief-decor"
-        aria-hidden="true"
-      ></div>
-      <div class="siva-brief-top">
-        <div class="siva-brief-av">
-          <img src="{{ asset('/static/sivarrai.png') }}" alt="Sivarr AI" />
-        </div>
-        <div>
-          <div class="siva-brief-name" id="home-greeting">Good morning</div>
-          <div style="font-size: 0.68rem; opacity: 0.7" id="home-sub">
-            Here's your day at a glance
-          </div>
-        </div>
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-left: auto;
-          "
-        >
-          <button
-            data-onclick="briefDecorToggle" data-onclick-this
-            title="Personalize header"
-            class="siva-brief-action"
-          >
-            <i class="ti ti-palette"></i>
-          </button>
-          <button
-            data-onclick="refreshHomeBrief"
-            title="Refresh brief"
-            class="siva-brief-action"
-          >
-            <i class="ti ti-refresh"></i>
-          </button>
-          <button
-            data-onclick="briefMsgToggle"
-            title="Collapse insight"
-            class="siva-brief-action"
-            id="brief-collapse-btn"
-          >
-            <i class="ti ti-chevron-up siva-brief-msg-chevron"></i>
-          </button>
-          <span class="siva-brief-badge">Sivarr AI</span>
-        </div>
-      </div>
-      <div class="siva-brief-msg" id="home-brief-msg">
-        You have tasks due today. Your study streak is going strong, keep it
-        up! Ready to make progress?
+    <!-- Home greeting -->
+    <div class="home-greet-plain">
+      <div class="home-greet-plain-name" id="home-greeting">Good morning</div>
+      <div class="home-greet-plain-date" id="home-sub">
+        Here's your day at a glance
       </div>
     </div>
 
