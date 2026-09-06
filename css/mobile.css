@@ -452,7 +452,11 @@ body {
      so a plain-class rule here ties in specificity with marketplace.css's
      own unconditional rule and LOSES on source order regardless of the
      media query — confirmed live (icon tiles stayed 40px, cards stayed
-     column-direction) before this file was qualified. */
+     column-direction) before this file was qualified. #panel-marketplace's
+     own padding override needs !important instead (ID vs ID ties too). */
+  #panel-marketplace {
+    padding: 18px 16px !important;
+  }
   #panel-marketplace .mkt-publish-btn .lbl {
     display: none;
   }
