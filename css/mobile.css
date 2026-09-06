@@ -445,6 +445,49 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  /* Marketplace panel itself (#mktGrid cards, type/category rows, header) —
+     .ag-grid above already covers the separate agent-template marketplace.
+     Every selector below is qualified with #panel-marketplace: mobile.css
+     is <link>ed before css/features/marketplace.css in templates/index.html,
+     so a plain-class rule here ties in specificity with marketplace.css's
+     own unconditional rule and LOSES on source order regardless of the
+     media query — confirmed live (icon tiles stayed 40px, cards stayed
+     column-direction) before this file was qualified. */
+  #panel-marketplace .mkt-publish-btn .lbl {
+    display: none;
+  }
+  #panel-marketplace .mkt-publish-btn {
+    padding: 10px 12px;
+  }
+  #panel-marketplace .mkt-type-tabs,
+  #panel-marketplace .mkt-category-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #panel-marketplace .mkt-type-tabs::-webkit-scrollbar,
+  #panel-marketplace .mkt-category-row::-webkit-scrollbar {
+    display: none;
+  }
+  #panel-marketplace .mkt-card {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  #panel-marketplace .mkt-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+  #panel-marketplace .mkt-icon-extension,
+  #panel-marketplace .mkt-icon-integration,
+  #panel-marketplace .mkt-icon-template {
+    width: 34px;
+    height: 34px;
+  }
+
   /* ── Templates ────────────────────────────────────────────── */
   .tpl-search-wrap input {
     width: 120px;

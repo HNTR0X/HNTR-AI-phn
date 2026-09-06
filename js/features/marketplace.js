@@ -578,7 +578,7 @@ function mktRenderFeatured() {
   const strip = document.getElementById("mktFeaturedStrip");
   if (!strip) return;
   const f = mktItems.filter((i) => i.official).slice(0, 4);
-  strip.innerHTML = `<div class="mkt-featured-label">Featured</div><div class="mkt-featured-cards">${f.map((i) => `<div class="mkt-featured-card" data-onclick="mktOpenDetail" data-onclick-arg0="${mktEsc(i.id)}"><div class="mkt-item-icon">${i.icon}</div><div><div class="mkt-item-name">${mktEsc(i.name)}</div><span class="mkt-item-type-badge mkt-type-${i.type}">${i.type}</span></div></div>`).join("")}</div>`;
+  strip.innerHTML = `<div class="mkt-featured-label">Featured</div><div class="mkt-featured-cards">${f.map((i) => `<div class="mkt-featured-card" data-onclick="mktOpenDetail" data-onclick-arg0="${mktEsc(i.id)}"><div class="mkt-item-icon mkt-icon-${i.type}">${i.icon}</div><div><div class="mkt-item-name">${mktEsc(i.name)}</div><span class="mkt-item-type-badge mkt-type-${i.type}">${i.type}</span></div></div>`).join("")}</div>`;
 }
 
 function mktItemBtn(i) {
@@ -604,7 +604,7 @@ function mktRenderGrid() {
   grid.innerHTML = items
     .map(
       (i) =>
-        `<div class="mkt-card" data-onclick="mktOpenDetail" data-onclick-arg0="${mktEsc(i.id)}"><div class="mkt-card-top"><div class="mkt-item-icon">${i.icon}</div><span class="mkt-item-type-badge mkt-type-${i.type}">${i.type}</span></div><div class="mkt-item-name">${mktEsc(i.name)}</div><div class="mkt-item-author">${i.official ? "✦ Sivarr Official" : mktEsc(i.author)}</div><div class="mkt-item-desc">${mktEsc(i.desc)}</div><div class="mkt-card-footer"><div class="mkt-item-stats"><span>★ ${i.rating}</span><span>${i.installs.toLocaleString()}</span></div>${mktItemBtn(i)}</div></div>`,
+        `<div class="mkt-card" data-onclick="mktOpenDetail" data-onclick-arg0="${mktEsc(i.id)}"><div class="mkt-card-top"><div class="mkt-item-icon mkt-icon-${i.type}">${i.icon}</div><span class="mkt-item-type-badge mkt-type-${i.type}">${i.type}</span></div><div class="mkt-card-body"><div class="mkt-item-name">${mktEsc(i.name)}</div><div class="mkt-item-author">${i.official ? '<i class="ti ti-rosette-discount-check mkt-verified" aria-hidden="true"></i> Sivarr Official' : mktEsc(i.author)}</div><div class="mkt-item-desc">${mktEsc(i.desc)}</div><div class="mkt-card-footer"><div class="mkt-item-stats"><span>★ ${i.rating}</span><span>${i.installs.toLocaleString()}</span></div>${mktItemBtn(i)}</div></div></div>`,
     )
     .join("");
 }
