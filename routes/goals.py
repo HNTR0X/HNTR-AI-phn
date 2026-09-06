@@ -57,18 +57,63 @@ async def get_goals_trash(token: str = ""):
     return {"goals": trashed}
 
 
+def _sanitize_milestones(raw) -> list:
+    return [
+        {
+            "id": sanitize_text(str(m.get("id", "")), 40) or str(uuid.uuid4())[:8],
+            "name": sanitize_text(str(m.get("name", "")), 200),
+            "done": bool(m.get("done", False)),
+        }
+        for m in (raw or [])
+        if isinstance(m, dict) and str(m.get("name", "")).strip()
+    ][:50]
+
+
+def _sanitize_habit_ids(raw) -> list:
+    return [sanitize_text(str(h), 40) for h in (raw or [])][:50]
+
+
+def _calc_milestone_progress(mode: str, milestones: list, manual_pct, pct_override) -> int:
+    """Mirrors js/features/habits.js's _goalPct() exactly -- keep both in
+    sync if the percentage rules ever change. Computed server-side too (not
+    just in the panel's own render) so any other surface reading a goal's
+    plain `progress` int (e.g. the Home dashboard's goal-progress card)
+    sees an accurate value for goals made in the newer milestone-driven
+    Goals & Habits panel, not just whatever the panel itself displays."""
+    total = len(milestones)
+    done = sum(1 for m in milestones if m.get("done"))
+    milestone_pct = round((done / total) * 100) if total else None
+    if mode == "manual":
+        return max(0, min(100, int(manual_pct or 0)))
+    if mode == "hybrid" and pct_override is not None:
+        return max(0, min(100, int(pct_override)))
+    return milestone_pct if milestone_pct is not None else 0
+
+
 @router.post("/api/goals/add")
 async def add_goal(data: dict):
     sid, _    = _resolve_token(data)
     title     = sanitize_text(str(data.get("title","")), 100)
     subject   = sanitize_text(str(data.get("subject","")), 100)
     target    = int(data.get("target_score", 70))
-    deadline  = sanitize_text(str(data.get("deadline","")), 20)
+    # `due` is the newer Goals & Habits panel's field name; `deadline` is the
+    # older one. Mirror onto both columns so either reader sees the value.
+    deadline  = sanitize_text(str(data.get("deadline","") or data.get("due","")), 20)
     goal_type = sanitize_text(str(data.get("goal_type", "okr")), 20)
     if goal_type not in ("okr", "score"):
         goal_type = "okr"
     if not title:
         raise HTTPException(400, "Goal title required.")
+
+    mode = sanitize_text(str(data.get("mode", "milestone")), 20)
+    if mode not in ("milestone", "manual", "hybrid"):
+        mode = "milestone"
+    manual_pct = max(0, min(100, int(data.get("manual_pct", 0) or 0)))
+    pct_override_raw = data.get("pct_override")
+    pct_override = max(0, min(100, int(pct_override_raw))) if pct_override_raw is not None else None
+    milestones = _sanitize_milestones(data.get("milestones"))
+    habit_ids = _sanitize_habit_ids(data.get("habit_ids"))
+
     goals = load_goals(sid)
     goal = {
         "id":           str(uuid.uuid4())[:8],
@@ -76,11 +121,17 @@ async def add_goal(data: dict):
         "subject":      subject,
         "target_score": min(max(target, 1), 100),
         "deadline":     deadline,
+        "due":          deadline,
         "created":      datetime.date.today().isoformat(),
-        "progress":     0,
-        "completed":    False,
         "goal_type":    goal_type,
+        "mode":         mode,
+        "manual_pct":   manual_pct,
+        "pct_override": pct_override,
+        "milestones":   milestones,
+        "habit_ids":    habit_ids,
     }
+    goal["progress"] = _calc_milestone_progress(mode, milestones, manual_pct, pct_override)
+    goal["completed"] = goal["progress"] >= 100
     goals.append(goal)
     save_goals(sid, goals)
     return {"goal": goal}
@@ -142,9 +193,29 @@ async def edit_goal(data: dict):
                 g["title"] = sanitize_text(str(data["title"]), 200)
             if "subject" in data:
                 g["subject"] = sanitize_text(str(data.get("subject", "")), 100)
-            if "deadline" in data:
-                dl = data.get("deadline") or None
-                g["deadline"] = sanitize_text(str(dl), 20) if dl else None
+            if "deadline" in data or "due" in data:
+                dl = data.get("deadline") or data.get("due") or None
+                val = sanitize_text(str(dl), 20) if dl else None
+                g["deadline"] = val
+                g["due"] = val
+            if "mode" in data:
+                m = sanitize_text(str(data.get("mode", "milestone")), 20)
+                g["mode"] = m if m in ("milestone", "manual", "hybrid") else "milestone"
+            if "manual_pct" in data:
+                g["manual_pct"] = max(0, min(100, int(data.get("manual_pct") or 0)))
+            if "pct_override" in data:
+                po = data.get("pct_override")
+                g["pct_override"] = max(0, min(100, int(po))) if po is not None else None
+            if "milestones" in data:
+                g["milestones"] = _sanitize_milestones(data.get("milestones"))
+            if "habit_ids" in data:
+                g["habit_ids"] = _sanitize_habit_ids(data.get("habit_ids"))
+            if any(k in data for k in ("mode", "manual_pct", "pct_override", "milestones")):
+                g["progress"] = _calc_milestone_progress(
+                    g.get("mode", "milestone"), g.get("milestones", []),
+                    g.get("manual_pct", 0), g.get("pct_override"),
+                )
+                g["completed"] = g["progress"] >= 100
             break
     save_goals(sid, goals)
     return {"ok": True}

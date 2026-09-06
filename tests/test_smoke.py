@@ -343,6 +343,107 @@ def test_goal_restore_brings_it_back(client, session_token):
     assert goal_id not in [g["id"] for g in trash]
 
 
+# ── Milestones / habit-linking (newer Goals & Habits panel) ─────────────────
+#
+# js/features/habits.js's own goal model (mode/manual_pct/pct_override/
+# milestones/habit_ids) shipped with no backend at all — every field was
+# silently dropped by add_goal/update_goal, so it looked saved in the
+# browser but never reached the server. These lock in the fix: the fields
+# round-trip, and `progress`/`completed` are derived from them server-side
+# too (not just in the panel's own JS), matching _goalPct() in habits.js.
+
+def test_goal_milestones_round_trip_and_drive_progress(client, session_token):
+    add = client.post("/api/goals/add", json={
+        "token": session_token, "title": "Learn guitar",
+        "mode": "milestone",
+        "milestones": [
+            {"id": "m1", "name": "Buy a guitar", "done": True},
+            {"id": "m2", "name": "Learn 3 chords", "done": False},
+        ],
+        "habit_ids": ["h1", "h2"],
+    })
+    assert add.status_code == 200
+    goal = add.json()["goal"]
+    assert goal["progress"] == 50  # 1 of 2 milestones done
+    assert goal["completed"] is False
+    assert [m["name"] for m in goal["milestones"]] == ["Buy a guitar", "Learn 3 chords"]
+    assert goal["habit_ids"] == ["h1", "h2"]
+
+    fetched = next(
+        g for g in client.get(f"/api/goals?token={session_token}").json()["goals"]
+        if g["id"] == goal["id"]
+    )
+    assert fetched["milestones"][0]["done"] is True
+    assert fetched["habit_ids"] == ["h1", "h2"]
+
+
+def test_goal_milestone_toggle_via_edit_recomputes_progress(client, session_token):
+    add = client.post("/api/goals/add", json={
+        "token": session_token, "title": "Read 12 books",
+        "mode": "milestone",
+        "milestones": [{"id": "m1", "name": "Book 1", "done": False}],
+    })
+    goal_id = add.json()["goal"]["id"]
+    assert add.json()["goal"]["progress"] == 0
+
+    client.post("/api/goals/edit", json={
+        "token": session_token, "id": goal_id,
+        "milestones": [{"id": "m1", "name": "Book 1", "done": True}],
+    })
+
+    goal = next(
+        g for g in client.get(f"/api/goals?token={session_token}").json()["goals"]
+        if g["id"] == goal_id
+    )
+    assert goal["progress"] == 100
+    assert goal["completed"] is True
+
+
+def test_goal_manual_mode_progress_uses_manual_pct(client, session_token):
+    add = client.post("/api/goals/add", json={
+        "token": session_token, "title": "Save $5000",
+        "mode": "manual", "manual_pct": 35,
+    })
+    assert add.json()["goal"]["progress"] == 35
+
+    client.post("/api/goals/edit", json={
+        "token": session_token, "id": add.json()["goal"]["id"],
+        "manual_pct": 80,
+    })
+    goal = next(
+        g for g in client.get(f"/api/goals?token={session_token}").json()["goals"]
+        if g["id"] == add.json()["goal"]["id"]
+    )
+    assert goal["progress"] == 80
+
+
+def test_goal_edit_persists_due_date_on_both_field_names(client, session_token):
+    """The newer panel sends `due`; the older one sends `deadline`. Both
+    must land so either reader sees the value."""
+    add = client.post("/api/goals/add", json={
+        "token": session_token, "title": "Ship v2", "due": "2026-12-01",
+    })
+    goal = add.json()["goal"]
+    assert goal["deadline"] == "2026-12-01"
+    assert goal["due"] == "2026-12-01"
+
+
+def test_goal_undelete_uses_real_restore_endpoint(client, session_token):
+    """Regression test: the panel's sync code used to call the nonexistent
+    /api/goals/undelete (real endpoint is /api/goals/restore) — restoring a
+    trashed goal 404'd forever. /api/goals/undelete must not exist (a typo'd
+    client hitting it should 404, not silently succeed), and /restore is
+    what actually brings a goal back — already covered by
+    test_goal_restore_brings_it_back, this just pins the undelete typo as
+    permanently gone."""
+    add = client.post("/api/goals/add", json={"token": session_token, "title": "Learn Elixir"})
+    goal_id = add.json()["goal"]["id"]
+    client.post("/api/goals/delete", json={"token": session_token, "id": goal_id})
+
+    bad = client.post("/api/goals/undelete", json={"token": session_token, "id": goal_id})
+    assert bad.status_code == 404
+
+
 def test_goals_trash_requires_auth(client):
     r = client.get("/api/goals/trash")
     assert r.status_code == 401

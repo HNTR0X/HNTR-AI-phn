@@ -119,6 +119,10 @@ body.offline .layout {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  /* Fixed, never-themed purple (matches --logo-purple/2 elsewhere) -- the
+     mark itself is a white outline on a transparent PNG, so it needs its
+     own backdrop to stay visible in light mode. */
+  background: linear-gradient(135deg, var(--logo-purple), var(--logo-purple2));
 }
 .tb-logo img {
   width: 100%;
@@ -1873,6 +1877,11 @@ body.auth-screen #login-screen {
   transition:
     transform 0.15s,
     box-shadow 0.15s;
+}
+.mob-fab img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 .mob-fab:active {
   transform: scale(0.92);

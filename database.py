@@ -785,6 +785,18 @@ CREATE INDEX IF NOT EXISTS idx_habits_sid_deleted ON habits(sid, deleted_at);
 -- pre-existing gap, unrelated to this migration) so the column default
 -- papers over that the same way tasks' column defaults already do for
 -- tasks.py's own equivalent gaps.
+-- due/mode/manual_pct/pct_override/milestones/habit_ids (2026-09) belong to
+-- the newer merged Goals & Habits panel (js/features/habits.js), which has
+-- its own goal-progress model (milestone-driven / manual / hybrid, tracked
+-- per-goal in `mode`) independent of the older target_score/goal_type/
+-- key_results OKR model above -- both coexist on the same row rather than
+-- migrating one into the other, since existing goals created by the old
+-- panel already have real target_score/goal_type/key_results data that
+-- would otherwise need a lossy conversion. `due` mirrors `deadline` (kept
+-- separate, not reusing the column, since the old panel's `deadline`
+-- writes/reads shouldn't have to change shape). habit_ids/milestones are
+-- JSONB for the same reason key_results is: small, always read/written
+-- whole with the parent goal, no caller needs a join.
 CREATE TABLE IF NOT EXISTS goals (
     id            TEXT NOT NULL,
     sid           TEXT NOT NULL REFERENCES users(sid) ON DELETE CASCADE,
@@ -797,12 +809,26 @@ CREATE TABLE IF NOT EXISTS goals (
     completed     BOOLEAN DEFAULT FALSE,
     goal_type     TEXT DEFAULT 'okr',
     key_results   JSONB DEFAULT '[]',
+    due           TEXT DEFAULT '',
+    mode          TEXT DEFAULT 'milestone',
+    manual_pct    INTEGER DEFAULT 0,
+    pct_override  INTEGER,
+    milestones    JSONB DEFAULT '[]',
+    habit_ids     JSONB DEFAULT '[]',
     deleted_at    TIMESTAMPTZ,
     created_at    TIMESTAMPTZ DEFAULT NOW(),
     updated_at    TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (sid, id)
 );
 CREATE INDEX IF NOT EXISTS idx_goals_sid_deleted ON goals(sid, deleted_at);
+-- Existing production goals table predates the columns above -- CREATE
+-- TABLE IF NOT EXISTS is a no-op there, so they need adding explicitly.
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS due TEXT DEFAULT '';
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS mode TEXT DEFAULT 'milestone';
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS manual_pct INTEGER DEFAULT 0;
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS pct_override INTEGER;
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS milestones JSONB DEFAULT '[]';
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS habit_ids JSONB DEFAULT '[]';
 
 -- Personal docs (Session 16) -- same migration, user_blobs(key='docs') ->
 -- a real table. Unlike tasks/goals/habits, docs has no per-entity
@@ -3331,13 +3357,15 @@ def purge_expired_habits(cutoff_iso: str) -> int:
 _GOAL_COLUMNS = {
     "title", "subject", "target_score", "deadline", "created", "progress",
     "completed", "goal_type", "key_results", "deleted_at",
+    "due", "mode", "manual_pct", "pct_override", "milestones", "habit_ids",
 }
+_GOAL_JSONB_COLUMNS = {"key_results", "milestones", "habit_ids"}
 
 
 def _goal_param(key: str, value):
-    """key_results is the one JSONB column here -- everything else is a
-    plain scalar psycopg2 can bind directly."""
-    if key == "key_results":
+    """key_results/milestones/habit_ids are the JSONB columns here --
+    everything else is a plain scalar psycopg2 can bind directly."""
+    if key in _GOAL_JSONB_COLUMNS:
         import json as _json
         return _json.dumps(value if value is not None else [])
     return value

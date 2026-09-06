@@ -1279,7 +1279,6 @@ function _rehydrateActivePanel() {
   else if (id === "panel-skills" && typeof skillsInit === "function")
     skillsInit();
   else if (id === "panel-finance" && typeof finInit === "function") finInit();
-  else if (id === "panel-goals" && typeof glLoad === "function") glLoad();
 }
 
 function _applyLoginData(r) {
@@ -13038,6 +13037,14 @@ function nav(name, btn) {
     nav("marketplace", btn);
     return;
   }
+  // The standalone Goals panel was retired -- goals now live in the merged
+  // Goals & Habits panel (panel-habits, js/features/habits.js). Redirect
+  // rather than deleting the "goals" nav entry/keyboard shortcuts/search
+  // results that already point at it everywhere.
+  if (name === "goals") {
+    nav("habits", btn);
+    return;
+  }
   _pushRecentNav(name);
   if (typeof cmdPushRecent === "function") cmdPushRecent(name);
   // Leaving the org space — tear down the live SSE + presence (it is kept alive
@@ -13160,7 +13167,6 @@ function nav(name, btn) {
   }
   if (name === "contenthub") chInit();
   if (name === "settings") stInit();
-  if (name === "goals") glLoad();
   if (name === "quiz" && !S.quizActive) {
     const qd = $("qd-label");
     if (qd) qd.textContent = S.diff.charAt(0).toUpperCase() + S.diff.slice(1);

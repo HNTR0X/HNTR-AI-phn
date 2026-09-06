@@ -940,13 +940,15 @@ function _syncGoalsToServer(goals) {
       _goalSendMutation("/api/goals/delete", { id: g.id });
     } else if (was.deleted_at && !g.deleted_at) {
       _goalSendMutation("/api/goals/restore", { id: g.id });
-      _goalSendMutation("/api/goals/update", { id: g.id, ...g });
       _goalSendMutation("/api/goals/edit", { id: g.id, ...g });
     } else {
-      // /api/goals/update only persists progress/completed; title, subject,
-      // and deadline are a separate endpoint (/api/goals/edit) server-side,
-      // so both must fire or those field edits silently never reach the DB.
-      _goalSendMutation("/api/goals/update", { id: g.id, ...g });
+      // /api/goals/edit is the one endpoint that persists this panel's full
+      // field set (title/due/mode/manual_pct/pct_override/milestones/
+      // habit_ids) and recomputes `progress`/`completed` server-side from
+      // them. /api/goals/update is a separate, older endpoint (still used
+      // by legacy OKR-style goals) that only knows progress/completed as
+      // raw inputs -- this panel's goal objects never carry those, so
+      // calling it here would just zero them back out. Edit only.
       _goalSendMutation("/api/goals/edit", { id: g.id, ...g });
     }
   });
