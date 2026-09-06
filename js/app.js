@@ -6133,6 +6133,7 @@ function stInit() {
   _stSyncSeg("st-theme-seg", "mode", _mode);
   const _dens = localStorage.getItem("sivarr_density") || "cozy";
   _stSyncSeg("st-density-seg", "density", _dens);
+  stApplyReduceMotion(localStorage.getItem("sivarr_reduce_motion") === "on");
   const _fs = parseInt(localStorage.getItem("sivarr_font_scale")) || 100;
   const _fsr = $("st-fontscale");
   if (_fsr) _fsr.value = _fs;
@@ -6181,6 +6182,7 @@ function stInit() {
   stUpdateUsage();
   stLoadBillingHistory();
   st2faInit();
+  stLoadSessions();
 
   // Org settings (Blueprint Stage 3) — shown only when the user is in an org
   if (typeof orgSettingsInit === "function") orgSettingsInit();
@@ -6890,6 +6892,18 @@ function stSetDensity(d) {
   localStorage.setItem("sivarr_density", d);
   _stSyncSeg("st-density-seg", "density", d);
 }
+
+function stApplyReduceMotion(on) {
+  if (on) document.documentElement.setAttribute("data-reduce-motion", "on");
+  else document.documentElement.removeAttribute("data-reduce-motion");
+  const btn = $("st-reduce-motion");
+  if (btn) btn.classList.toggle("on", !!on);
+}
+function stSetReduceMotion(btn) {
+  const on = !btn.classList.contains("on");
+  localStorage.setItem("sivarr_reduce_motion", on ? "on" : "off");
+  stApplyReduceMotion(on);
+}
 // CSP migration: takes the range-input element instead of the raw value string.
 function stSetFontScale(el) {
   let v = Math.max(85, Math.min(120, parseInt(el.value) || 100));
@@ -6950,6 +6964,13 @@ function stGoSection(id, el) {
     .forEach((it) =>
       it.classList.toggle("active", it === el || it.dataset.sec === id),
     );
+}
+function stFilterSubnav(el) {
+  const q = (el.value || "").trim().toLowerCase();
+  document.querySelectorAll("#st-subnav .st-subnav-item[data-sec]").forEach((it) => {
+    const label = it.textContent.trim().toLowerCase();
+    it.classList.toggle("st-nav-hidden", q.length > 0 && !label.includes(q));
+  });
 }
 
 async function stChangePassword() {
@@ -7016,8 +7037,104 @@ async function stLogoutAll() {
     }))
   )
     return;
+  const token = getToken();
+  if (token) {
+    try {
+      await fetch("/api/auth/sessions/revoke-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+    } catch {}
+  }
   clearSession();
   location.reload();
+}
+
+// ── Sessions & Devices ──────────────────────────────────────────────
+function _stEsc(s) {
+  return String(s == null ? "" : s).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+}
+function _stTimeAgo(iso) {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  const mins = Math.max(0, Math.round((Date.now() - then) / 60000));
+  if (mins < 1) return "Active now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.round(hrs / 24)}d ago`;
+}
+async function stLoadSessions() {
+  const list = $("st-sessions-list");
+  if (!list) return;
+  const token = getToken();
+  if (!token) return;
+  try {
+    const r = await fetch("/api/auth/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.sessions) {
+      list.innerHTML = `<div style="font-size:0.78rem;color:var(--muted)">Couldn't load sessions.</div>`;
+      return;
+    }
+    if (!d.sessions.length) {
+      list.innerHTML = `<div style="font-size:0.78rem;color:var(--muted)">No active sessions.</div>`;
+      return;
+    }
+    list.innerHTML = d.sessions
+      .map((s) => {
+        const icon =
+          s.device.includes("iPhone") || s.device.includes("Android")
+            ? "ti-device-mobile"
+            : s.device.includes("iPad")
+              ? "ti-device-tablet"
+              : "ti-device-laptop";
+        const right = s.is_current
+          ? `<span class="st-session-now">Active now</span>`
+          : `<button class="st-session-revoke" data-onclick="stRevokeSession" data-onclick-arg0="${_stEsc(s.ref)}" data-onclick-this>Sign out</button>`;
+        return `<div class="st-session-row">
+          <div class="st-session-icon"><i class="ti ${icon}"></i></div>
+          <div style="flex:1;min-width:0">
+            <div class="st-session-name">${_stEsc(s.device)}${s.is_current ? " · This device" : ""}</div>
+            <div class="st-session-meta">${_stEsc(s.ip)} · ${_stTimeAgo(s.last_seen)}</div>
+          </div>
+          ${right}
+        </div>`;
+      })
+      .join("");
+  } catch {
+    list.innerHTML = `<div style="font-size:0.78rem;color:var(--muted)">Couldn't load sessions.</div>`;
+  }
+}
+async function stRevokeSession(ref, btn) {
+  const token = getToken();
+  if (!token) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "…";
+  }
+  try {
+    const r = await fetch("/api/auth/sessions/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, ref }),
+    });
+    if (r.ok) {
+      toast("Session signed out");
+      stLoadSessions();
+    } else {
+      toast("Couldn't sign out that session.");
+    }
+  } catch {
+    toast("Network error. Try again.");
+  }
 }
 
 // ── 2FA (Session 20) ──────────────────────────────────────────────
@@ -13793,6 +13910,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const dens = localStorage.getItem("sivarr_density");
   if (dens === "compact")
     document.documentElement.setAttribute("data-density", "compact");
+  if (localStorage.getItem("sivarr_reduce_motion") === "on")
+    document.documentElement.setAttribute("data-reduce-motion", "on");
   const fs = parseInt(localStorage.getItem("sivarr_font_scale"));
   if (fs) document.documentElement.style.setProperty("--font-scale", fs / 100);
   // Keep "system" mode reactive to OS theme changes
@@ -18114,16 +18233,16 @@ function stExtrasRestore() {
       el.classList.remove("on");
     else el.classList.add("on");
   });
-  const tz = document.getElementById("st-tz-select");
+  const tz = document.getElementById("st-tz-display");
   if (tz) {
-    const saved = localStorage.getItem("sivarr_timezone");
-    if (saved) tz.value = saved;
-    tz.onchange = () => {
-      try {
-        localStorage.setItem("sivarr_timezone", tz.value);
-      } catch (e) {}
-      if (typeof toast === "function") toast("Timezone saved");
-    };
+    try {
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const offset = -new Date().getTimezoneOffset() / 60;
+      const gmt = "GMT" + (offset >= 0 ? "+" : "") + offset;
+      tz.value = `${zone} (${gmt})`;
+    } catch (e) {
+      tz.value = "Unable to detect";
+    }
   }
 }
 // CSP migration: param order flipped to (key, btn) -- delegate.js's

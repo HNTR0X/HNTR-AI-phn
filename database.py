@@ -344,10 +344,18 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     name       TEXT NOT NULL DEFAULT '',
     email      TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ   DEFAULT NOW(),
-    expires_at TIMESTAMPTZ   NOT NULL
+    expires_at TIMESTAMPTZ   NOT NULL,
+    user_agent TEXT          NOT NULL DEFAULT '',
+    ip         TEXT          NOT NULL DEFAULT '',
+    last_seen  TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_sid     ON user_sessions(sid);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at);
+
+-- Migrations for existing installs (Settings redesign: Sessions & Devices)
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS user_agent TEXT NOT NULL DEFAULT '';
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS ip TEXT NOT NULL DEFAULT '';
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS spaces (
     id         TEXT PRIMARY KEY,
@@ -1187,17 +1195,18 @@ def db_save_progress(sid: str, data: dict) -> None:
 
 # ── Sessions ──────────────────────────────────────────────────────
 
-def create_db_session(token: str, sid: str, name: str, email: str, expires_at) -> None:
+def create_db_session(token: str, sid: str, name: str, email: str, expires_at,
+                       user_agent: str = "", ip: str = "") -> None:
     conn = _get_conn()
     if not conn:
         return
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO user_sessions (token, sid, name, email, expires_at)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO user_sessions (token, sid, name, email, expires_at, user_agent, ip, last_seen)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
                 ON CONFLICT (token) DO UPDATE SET expires_at = EXCLUDED.expires_at
-            """, (token, sid, name, email, expires_at))
+            """, (token, sid, name, email, expires_at, user_agent, ip))
         conn.commit()
     except Exception as exc:
         log.error(f"create_db_session failed: {exc}")
@@ -1253,6 +1262,66 @@ def delete_sessions_for_sid(sid: str, except_token: str | None = None) -> int:
         try: conn.rollback()
         except Exception: pass
         return 0
+    finally:
+        _release(conn)
+
+
+def touch_session_last_seen(token: str) -> None:
+    """Bump a session's last-active timestamp. Called at most once per
+    SESSION_REVALIDATE_SECONDS per token (see core.get_session_from_token),
+    not on every request -- failure here should never break the request."""
+    conn = _get_conn()
+    if not conn:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute("UPDATE user_sessions SET last_seen = NOW() WHERE token = %s", (token,))
+        conn.commit()
+    except Exception as exc:
+        log.error(f"touch_session_last_seen: {exc}")
+        try: conn.rollback()
+        except Exception: pass
+    finally:
+        _release(conn)
+
+
+def list_sessions_for_sid(sid: str) -> list[dict]:
+    """Self-service session list for Settings > Security > Sessions & Devices."""
+    def _q(conn):
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT token, user_agent, ip, created_at, last_seen, expires_at
+                FROM user_sessions
+                WHERE sid = %s AND expires_at > NOW()
+                ORDER BY COALESCE(last_seen, created_at) DESC
+            """, (sid,))
+            rows = cur.fetchall()
+        return [
+            {"token": r[0], "user_agent": r[1], "ip": r[2], "created_at": r[3],
+             "last_seen": r[4], "expires_at": r[5]}
+            for r in rows
+        ]
+    with _timed("list_sessions_for_sid"):
+        return _with_conn("list_sessions_for_sid", _q, [])
+
+
+def delete_session_for_sid(sid: str, token: str) -> bool:
+    """Revoke one specific session, scoped to its owner so a caller can never
+    revoke a session that isn't theirs even if a token were guessed."""
+    conn = _get_conn()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM user_sessions WHERE sid = %s AND token = %s", (sid, token))
+            n = cur.rowcount
+        conn.commit()
+        return n > 0
+    except Exception as exc:
+        log.error(f"delete_session_for_sid: {exc}")
+        try: conn.rollback()
+        except Exception: pass
+        return False
     finally:
         _release(conn)
 

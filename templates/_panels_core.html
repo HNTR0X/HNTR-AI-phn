@@ -731,6 +731,15 @@ content-loss issue found in the prior split.
   </div>
   <div class="st-layout">
     <nav class="st-subnav" id="st-subnav">
+      <div class="st-subnav-search">
+        <i class="ti ti-search"></i>
+        <input
+          type="text"
+          id="st-subnav-filter"
+          placeholder="Search settings…"
+          data-oninput="stFilterSubnav" data-oninput-this
+        />
+      </div>
       <button
         class="st-subnav-item active"
         data-sec="profile"
@@ -779,6 +788,13 @@ content-loss issue found in the prior split.
         data-onclick="stGoSection" data-onclick-arg0="data" data-onclick-this
       >
         <i class="ti ti-shield-lock"></i> Data &amp; Privacy
+      </button>
+      <button
+        class="st-subnav-item"
+        data-sec="shortcuts"
+        data-onclick="stGoSection" data-onclick-arg0="shortcuts" data-onclick-this
+      >
+        <i class="ti ti-command"></i> Shortcuts
       </button>
       <button
         class="st-subnav-item"
@@ -903,18 +919,20 @@ content-loss issue found in the prior split.
             />
           </div>
           <div>
-            <div class="st-label" style="margin-bottom: 4px">Timezone</div>
-            <select class="st-input" id="st-tz-select">
-              <option value="Africa/Lagos">Africa/Lagos (WAT)</option>
-              <option value="Africa/Accra">Africa/Accra (GMT)</option>
-              <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
-              <option value="Africa/Johannesburg">
-                Africa/Johannesburg (SAST)
-              </option>
-              <option value="Europe/London">Europe/London</option>
-              <option value="America/New_York">America/New_York</option>
-              <option value="UTC">UTC</option>
-            </select>
+            <div class="st-label" style="margin-bottom: 4px">
+              Timezone <span class="st-local-tag">Auto-detected</span>
+            </div>
+            <input
+              class="st-input"
+              id="st-tz-display"
+              type="text"
+              readonly
+              style="opacity: 0.75; cursor: default"
+            />
+            <div class="st-field-hint">
+              Every real feature (Calendar, reminders) already reads this
+              straight from your browser.
+            </div>
           </div>
           <button
             class="st-save-profile-btn"
@@ -1027,6 +1045,21 @@ content-loss issue found in the prior split.
                 style="font-size: 1.15rem; color: var(--text3)"
               ></i>
             </div>
+          </div>
+
+          <!-- Reduce motion -->
+          <div class="st-row">
+            <div>
+              <span class="st-label">Reduce motion</span>
+              <div class="st-field-hint">
+                Turns off page transitions and hover animations
+              </div>
+            </div>
+            <button
+              class="st-toggle"
+              id="st-reduce-motion"
+              data-onclick="stSetReduceMotion" data-onclick-this
+            ></button>
           </div>
 
           <div class="st-divider"></div>
@@ -1202,7 +1235,7 @@ content-loss issue found in the prior split.
         </div>
         <div class="st-section-body">
           <div class="st-row">
-            <span class="st-label">Announcements</span>
+            <span class="st-label">Announcements <span class="st-local-tag">Local only</span></span>
             <button
               class="st-toggle on"
               id="st-notif-ann"
@@ -1218,7 +1251,7 @@ content-loss issue found in the prior split.
             ></button>
           </div>
           <div class="st-row">
-            <span class="st-label">Quiz results</span>
+            <span class="st-label">Quiz results <span class="st-local-tag">Local only</span></span>
             <button
               class="st-toggle on"
               id="st-notif-quiz"
@@ -1237,7 +1270,7 @@ content-loss issue found in the prior split.
             CHANNELS
           </div>
           <div class="st-row">
-            <span class="st-label">In-app</span>
+            <span class="st-label">In-app <span class="st-local-tag">Local only</span></span>
             <button
               class="st-toggle on"
               id="st-notifch-inapp"
@@ -1245,7 +1278,7 @@ content-loss issue found in the prior split.
             ></button>
           </div>
           <div class="st-row">
-            <span class="st-label">Email</span>
+            <span class="st-label">Email <span class="st-local-tag">Local only</span></span>
             <button
               class="st-toggle on"
               id="st-notifch-email"
@@ -1310,9 +1343,6 @@ content-loss issue found in the prior split.
           </div>
           <button data-onclick="stChangePassword" class="st-btn" id="st-pw-btn">
             🔑 Update Password
-          </button>
-          <button data-onclick="stLogoutAll" class="st-btn danger">
-            🚪 Sign Out Everywhere
           </button>
 
           <div
@@ -1448,6 +1478,18 @@ content-loss issue found in the prior split.
               Cancel
             </button>
           </div>
+
+          <div class="st-divider"></div>
+
+          <div class="st-label" style="margin-bottom: 8px">
+            Sessions &amp; Devices
+          </div>
+          <div id="st-sessions-list">
+            <div style="font-size: 0.78rem; color: var(--muted)">Loading…</div>
+          </div>
+          <button data-onclick="stLogoutAll" class="st-btn danger" style="margin-top: 10px">
+            🚪 Sign Out Everywhere
+          </button>
         </div>
       </div>
 
@@ -1782,39 +1824,51 @@ content-loss issue found in the prior split.
             <i class="ti ti-alert-triangle" style="margin-right: 6px"></i>Reset
             all progress
           </button>
-          <div class="st-divider"></div>
-          <button
-            data-onclick="stDeleteAccount"
-            style="
-              width: 100%;
-              background: rgba(239, 68, 68, 0.08);
-              border: 1px solid rgba(239, 68, 68, 0.25);
-              border-radius: 9px;
-              padding: 9px;
-              color: #f87171;
-              font-family: var(--font);
-              font-size: 0.82rem;
-              font-weight: 700;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              gap: 6px;
-              justify-content: center;
-            "
-          >
-            <i class="ti ti-trash"></i> Delete my account
-          </button>
-          <div
-            style="
-              font-size: 0.7rem;
-              color: var(--muted);
-              margin-top: 8px;
-              opacity: 0.75;
-            "
-          >
-            Deleting your account is permanent and removes all your data. Your
-            full data export lives in
-            <strong>Import &amp; Export</strong> above.
+        </div>
+      </div>
+
+      <div class="st-danger-zone">
+        <div class="st-danger-zone-title">Danger Zone</div>
+        <div class="st-danger-zone-sub">
+          Deleting your account is permanent and removes all your data.
+          Your full data export lives in
+          <strong>Import &amp; Export</strong> above.
+        </div>
+        <button class="st-danger-zone-btn" data-onclick="stDeleteAccount">
+          <i class="ti ti-trash"></i> Delete my account
+        </button>
+      </div>
+
+      <!-- Keyboard Shortcuts -->
+      <div class="st-section open" id="st-sec-shortcuts">
+        <div class="st-section-hd">
+          <div class="st-section-icon" style="background: #4f6ef720">⌨️</div>
+          <div class="st-section-title">Keyboard Shortcuts</div>
+        </div>
+        <div class="st-section-body">
+          <div class="st-kbd-row">
+            <span class="st-label">Open command palette</span>
+            <span class="st-kbd-keys"><kbd>⌘/Ctrl</kbd><kbd>K</kbd></span>
+          </div>
+          <div class="st-kbd-row">
+            <span class="st-label">Navigate palette results</span>
+            <span class="st-kbd-keys"><kbd>↑</kbd><kbd>↓</kbd></span>
+          </div>
+          <div class="st-kbd-row">
+            <span class="st-label">Select result</span>
+            <span class="st-kbd-keys"><kbd>↵</kbd></span>
+          </div>
+          <div class="st-kbd-row">
+            <span class="st-label">Close any modal</span>
+            <span class="st-kbd-keys"><kbd>Esc</kbd></span>
+          </div>
+          <div class="st-kbd-row">
+            <span class="st-label">Quick-capture / extract tasks from text</span>
+            <span class="st-kbd-keys"><kbd>Alt</kbd><kbd>A</kbd></span>
+          </div>
+          <div class="st-field-hint" style="margin-top: 10px">
+            More shortcuts are being catalogued — this list will grow as
+            they're confirmed.
           </div>
         </div>
       </div>

@@ -515,6 +515,19 @@ body.theme-transitioning *::after {
   line-height: 1.4;
 }
 
+/* ── REDUCE MOTION (Settings → Appearance): forces the same suppression
+   css/mobile.css's OS-level @media(prefers-reduced-motion) already applies,
+   but independent of the OS setting -- lets someone want reduced motion
+   without changing it system-wide, or vice versa. ─────────────────── */
+[data-reduce-motion="on"] *,
+[data-reduce-motion="on"] *::before,
+[data-reduce-motion="on"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* ── Font-scale (Settings → Appearance → Text size) ─────────── */
 html {
   font-size: calc(100% * var(--font-scale, 1));

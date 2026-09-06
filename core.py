@@ -329,23 +329,25 @@ def _save_json_file(path: Path, data):
 _session_tokens: dict = {}   # token → {sid, name, email, expires, checked}
 
 
-def create_session_token(sid: str, name: str, email: str) -> str:
+def create_session_token(sid: str, name: str, email: str,
+                          user_agent: str = "", ip: str = "") -> str:
     token   = secrets.token_urlsafe(32)
     expires = datetime.datetime.utcnow() + datetime.timedelta(days=SESSION_TTL_DAYS)
     _session_tokens[token] = {"sid": sid, "name": name, "email": email, "expires": expires,
                               "checked": datetime.datetime.utcnow()}
     if db.is_available():
-        db.create_db_session(token, sid, name, email, expires)
+        db.create_db_session(token, sid, name, email, expires, user_agent, ip)
     return token
 
 
-def create_session_token_for_existing(token: str, sid: str, name: str, email: str) -> None:
+def create_session_token_for_existing(token: str, sid: str, name: str, email: str,
+                                       user_agent: str = "", ip: str = "") -> None:
     """Register an already-issued token on this worker (cross-worker session recovery)."""
     expires = datetime.datetime.utcnow() + datetime.timedelta(days=SESSION_TTL_DAYS)
     _session_tokens[token] = {"sid": sid, "name": name, "email": email, "expires": expires,
                               "checked": datetime.datetime.utcnow()}
     if db.is_available():
-        db.create_db_session(token, sid, name, email, expires)
+        db.create_db_session(token, sid, name, email, expires, user_agent, ip)
 
 
 def delete_all_sessions(sid: str, except_token: str | None = None) -> None:
@@ -380,6 +382,7 @@ def get_session_from_token(token: str) -> dict | None:
                     del _session_tokens[token]
                     return None
                 entry["checked"] = datetime.datetime.utcnow()
+                db.touch_session_last_seen(token)
         return entry
     # Fallback: check DB and warm this worker's cache for subsequent requests
     if db.is_available():
@@ -403,6 +406,7 @@ def get_session_from_token(token: str) -> dict | None:
             "checked": datetime.datetime.utcnow(),
         }
         _session_tokens[token] = entry
+        db.touch_session_last_seen(token)
         return entry
     return None
 

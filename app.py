@@ -136,6 +136,7 @@ from core import (
     RATE_LIMIT_WINDOW, limiter, get_client_key, check_rate_limit,
     asset, sw_cache_version,
     password_policy_error, safe_url,
+    _client_ip,
 )
 
 for d in [DATA_DIR, UPLOADS_DIR, SHARES_DIR, LOG_DIR]:
@@ -2876,7 +2877,8 @@ async def login(req: LoginRequest, request: Request, bg: BackgroundTasks, respon
         log.warning(f"AI session init deferred (non-fatal) for {sid}: {_ai_e}")
 
     cleanup_expired_tokens()
-    token = create_session_token(sid, user["name"], user["email"])
+    token = create_session_token(sid, user["name"], user["email"],
+                                  request.headers.get("user-agent", ""), _client_ip(request))
 
     log.info(f"{'Register' if req.action=='register' else 'Login'}: {user['name']} ({email}) | Sessions: {p['sessions']}")
 
@@ -3079,6 +3081,105 @@ async def reset_password(data: dict):
     # attacker holding a stolen token is locked out the moment the owner resets.
     delete_all_sessions(rec["sid"])
     return {"ok": True, "message": "Password updated. You can now sign in."}
+
+
+def _describe_device(user_agent: str) -> str:
+    """Best-effort "Browser on OS" label from a User-Agent string. Heuristic,
+    not a full parser — good enough for a settings list, not for fingerprinting."""
+    ua = user_agent or ""
+    if "Edg/" in ua or "Edg " in ua:
+        browser = "Edge"
+    elif "OPR/" in ua or "Opera" in ua:
+        browser = "Opera"
+    elif "Firefox" in ua:
+        browser = "Firefox"
+    elif "CriOS" in ua:
+        browser = "Chrome"
+    elif "Chrome" in ua:
+        browser = "Chrome"
+    elif "Safari" in ua:
+        browser = "Safari"
+    else:
+        browser = "Unknown browser"
+
+    if "iPhone" in ua:
+        os_name = "iPhone"
+    elif "iPad" in ua:
+        os_name = "iPad"
+    elif "Android" in ua:
+        os_name = "Android"
+    elif "Windows" in ua:
+        os_name = "Windows"
+    elif "Mac OS" in ua:
+        os_name = "Mac"
+    elif "Linux" in ua:
+        os_name = "Linux"
+    else:
+        os_name = "an unknown device"
+
+    return f"{browser} on {os_name}"
+
+
+@app.post("/api/auth/sessions")
+async def list_my_sessions(data: dict):
+    """Self-service Sessions & Devices list for Settings > Security."""
+    token = sanitize_text(str(data.get("token", "")), 200)
+    if not token:
+        raise HTTPException(401, "Authentication required.")
+    entry = get_session_from_token(token)
+    if not entry:
+        raise HTTPException(401, "Session expired. Please sign in again.")
+    sid = entry["sid"]
+    rows = db.list_sessions_for_sid(sid) if db.is_available() else []
+    sessions = []
+    for r in rows:
+        ref = hashlib.sha256(r["token"].encode()).hexdigest()[:12]
+        sessions.append({
+            "ref": ref,
+            "device": _describe_device(r["user_agent"]),
+            "ip": r["ip"] or "Unknown",
+            "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+            "last_seen": (r["last_seen"] or r["created_at"]).isoformat() if (r["last_seen"] or r["created_at"]) else None,
+            "is_current": r["token"] == token,
+        })
+    return {"ok": True, "sessions": sessions}
+
+
+@app.post("/api/auth/sessions/revoke")
+async def revoke_my_session(data: dict):
+    """Revoke one of the caller's OWN sessions by its opaque ref (never the
+    raw token — the real bearer token for another session never round-trips
+    back to the client)."""
+    token = sanitize_text(str(data.get("token", "")), 200)
+    ref   = sanitize_text(str(data.get("ref", "")), 64)
+    if not token:
+        raise HTTPException(401, "Authentication required.")
+    if not ref:
+        raise HTTPException(400, "Missing session reference.")
+    entry = get_session_from_token(token)
+    if not entry:
+        raise HTTPException(401, "Session expired. Please sign in again.")
+    sid = entry["sid"]
+    rows = db.list_sessions_for_sid(sid) if db.is_available() else []
+    target = next((r for r in rows if hashlib.sha256(r["token"].encode()).hexdigest()[:12] == ref), None)
+    if not target:
+        raise HTTPException(404, "Session not found.")
+    db.delete_session_for_sid(sid, target["token"])
+    return {"ok": True}
+
+
+@app.post("/api/auth/sessions/revoke-all")
+async def revoke_all_my_sessions(data: dict):
+    """Real "Sign Out Everywhere" — revokes every session for this account,
+    including the caller's own current one."""
+    token = sanitize_text(str(data.get("token", "")), 200)
+    if not token:
+        raise HTTPException(401, "Authentication required.")
+    entry = get_session_from_token(token)
+    if not entry:
+        raise HTTPException(401, "Session expired. Please sign in again.")
+    delete_all_sessions(entry["sid"])
+    return {"ok": True}
 
 
 @app.post("/api/auth/2fa/status")
@@ -5476,7 +5577,7 @@ async def google_oauth_callback(bg: BackgroundTasks, code: str = "", error: str 
 
 
 @app.get("/api/auth/google/exchange")
-async def google_token_exchange(response: Response, code: str = ""):
+async def google_token_exchange(response: Response, request: Request, code: str = ""):
     """Exchange a one-time code for a session token and full login data.
 
     Returns the same shape as /api/login so the client can call _applyLoginData
@@ -5485,12 +5586,15 @@ async def google_token_exchange(response: Response, code: str = ""):
     if not code:
         raise HTTPException(400, "Missing code.")
 
+    ua = request.headers.get("user-agent", "")
+    ip = _client_ip(request)
+
     # Primary path: stateless HMAC-signed code — any worker can verify it with
     # no shared storage. The session token is minted here, server-side.
     ident = _google_verify_xcode(code)
     if ident:
         sid, name, email = ident["sid"], ident["name"], ident["email"]
-        token = create_session_token(sid, name, email)
+        token = create_session_token(sid, name, email, ua, ip)
     else:
         # Backward-compat: legacy server-stored opaque code (in-flight codes from
         # a previous deploy). Safe to delete after one deploy cycle.
@@ -5504,7 +5608,7 @@ async def google_token_exchange(response: Response, code: str = ""):
             sid, name, email = entry["sid"], entry["name"], entry["email"]
         elif x_sid:
             sid, name, email = x_sid, xdata.get("name", ""), xdata.get("email", "")
-            create_session_token_for_existing(token, sid, name, email)
+            create_session_token_for_existing(token, sid, name, email, ua, ip)
         else:
             raise HTTPException(400, "Session expired. Please sign in again.")
 
