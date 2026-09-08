@@ -51,6 +51,7 @@ from fastapi import APIRouter, HTTPException
 import database as db
 from core import get_session_from_token, sanitize_text
 from routes.tasks import load_tasks
+from routes.habits import load_habits
 from routes.goals import load_goals
 from routes.docs_notes import load_docs
 from routes.journal import load_journal
@@ -118,6 +119,23 @@ async def unified_search(q: str = "", token: str = "", limit: int = 30, offset: 
                     "id":    t.get("id", ""),
                     "score": _substring_score(q, title),
                 })
+
+    # ── Habits ─────────────────────────────────────────────────────────
+    for h in load_habits(sid):
+        if h.get("deleted_at"):
+            continue
+        title = h.get("title", "")
+        if q in title.lower():
+            streak = h.get("streak", 0)
+            meta = f"{streak}-day streak" if streak else "habit"
+            results.append({
+                "type":  "habit",
+                "icon":  h.get("emoji") or "⚡",
+                "title": title,
+                "meta":  meta,
+                "id":    h.get("id", ""),
+                "score": _substring_score(q, title),
+            })
 
     # ── Goals — real Postgres full-text search when available ──────────
     if db.is_available():

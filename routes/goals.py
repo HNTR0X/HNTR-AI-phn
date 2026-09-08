@@ -114,7 +114,6 @@ async def add_goal(data: dict):
     milestones = _sanitize_milestones(data.get("milestones"))
     habit_ids = _sanitize_habit_ids(data.get("habit_ids"))
 
-    goals = load_goals(sid)
     goal = {
         "id":           str(uuid.uuid4())[:8],
         "title":        title,
@@ -129,95 +128,156 @@ async def add_goal(data: dict):
         "pct_override": pct_override,
         "milestones":   milestones,
         "habit_ids":    habit_ids,
+        "key_results":  [],
     }
     goal["progress"] = _calc_milestone_progress(mode, milestones, manual_pct, pct_override)
     goal["completed"] = goal["progress"] >= 100
-    goals.append(goal)
-    save_goals(sid, goals)
+
+    if db.is_available():
+        ok = db.create_goal(sid, goal["id"], title, **{k: v for k, v in goal.items() if k not in ("id", "title")})
+        if not ok:
+            raise HTTPException(500, "Failed to create goal.")
+    else:
+        goals = _load_user_list(sid, "goals")
+        goals.append(goal)
+        _save_user_list(sid, "goals", goals)
     return {"goal": goal}
 
 
 @router.post("/api/goals/update")
 async def update_goal(data: dict):
     sid, _   = _resolve_token(data)
-    goal_id  = sanitize_text(str(data.get("id","")), 20)
+    goal_id  = sanitize_text(str(data.get("id","")), 50)
+    if not goal_id:
+        raise HTTPException(400, "Goal id required.")
     progress = int(data.get("progress", 0))
     completed = bool(data.get("completed", False))
-    goals = load_goals(sid)
-    for g in goals:
-        if g["id"] == goal_id:
-            g["progress"]  = min(max(progress, 0), 100)
-            g["completed"] = completed
-            break
-    save_goals(sid, goals)
+    updates = {
+        "progress": min(max(progress, 0), 100),
+        "completed": completed,
+    }
+
+    if db.is_available():
+        ok = db.update_goal(goal_id, sid, updates)
+        if not ok:
+            raise HTTPException(500, "Failed to update goal.")
+    else:
+        goals = _load_user_list(sid, "goals")
+        current = next((g for g in goals if g.get("id") == goal_id), None)
+        if not current:
+            raise HTTPException(404, "Goal not found.")
+        current.update(updates)
+        _save_user_list(sid, "goals", goals)
     return {"ok": True}
 
 
 @router.post("/api/goals/delete")
 async def delete_goal(data: dict):
-    """Soft delete — marks the goal deleted_at instead of removing it, so it
-    can be recovered from Trash for 30 days. Actually purged by the
-    _purge_deleted_goals background job in app.py."""
+    """Soft delete — sets deleted_at timestamp. Recoverable for 30 days."""
     sid, _  = _resolve_token(data)
-    goal_id = sanitize_text(str(data.get("id","")), 20)
-    goals   = load_goals(sid)
-    for g in goals:
-        if g["id"] == goal_id:
-            g["deleted_at"] = datetime.datetime.utcnow().isoformat()
-            break
-    save_goals(sid, goals)
+    goal_id = sanitize_text(str(data.get("id","")), 50)
+    if not goal_id:
+        raise HTTPException(400, "Goal id required.")
+    if db.is_available():
+        db.soft_delete_goal(goal_id, sid)
+    else:
+        goals = _load_user_list(sid, "goals")
+        for g in goals:
+            if g.get("id") == goal_id:
+                g["deleted_at"] = datetime.datetime.utcnow().isoformat()
+                break
+        _save_user_list(sid, "goals", goals)
     return {"ok": True}
+
+
+async def _handle_undelete_goal(data: dict):
+    """Shared undelete / restore logic for goals."""
+    sid, _  = _resolve_token(data)
+    goal_id = sanitize_text(str(data.get("id","")), 50)
+    if not goal_id:
+        raise HTTPException(400, "Goal id required.")
+    if db.is_available():
+        db.undelete_goal(goal_id, sid)
+    else:
+        goals = _load_user_list(sid, "goals")
+        for g in goals:
+            if g.get("id") == goal_id:
+                g["deleted_at"] = None
+                break
+        _save_user_list(sid, "goals", goals)
+    return {"ok": True}
+
+
+@router.post("/api/goals/undelete")
+async def undelete_goal_endpoint(data: dict):
+    return await _handle_undelete_goal(data)
 
 
 @router.post("/api/goals/restore")
-async def restore_goal(data: dict):
-    sid, _  = _resolve_token(data)
-    goal_id = sanitize_text(str(data.get("id","")), 20)
-    goals   = load_goals(sid)
-    for g in goals:
-        if g["id"] == goal_id:
-            g["deleted_at"] = None
-            break
-    save_goals(sid, goals)
-    return {"ok": True}
+async def restore_goal_endpoint(data: dict):
+    """Legacy alias for undelete — kept for backwards compatibility with existing clients."""
+    return await _handle_undelete_goal(data)
 
 
 @router.post("/api/goals/edit")
 async def edit_goal(data: dict):
     sid, _  = _resolve_token(data)
-    goal_id = sanitize_text(str(data.get("id","")), 20)
-    goals   = load_goals(sid)
-    for g in goals:
-        if g["id"] == goal_id:
-            if data.get("title"):
-                g["title"] = sanitize_text(str(data["title"]), 200)
-            if "subject" in data:
-                g["subject"] = sanitize_text(str(data.get("subject", "")), 100)
-            if "deadline" in data or "due" in data:
-                dl = data.get("deadline") or data.get("due") or None
-                val = sanitize_text(str(dl), 20) if dl else None
-                g["deadline"] = val
-                g["due"] = val
-            if "mode" in data:
-                m = sanitize_text(str(data.get("mode", "milestone")), 20)
-                g["mode"] = m if m in ("milestone", "manual", "hybrid") else "milestone"
-            if "manual_pct" in data:
-                g["manual_pct"] = max(0, min(100, int(data.get("manual_pct") or 0)))
-            if "pct_override" in data:
-                po = data.get("pct_override")
-                g["pct_override"] = max(0, min(100, int(po))) if po is not None else None
-            if "milestones" in data:
-                g["milestones"] = _sanitize_milestones(data.get("milestones"))
-            if "habit_ids" in data:
-                g["habit_ids"] = _sanitize_habit_ids(data.get("habit_ids"))
-            if any(k in data for k in ("mode", "manual_pct", "pct_override", "milestones")):
-                g["progress"] = _calc_milestone_progress(
-                    g.get("mode", "milestone"), g.get("milestones", []),
-                    g.get("manual_pct", 0), g.get("pct_override"),
-                )
-                g["completed"] = g["progress"] >= 100
-            break
-    save_goals(sid, goals)
+    goal_id = sanitize_text(str(data.get("id","")), 50)
+    if not goal_id:
+        raise HTTPException(400, "Goal id required.")
+
+    updates = {}
+    if data.get("title"):
+        updates["title"] = sanitize_text(str(data["title"]), 200)
+    if "subject" in data:
+        updates["subject"] = sanitize_text(str(data.get("subject", "")), 100)
+    if "deadline" in data or "due" in data:
+        dl = data.get("deadline") or data.get("due") or None
+        val = sanitize_text(str(dl), 20) if dl else None
+        updates["deadline"] = val
+        updates["due"] = val
+    if "mode" in data:
+        m = sanitize_text(str(data.get("mode", "milestone")), 20)
+        updates["mode"] = m if m in ("milestone", "manual", "hybrid") else "milestone"
+    if "manual_pct" in data:
+        updates["manual_pct"] = max(0, min(100, int(data.get("manual_pct") or 0)))
+    if "pct_override" in data:
+        po = data.get("pct_override")
+        updates["pct_override"] = max(0, min(100, int(po))) if po is not None else None
+    if "milestones" in data:
+        updates["milestones"] = _sanitize_milestones(data.get("milestones"))
+    if "habit_ids" in data:
+        updates["habit_ids"] = _sanitize_habit_ids(data.get("habit_ids"))
+
+    if db.is_available():
+        current = db.get_goal(goal_id, sid)
+        if not current:
+            raise HTTPException(404, "Goal not found.")
+        merged = {**current, **updates}
+        if any(k in updates for k in ("mode", "manual_pct", "pct_override", "milestones")):
+            merged["progress"] = _calc_milestone_progress(
+                merged.get("mode", "milestone"), merged.get("milestones", []),
+                merged.get("manual_pct", 0), merged.get("pct_override"),
+            )
+            merged["completed"] = merged["progress"] >= 100
+            updates["progress"] = merged["progress"]
+            updates["completed"] = merged["completed"]
+        ok = db.update_goal(goal_id, sid, updates)
+        if not ok:
+            raise HTTPException(500, "Failed to edit goal.")
+    else:
+        goals = _load_user_list(sid, "goals")
+        current = next((g for g in goals if g.get("id") == goal_id), None)
+        if not current:
+            raise HTTPException(404, "Goal not found.")
+        current.update(updates)
+        if any(k in updates for k in ("mode", "manual_pct", "pct_override", "milestones")):
+            current["progress"] = _calc_milestone_progress(
+                current.get("mode", "milestone"), current.get("milestones", []),
+                current.get("manual_pct", 0), current.get("pct_override"),
+            )
+            current["completed"] = current["progress"] >= 100
+        _save_user_list(sid, "goals", goals)
     return {"ok": True}
 
 
@@ -225,70 +285,96 @@ def _calc_goal_progress(g: dict) -> int:
     krs = g.get("key_results", [])
     if not krs:
         return g.get("progress", 0)
-    pcts = [min(100.0, (kr["current"] / max(0.01, kr["target"])) * 100) for kr in krs]
-    return round(sum(pcts) / len(krs))
+    pcts = [min(100.0, (float(kr.get("current", 0)) / max(0.01, float(kr.get("target", 1)))) * 100) for kr in krs]
+    return round(sum(pcts) / len(pcts))
 
 
 @router.post("/api/goals/kr/add")
 async def add_goal_kr(data: dict):
     sid, _  = _resolve_token(data)
-    goal_id = sanitize_text(str(data.get("goal_id","")), 20)
+    goal_id = sanitize_text(str(data.get("goal_id","")), 50)
     title   = sanitize_text(str(data.get("title","")), 200)
     target  = float(data.get("target", 100))
     current = float(data.get("current", 0))
     unit    = sanitize_text(str(data.get("unit","")), 50)
     if not title:
         raise HTTPException(400, "KR title required.")
-    goals = load_goals(sid)
-    for g in goals:
-        if g["id"] == goal_id:
-            kr = {"id": str(uuid.uuid4())[:8], "title": title,
-                  "target": max(0.1, target), "current": max(0.0, current), "unit": unit}
-            g.setdefault("key_results", []).append(kr)
-            g["progress"] = _calc_goal_progress(g)
-            break
-    save_goals(sid, goals)
+    if not goal_id:
+        raise HTTPException(400, "Goal id required.")
+
+    kr = {"id": str(uuid.uuid4())[:8], "title": title,
+          "target": max(0.1, target), "current": max(0.0, current), "unit": unit}
+
+    if db.is_available():
+        ok, _ = db.mutate_goal_kr(goal_id, sid, "add", kr)
+        if not ok:
+            raise HTTPException(500, "Failed to add key result.")
+    else:
+        goals = _load_user_list(sid, "goals")
+        g = next((x for x in goals if x.get("id") == goal_id), None)
+        if not g:
+            raise HTTPException(404, "Goal not found.")
+        g.setdefault("key_results", []).append(kr)
+        g["progress"] = _calc_goal_progress(g)
+        _save_user_list(sid, "goals", goals)
     return {"ok": True}
 
 
 @router.post("/api/goals/kr/update")
 async def update_goal_kr(data: dict):
     sid, _  = _resolve_token(data)
-    goal_id = sanitize_text(str(data.get("goal_id","")), 20)
-    kr_id   = sanitize_text(str(data.get("kr_id","")), 20)
+    goal_id = sanitize_text(str(data.get("goal_id","")), 50)
+    kr_id   = sanitize_text(str(data.get("kr_id","")), 50)
     current = float(data.get("current", 0))
-    goals   = load_goals(sid)
-    for g in goals:
-        if g["id"] == goal_id:
-            for kr in g.get("key_results", []):
-                if kr["id"] == kr_id:
-                    kr["current"] = max(0.0, current)
-                    break
-            g["progress"] = _calc_goal_progress(g)
-            if g["progress"] >= 100:
-                g["completed"] = True
-            break
-    save_goals(sid, goals)
+    if not goal_id or not kr_id:
+        raise HTTPException(400, "Goal id and KR id required.")
+
+    if db.is_available():
+        ok, _ = db.mutate_goal_kr(goal_id, sid, "update", {"kr_id": kr_id, "current": current})
+        if not ok:
+            raise HTTPException(500, "Failed to update key result.")
+    else:
+        goals = _load_user_list(sid, "goals")
+        g = next((x for x in goals if x.get("id") == goal_id), None)
+        if not g:
+            raise HTTPException(404, "Goal not found.")
+        for kr in g.get("key_results", []):
+            if kr.get("id") == kr_id:
+                kr["current"] = max(0.0, current)
+                break
+        g["progress"] = _calc_goal_progress(g)
+        if g["progress"] >= 100:
+            g["completed"] = True
+        _save_user_list(sid, "goals", goals)
     return {"ok": True}
 
 
 @router.post("/api/goals/kr/delete")
 async def delete_goal_kr(data: dict):
     sid, _  = _resolve_token(data)
-    goal_id = sanitize_text(str(data.get("goal_id","")), 20)
-    kr_id   = sanitize_text(str(data.get("kr_id","")), 20)
-    goals   = load_goals(sid)
-    for g in goals:
-        if g["id"] == goal_id:
-            g["key_results"] = [kr for kr in g.get("key_results", []) if kr["id"] != kr_id]
-            g["progress"] = _calc_goal_progress(g)
-            break
-    save_goals(sid, goals)
+    goal_id = sanitize_text(str(data.get("goal_id","")), 50)
+    kr_id   = sanitize_text(str(data.get("kr_id","")), 50)
+    if not goal_id or not kr_id:
+        raise HTTPException(400, "Goal id and KR id required.")
+
+    if db.is_available():
+        ok, _ = db.mutate_goal_kr(goal_id, sid, "delete", {"kr_id": kr_id})
+        if not ok:
+            raise HTTPException(500, "Failed to delete key result.")
+    else:
+        goals = _load_user_list(sid, "goals")
+        g = next((x for x in goals if x.get("id") == goal_id), None)
+        if not g:
+            raise HTTPException(404, "Goal not found.")
+        g["key_results"] = [kr for kr in g.get("key_results", []) if kr.get("id") != kr_id]
+        g["progress"] = _calc_goal_progress(g)
+        _save_user_list(sid, "goals", goals)
     return {"ok": True}
 
 
 @router.post("/api/import/goals")
 async def import_goals(data: dict):
+    """Import goals without wiping existing goals — appends newly imported goals."""
     token = data.get("token", "")
     sess  = get_session_from_token(token)
     if not sess:
@@ -297,25 +383,38 @@ async def import_goals(data: dict):
     rows = data.get("goals", [])
     if not isinstance(rows, list):
         raise HTTPException(400, "goals must be a list.")
-    existing = load_goals(sid)
+
     imported = []
     for r in rows[:200]:
-        title = sanitize_text(str(r.get("title", "")), 100).strip()
+        title = sanitize_text(str(r.get("title", "")), 200).strip()
         if not title:
             continue
         try:
             target = min(max(int(float(r.get("target_score", 70))), 1), 100)
         except (ValueError, TypeError):
             target = 70
+        deadline = sanitize_text(str(r.get("deadline", "") or r.get("due", "")), 20)
         imported.append({
             "id":           str(uuid.uuid4())[:8],
             "title":        title,
             "subject":      sanitize_text(str(r.get("subject", "")), 100),
             "target_score": target,
-            "deadline":     sanitize_text(str(r.get("deadline", "")), 20),
+            "deadline":     deadline,
+            "due":          deadline,
             "created":      datetime.date.today().isoformat(),
             "progress":     0,
             "completed":    str(r.get("completed", "")).lower() in ("yes", "true", "1"),
+            "goal_type":    "okr",
+            "mode":         "milestone",
+            "key_results":  [],
+            "milestones":   [],
+            "habit_ids":    [],
         })
-    save_goals(sid, existing + imported)
+
+    if db.is_available():
+        for g in imported:
+            db.create_goal(sid, g["id"], g["title"], **{k: v for k, v in g.items() if k not in ("id", "title")})
+    else:
+        existing = load_goals(sid)
+        _save_user_list(sid, "goals", existing + imported)
     return {"ok": True, "imported": len(imported)}

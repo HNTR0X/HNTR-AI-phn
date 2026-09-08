@@ -135,6 +135,21 @@ async def list_habits(token: str = ""):
         raise HTTPException(401, "Invalid session.")
     return {"habits": [h for h in load_habits(sess["sid"]) if not h.get("deleted_at")]}
 
+@router.get("/api/habits/{id}")
+async def get_particular_habit(id: str, token: str = ""):
+    sess = get_session_from_token(token)
+    if not sess:
+        raise HTTPException(401, "Invalid session.")
+    sid = sess["sid"]
+    if db.is_available():
+        habit = db.get_habit(id, sid)
+    else:
+        habits = load_habits(sid)
+        habit = next((h for h in habits if h.get("id") == id), None)
+    if not habit:
+        raise HTTPException(404, "Habit not found.")
+    return {"habit": habit}
+
 
 @router.get("/api/habits/trash")
 async def list_trashed_habits(token: str = ""):

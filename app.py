@@ -5233,7 +5233,7 @@ async def home_briefing_data(token: str = ""):
     active_goals    = sum(1 for g in goals if not g.get("completed") and not g.get("done"))
     goals_at_risk   = sum(1 for g in goals
                           if not g.get("completed") and not g.get("done")
-                          and g.get("due") and g.get("due") < today)
+                          and (g.get("deadline") or g.get("due")) and (g.get("deadline") or g.get("due")) < today)
 
     # Streak: count consecutive days any habit was completed
     streak_days = 0

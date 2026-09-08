@@ -3477,6 +3477,240 @@ def get_goals(sid: str, include_deleted: bool = False) -> list:
         _release(conn)
 
 
+def get_trashed_goals(sid: str) -> list:
+    conn = _get_conn()
+    if not conn:
+        return []
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM goals WHERE sid=%s AND deleted_at IS NOT NULL ORDER BY deleted_at DESC", (sid,))
+            return [_row_to_goal(r) for r in cur.fetchall()]
+    except Exception as exc:
+        log.error(f"get_trashed_goals: {exc}")
+        return []
+    finally:
+        _release(conn)
+
+
+def get_goal(goal_id: str, sid: str) -> dict | None:
+    conn = _get_conn()
+    if not conn:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM goals WHERE id=%s AND sid=%s", (goal_id, sid))
+            row = cur.fetchone()
+            return _row_to_goal(row) if row else None
+    except Exception as exc:
+        log.error(f"get_goal: {exc}")
+        return None
+    finally:
+        _release(conn)
+
+
+def create_goal(sid: str, goal_id: str, title: str, **fields) -> bool:
+    cols = {k: v for k, v in fields.items() if k in _GOAL_COLUMNS and k not in ("id", "sid", "title")}
+    conn = _get_conn()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            names = ["id", "sid", "title"] + list(cols.keys())
+            vals  = [goal_id, sid, title] + [_goal_param(k, v) for k, v in cols.items()]
+            placeholders = ", ".join(["%s"] * len(vals))
+            cur.execute(
+                f"INSERT INTO goals ({', '.join(names)}) VALUES ({placeholders})",
+                vals,
+            )
+        conn.commit()
+        return True
+    except Exception as exc:
+        log.error(f"create_goal: {exc}")
+        conn.rollback()
+        return False
+    finally:
+        _release(conn)
+
+
+def update_goal(goal_id: str, sid: str, updates: dict) -> bool:
+    sets = {k: v for k, v in updates.items() if k in _GOAL_COLUMNS}
+    if not sets:
+        return True
+    conn = _get_conn()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cols = ", ".join(f"{k}=%s" for k in sets)
+            vals = [_goal_param(k, v) for k, v in sets.items()]
+            cur.execute(
+                f"UPDATE goals SET {cols}, updated_at=NOW() WHERE id=%s AND sid=%s",
+                (*vals, goal_id, sid),
+            )
+        conn.commit()
+        return True
+    except Exception as exc:
+        log.error(f"update_goal: {exc}")
+        conn.rollback()
+        return False
+    finally:
+        _release(conn)
+
+
+def soft_delete_goal(goal_id: str, sid: str) -> bool:
+    conn = _get_conn()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE goals SET deleted_at=NOW(), updated_at=NOW() WHERE id=%s AND sid=%s",
+                (goal_id, sid),
+            )
+        conn.commit()
+        return True
+    except Exception as exc:
+        log.error(f"soft_delete_goal: {exc}")
+        conn.rollback()
+        return False
+    finally:
+        _release(conn)
+
+
+def undelete_goal(goal_id: str, sid: str) -> bool:
+    conn = _get_conn()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE goals SET deleted_at=NULL, updated_at=NOW() WHERE id=%s AND sid=%s",
+                (goal_id, sid),
+            )
+        conn.commit()
+        return True
+    except Exception as exc:
+        log.error(f"undelete_goal: {exc}")
+        conn.rollback()
+        return False
+    finally:
+        _release(conn)
+
+
+def has_user_migrated_goals(sid: str) -> bool:
+    """Check if lazy migration has already been completed for this sid."""
+    conn = _get_conn()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM user_blobs WHERE sid=%s AND key='goals_migrated'", (sid,))
+            if cur.fetchone():
+                return True
+            cur.execute("SELECT 1 FROM goals WHERE sid=%s LIMIT 1", (sid,))
+            return cur.fetchone() is not None
+    except Exception as exc:
+        log.error(f"has_user_migrated_goals: {exc}")
+        return False
+    finally:
+        _release(conn)
+
+
+def replace_all_goals_and_mark_migrated(sid: str, goals: list) -> bool:
+    """Atomic migration transaction: inserts legacy goals into goals table
+    AND records migration completion in a single transaction."""
+    import json as _json
+    conn = _get_conn()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM goals WHERE sid=%s", (sid,))
+            for g in goals:
+                cols = {k: v for k, v in g.items() if k in _GOAL_COLUMNS and k not in ("id", "sid", "title")}
+                names = ["id", "sid", "title"] + list(cols.keys())
+                vals  = [g["id"], sid, g.get("title", "")] + [_goal_param(k, v) for k, v in cols.items()]
+                placeholders = ", ".join(["%s"] * len(vals))
+                cur.execute(
+                    f"INSERT INTO goals ({', '.join(names)}) VALUES ({placeholders})",
+                    vals,
+                )
+            cur.execute(
+                """INSERT INTO user_blobs (sid, key, data, updated_at)
+                   VALUES (%s, 'goals_migrated', '{"migrated":true}', NOW())
+                   ON CONFLICT (sid, key) DO UPDATE SET data=EXCLUDED.data, updated_at=NOW()""",
+                (sid,),
+            )
+        conn.commit()
+        return True
+    except Exception as exc:
+        log.error(f"replace_all_goals_and_mark_migrated: {exc}")
+        conn.rollback()
+        return False
+    finally:
+        _release(conn)
+
+
+def mutate_goal_kr(goal_id: str, sid: str, kr_action: str, kr_data: dict) -> tuple[bool, dict | None]:
+    """Execute a single-goal Key Result mutation (add/update/delete) inside a
+    single protected transaction block."""
+    import json as _json
+    conn = _get_conn()
+    if not conn:
+        return False, None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM goals WHERE id=%s AND sid=%s FOR UPDATE", (goal_id, sid))
+            row = cur.fetchone()
+            if not row:
+                conn.rollback()
+                return False, None
+            g = _row_to_goal(row)
+            krs = g.get("key_results") or []
+            if isinstance(krs, str):
+                try:
+                    krs = _json.loads(krs)
+                except Exception:
+                    krs = []
+
+            if kr_action == "add":
+                krs.append(kr_data)
+            elif kr_action == "update":
+                target_kr_id = kr_data.get("kr_id")
+                curr_val = kr_data.get("current", 0.0)
+                for kr in krs:
+                    if kr.get("id") == target_kr_id:
+                        kr["current"] = max(0.0, float(curr_val))
+                        break
+            elif kr_action == "delete":
+                target_kr_id = kr_data.get("kr_id")
+                krs = [kr for kr in krs if kr.get("id") != target_kr_id]
+
+            # Recalculate progress & completed status
+            if krs:
+                pcts = [min(100.0, (float(kr.get("current", 0)) / max(0.01, float(kr.get("target", 1)))) * 100) for kr in krs]
+                progress = round(sum(pcts) / len(pcts))
+            else:
+                progress = g.get("progress", 0)
+            completed = progress >= 100 if krs else g.get("completed", False)
+
+            cur.execute(
+                "UPDATE goals SET key_results=%s, progress=%s, completed=%s, updated_at=NOW() WHERE id=%s AND sid=%s",
+                (_json.dumps(krs), progress, completed, goal_id, sid),
+            )
+            g["key_results"] = krs
+            g["progress"] = progress
+            g["completed"] = completed
+        conn.commit()
+        return True, g
+    except Exception as exc:
+        log.error(f"mutate_goal_kr[{kr_action}]: {exc}")
+        conn.rollback()
+        return False, None
+    finally:
+        _release(conn)
+
+
 def search_goals(sid: str, q: str, limit: int = 15) -> list:
     """Full-text search over this user's goals, ranked via goals.search_vector
     (title + subject) + its GIN index. Soft-deleted goals excluded in SQL,
@@ -3506,10 +3740,7 @@ def search_goals(sid: str, q: str, limit: int = 15) -> list:
 
 def replace_all_goals(sid: str, goals: list) -> bool:
     """Bulk replace -- delete every row for sid, reinsert the given list.
-    The *only* write path for goals (see this section's header comment) --
-    keeps the exact whole-array-overwrite semantics the old user_blobs blob
-    had, so routes/goals.py needed zero changes to its own read-modify-
-    write logic for this migration."""
+    Constrained strictly to initial lazy migration and full-resync fallbacks."""
     conn = _get_conn()
     if not conn:
         return False

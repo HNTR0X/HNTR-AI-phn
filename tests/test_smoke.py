@@ -428,20 +428,62 @@ def test_goal_edit_persists_due_date_on_both_field_names(client, session_token):
     assert goal["due"] == "2026-12-01"
 
 
-def test_goal_undelete_uses_real_restore_endpoint(client, session_token):
-    """Regression test: the panel's sync code used to call the nonexistent
-    /api/goals/undelete (real endpoint is /api/goals/restore) — restoring a
-    trashed goal 404'd forever. /api/goals/undelete must not exist (a typo'd
-    client hitting it should 404, not silently succeed), and /restore is
-    what actually brings a goal back — already covered by
-    test_goal_restore_brings_it_back, this just pins the undelete typo as
-    permanently gone."""
-    add = client.post("/api/goals/add", json={"token": session_token, "title": "Learn Elixir"})
-    goal_id = add.json()["goal"]["id"]
-    client.post("/api/goals/delete", json={"token": session_token, "id": goal_id})
+def test_goals_undelete_and_restore_parity(client, session_token):
+    """Verify both /api/goals/undelete and /api/goals/restore achieve identical restoration."""
+    add1 = client.post("/api/goals/add", json={"token": session_token, "title": "Learn Elixir"})
+    goal_id1 = add1.json()["goal"]["id"]
+    client.post("/api/goals/delete", json={"token": session_token, "id": goal_id1})
+    res1 = client.post("/api/goals/undelete", json={"token": session_token, "id": goal_id1})
+    assert res1.status_code == 200
+    goals1 = client.get(f"/api/goals?token={session_token}").json()["goals"]
+    assert goal_id1 in [g["id"] for g in goals1]
 
-    bad = client.post("/api/goals/undelete", json={"token": session_token, "id": goal_id})
-    assert bad.status_code == 404
+    add2 = client.post("/api/goals/add", json={"token": session_token, "title": "Learn Clojure"})
+    goal_id2 = add2.json()["goal"]["id"]
+    client.post("/api/goals/delete", json={"token": session_token, "id": goal_id2})
+    res2 = client.post("/api/goals/restore", json={"token": session_token, "id": goal_id2})
+    assert res2.status_code == 200
+    goals2 = client.get(f"/api/goals?token={session_token}").json()["goals"]
+    assert goal_id2 in [g["id"] for g in goals2]
+
+
+def test_import_goals_preserves_existing_goals(client, session_token):
+    """Verifies importing goals appends rather than wiping existing goals."""
+    add = client.post("/api/goals/add", json={"token": session_token, "title": "Existing Goal"})
+    existing_id = add.json()["goal"]["id"]
+
+    imp = client.post("/api/import/goals", json={
+        "token": session_token,
+        "goals": [{"title": "Imported Goal 1"}, {"title": "Imported Goal 2"}],
+    })
+    assert imp.status_code == 200 and imp.json()["imported"] == 2
+
+    goals = client.get(f"/api/goals?token={session_token}").json()["goals"]
+    titles = [g["title"] for g in goals]
+    assert "Existing Goal" in titles
+    assert "Imported Goal 1" in titles
+    assert "Imported Goal 2" in titles
+
+
+def test_get_particular_habit(client, session_token):
+    add = client.post("/api/habits/add", json={"token": session_token, "title": "Drink Water", "emoji": "💧"})
+    assert add.status_code == 200
+    habit_id = add.json()["habit"]["id"]
+
+    h = client.get(f"/api/habits/{habit_id}?token={session_token}")
+    assert h.status_code == 200
+    assert h.json()["habit"]["title"] == "Drink Water"
+
+    notFound = client.get(f"/api/habits/nonexistent_id?token={session_token}")
+    assert notFound.status_code == 404
+
+
+def test_search_includes_habits(client, session_token):
+    unique = "Zzyzx9HabitSearch"
+    client.post("/api/habits/add", json={"token": session_token, "title": unique, "emoji": "🏃"})
+
+    found = client.get(f"/api/search?q={unique}&token={session_token}").json()["results"]
+    assert any(r["title"] == unique and r["type"] == "habit" for r in found)
 
 
 def test_goals_trash_requires_auth(client):
