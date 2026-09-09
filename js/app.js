@@ -9751,7 +9751,13 @@ function homeHabitToggle(idx) {
 }
 
 // ════════════ CALENDAR ════════════
-let CAL_VIEW = "week"; // 'day' | 'week' | 'month'
+// Mobile defaults to a single day -- a 7-column week grid has no room to
+// breathe on a phone-width screen (each column ends up ~40px wide). Desktop
+// keeps its existing week default. Evaluated once at load, same as every
+// other mobile-breakpoint check in this codebase (720px); a user who then
+// manually switches to Weekly/Monthly keeps that choice for the session,
+// same as desktop already does -- this only changes the starting point.
+let CAL_VIEW = window.innerWidth <= 720 ? "day" : "week"; // 'day' | 'week' | 'month'
 let CAL_ANCHOR = new Date(); // reference date for the active view
 let CAL_MINI_Y = new Date().getFullYear();
 let CAL_MINI_M = new Date().getMonth();

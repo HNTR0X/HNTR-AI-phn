@@ -187,8 +187,18 @@ body {
   .g2 {
     grid-template-columns: 1fr;
   }
+  /* Any panel whose header carries more than one action button (Calendar's
+     Connect Google + Event, Finance's Income + Expense, etc.) can run out
+     of room on a narrow phone. Rather than patching each panel's markup,
+     let the header itself wrap to a second row and grow past its desktop
+     height instead of silently clipping the overflow off-screen -- no
+     horizontal scroll (see this file's header comment), nothing hidden. */
   .view-head {
-    padding: 0 14px;
+    padding: 8px 14px;
+    height: auto;
+    min-height: 54px;
+    flex-wrap: wrap;
+    row-gap: 6px;
   }
 
   /* ── Reset ALL centering on mobile — full width with small padding ── */
