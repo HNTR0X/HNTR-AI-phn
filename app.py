@@ -2497,7 +2497,17 @@ async def landing():
     Rendered through Jinja (rather than read as raw text) so its asset URLs get
     the same content-hash cache-busting as the app shell — see core.py's asset()."""
     if Path("templates/landing.html").exists():
-        return HTMLResponse(_get_jinja_env().get_template("landing.html").render())
+        # NGN figures are computed here rather than written into the template.
+        # get_naira_rate() exists so the team can change the rate WITHOUT a
+        # redeploy (admin override, DB-backed), so a hardcoded "= NGN 19,800"
+        # silently becomes a lie the moment anyone uses that: the page would
+        # advertise one price while checkout charges another.
+        rate = get_naira_rate()
+        ngn = lambda plan: f"{int(round(SIVARR_PLANS[plan]['amount_usd'] * rate)):,}"
+        return HTMLResponse(_get_jinja_env().get_template("landing.html").render(
+            pro_ngn=ngn("pro_monthly"),
+            creator_ngn=ngn("creator_monthly"),
+        ))
     return RedirectResponse(url="/app", status_code=302)
 
 
