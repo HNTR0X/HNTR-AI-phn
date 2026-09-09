@@ -596,6 +596,17 @@ Tabler icons are already loaded by index.html. habits.js is already loaded as
         width: 100%;
       }
     }
+    /* The topbar's own brand text already shows "Habits" (or "Goals",
+       both redirect to this panel -- see nav(), js/app.js) on mobile, so
+       this header-title would just repeat it. Scoped to .ghframe, not
+       bare .header-title -- that class name is also used by the Tasks
+       panel (.frame .header-title), and this file's own header comment
+       already warns against letting styles here leak past .ghframe. */
+    @media (max-width: 720px) {
+      .ghframe .header-title {
+        display: none;
+      }
+    }
   </style>
 
   <div class="ghframe" id="ghFrame">

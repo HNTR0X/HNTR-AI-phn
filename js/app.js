@@ -12687,6 +12687,23 @@ function _mobSidebarInit() {
 }
 document.addEventListener("DOMContentLoaded", _mobSidebarInit);
 
+// ── Mobile view-heads: the icon+title (.vh-icon/.vh-title) is CSS-hidden on
+// mobile everywhere (css/mobile.css) since the topbar's brand text already
+// shows the open panel's name -- most panels have nothing else in their
+// view-head, so hiding just those two leaves a dead, empty 54px+ bar with a
+// border-bottom. Collapse it fully when that's the case; a panel with real
+// header content left (e.g. Templates' search box) keeps its row.
+function _mobCollapseEmptyViewHeads() {
+  if (window.innerWidth > 720) return;
+  document.querySelectorAll(".view-head").forEach((vh) => {
+    const hasOtherContent = [...vh.children].some(
+      (c) => !c.classList.contains("vh-icon") && !c.classList.contains("vh-title"),
+    );
+    if (!hasOtherContent) vh.style.display = "none";
+  });
+}
+document.addEventListener("DOMContentLoaded", _mobCollapseEmptyViewHeads);
+
 // ── Mobile notifications: fold the standalone bell+panel into the account
 // dropdown instead (desktop keeps the separate bell -- #notif-wrap is only
 // CSS-hidden below 720px, see css/mobile.css). Relocates the *same* DOM

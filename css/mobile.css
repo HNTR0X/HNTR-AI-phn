@@ -213,6 +213,17 @@ body {
     flex-wrap: wrap;
     row-gap: 6px;
   }
+  /* The topbar's brand text now shows the open panel's name (see nav(),
+     js/app.js), so every panel repeating its own name+icon here is a
+     duplicate, not just Finance -- drop it everywhere. A view-head with
+     nothing left after that (most panels have no other header content)
+     is fully collapsed by _mobCollapseEmptyViewHeads() in js/app.js so it
+     doesn't sit there as dead space; the handful with real content left
+     (e.g. Templates' search box) keep their row, just without the title. */
+  .vh-icon,
+  .vh-title {
+    display: none;
+  }
 
   /* ── Reset ALL centering on mobile — full width with small padding ── */
   .home-wrap,

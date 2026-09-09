@@ -1185,6 +1185,17 @@
           height: 130px;
         }
       }
+      /* The topbar's own brand text already shows "Tasks" on mobile (see
+         nav(), js/app.js) -- this header-title would just repeat it. Scoped
+         to .frame, NOT bare .header-title -- that class name is also used
+         by the Goals & Habits panel (.ghframe .header-title) and this file
+         has a documented history of scope leaks (see the top-of-file
+         comment), so this must never affect anything outside .frame. */
+      @media (max-width: 720px) {
+        .frame .header-title {
+          display: none;
+        }
+      }
       @media (min-width: 600px) {
         /* ══ DESKTOP ══ — no floating rounded phone card, no centered
      device-shaped shadow. The frame fills the window like a real app
