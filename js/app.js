@@ -12687,6 +12687,37 @@ function _mobSidebarInit() {
 }
 document.addEventListener("DOMContentLoaded", _mobSidebarInit);
 
+// ── Mobile notifications: fold the standalone bell+panel into the account
+// dropdown instead (desktop keeps the separate bell -- #notif-wrap is only
+// CSS-hidden below 720px, see css/mobile.css). Relocates the *same* DOM
+// nodes (not a copy) so notifToggle/_renderNotifList/_renderNotifBadge etc.
+// keep working unchanged via their existing ids, regardless of which parent
+// they now live under. One-time move at load, same convention as
+// _mobSidebarInit() above.
+function _mobNotifInit() {
+  if (window.innerWidth > 720) return;
+  const panel = $("notif-panel");
+  const dropdown = $("profile-dropdown");
+  const pdHeader = dropdown?.querySelector(".pd-header");
+  if (panel && pdHeader) {
+    panel.style.position = "static";
+    panel.style.width = "auto";
+    panel.style.boxShadow = "none";
+    panel.style.borderRadius = "0";
+    panel.style.zIndex = "auto";
+    panel.style.display = "block";
+    panel.style.borderBottom = "1px solid var(--border)";
+    pdHeader.insertAdjacentElement("afterend", panel);
+  }
+  const badge = $("notif-badge");
+  const trigger = $("profile-trigger");
+  if (badge && trigger) {
+    trigger.style.position = "relative";
+    trigger.appendChild(badge);
+  }
+}
+document.addEventListener("DOMContentLoaded", _mobNotifInit);
+
 // ── Connect section order (Customize Sidebar removed — this now only feeds
 // the fixed default order into navRenderSidebar's sgi-connect render) ──
 function NAV_ORDER_KEY() {
@@ -13203,6 +13234,10 @@ function nav(name, btn) {
     try {
       localStorage.setItem("sb_last_panel", name);
     } catch (e) {}
+    // Mobile topbar shows the open panel's name instead of a static "Sivarr"
+    // (desktop's own brand label, same markup, is untouched by this).
+    const tbBrandName = $("tb-brand-name");
+    if (tbBrandName) tbBrandName.textContent = NAV_TABS[name]?.label || "Sivarr";
   }
   _updateMobileNav(name);
   syncSnavFromPanel(name);
@@ -13849,6 +13884,11 @@ function toggleProfile() {
   } else {
     trigger.classList.add("open");
     dropdown.classList.add("open");
+    // Mobile only: the notification list now lives inside this dropdown
+    // (_mobNotifInit()) instead of behind its own bell button, so refresh
+    // it here the same way notifToggle() does for desktop's separate panel.
+    if (window.innerWidth <= 720 && typeof _renderNotifList === "function")
+      _renderNotifList();
   }
 }
 

@@ -16,8 +16,14 @@
     <div class="tb-logo">
       <img src="{{ asset('/static/sivarr_mark_outline.png') }}" alt="Sivarr" />
     </div>
-    <span class="tb-name">Sivarr</span>
+    <!-- Text kept updated to the open panel's name on mobile (nav(), js/app.js)
+         -- "Sivarr" is just the pre-JS/fallback default. -->
+    <span class="tb-name" id="tb-brand-name">Sivarr</span>
   </button>
+  <!-- Mobile: search moved into the sidebar drawer's own top row (.sb-top-search)
+       so it opens alongside the drawer instead of always sitting in the topbar.
+       This button now only ever renders for the desktop body.sb-retracted
+       fallback (see css/layout.css) -- do not delete, mobile just hides it. -->
   <button class="tb-search" data-onclick="cmdOpen" aria-label="Search or jump to">
     <i class="ti ti-search"></i>
     <span>Search…</span>
@@ -31,8 +37,10 @@
     <!-- Top bar cleanup: Quick Add moved to the sidebar header; Fullscreen
          moved to the profile dropdown; Dark Mode + Announcements already in
          the dropdown. Notifications bell kept (distinct from Announcements). -->
-    <!-- Notifications -->
-    <div style="position: relative">
+    <!-- Notifications. On mobile this whole bell+panel is relocated into
+         the account dropdown instead (see _mobNotifInit(), js/app.js) --
+         hidden here at that point, purely a desktop affordance below. -->
+    <div id="notif-wrap" style="position: relative">
       <button
         class="tb-icon-btn"
         id="notif-btn"

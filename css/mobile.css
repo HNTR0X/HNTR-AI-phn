@@ -164,6 +164,19 @@ body {
   .tb-brand {
     width: auto;
   }
+  /* Search now lives in the sidebar drawer's own top row (.sb-top-search)
+     on mobile, not the always-visible topbar. .tb-search itself must stay
+     in the DOM (unhidden) for the desktop body.sb-retracted fallback -- see
+     css/layout.css -- this just removes it from view below 720px. */
+  .tb-search {
+    display: none !important;
+  }
+  /* Notifications bell relocates into the account dropdown on mobile
+     (_mobNotifInit(), js/app.js moves #notif-panel there and the unread
+     dot onto the avatar) -- hide the now-empty bell button left behind. */
+  #notif-wrap {
+    display: none !important;
+  }
 
   /* ── Sidebar mobile state ────────────────────────────────── */
   .sidebar {
