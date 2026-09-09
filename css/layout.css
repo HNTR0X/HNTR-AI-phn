@@ -1660,18 +1660,13 @@ body.auth-screen #login-screen {
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
   }
 
-  /* The topbar carries the panel name (see .tb-brand) on mobile, and search
-     now opens from here instead -- the drawer's own top row shows just the
-     logo (not the name/caret, which would duplicate .tb-brand's row above
-     it) plus the search bar (.sb-top-search, reuses the same cmdOpen() as
-     the old .tb-search did). */
+  /* The topbar (.tb-brand, fixed above the drawer) carries the logo at all
+     times, and swaps its own tab-name text for a search bar while the
+     drawer is open (body.mobile-sidebar-open, see .tb-search below) --
+     .sb-brand showing its own logo+search here too was a second, redundant
+     copy of both, so it stays fully hidden. */
   .sidebar .sb-brand {
-    display: flex;
-  }
-  .sidebar .sb-brand-name,
-  .sidebar .sb-brand-caret,
-  .sidebar .sb-mob-close-icon {
-    display: none !important;
+    display: none;
   }
 
   .sidebar,

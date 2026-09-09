@@ -164,12 +164,21 @@ body {
   .tb-brand {
     width: auto;
   }
-  /* Search now lives in the sidebar drawer's own top row (.sb-top-search)
-     on mobile, not the always-visible topbar. .tb-search itself must stay
-     in the DOM (unhidden) for the desktop body.sb-retracted fallback -- see
-     css/layout.css -- this just removes it from view below 720px. */
+  /* The topbar's own name text (.tb-name, shows the open panel's name --
+     see nav(), js/app.js) swaps for the search bar while the drawer is
+     open, instead of the drawer carrying its own separate logo+search row
+     (that was a second copy of the topbar's logo). .tb-search itself must
+     stay in the DOM (unhidden) for the desktop body.sb-retracted fallback
+     -- see css/layout.css -- this just removes it from view below 720px,
+     except while the drawer is open. */
   .tb-search {
     display: none !important;
+  }
+  body.mobile-sidebar-open .tb-name {
+    display: none !important;
+  }
+  body.mobile-sidebar-open .tb-search {
+    display: flex !important;
   }
   /* Notifications bell relocates into the account dropdown on mobile
      (_mobNotifInit(), js/app.js moves #notif-panel there and the unread
