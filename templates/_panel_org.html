@@ -890,6 +890,13 @@
         </button>
         <button
           class="ps-tab"
+          id="pstk-tab-invoices"
+          data-onclick="psGoTab" data-onclick-arg0="invoices" data-onclick-this
+        >
+          <i class="ti ti-file-invoice"></i>Invoices
+        </button>
+        <button
+          class="ps-tab"
           id="pstk-tab-refunds"
           data-onclick="psGoTab" data-onclick-arg0="refunds" data-onclick-this
         >
@@ -1107,6 +1114,31 @@
                 >
               </div>
               <div id="ps-cust-table"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INVOICES ── -->
+      <div class="ps-pane" id="pstk-pane-invoices">
+        <div class="os-scroll">
+          <div id="ps-loading-invoices" class="ps-loading">
+            <i class="ti ti-loader-2 ps-spin"></i> Loading…
+          </div>
+          <div id="ps-invoices-content" style="display: none">
+            <div class="os-card">
+              <div class="os-card-head">
+                <span class="os-card-title"
+                  ><i class="ti ti-file-invoice"></i>Invoices</span
+                >
+                <button
+                  class="os-card-link"
+                  data-onclick="psInvoiceCreatePrompt"
+                >
+                  <i class="ti ti-plus"></i> New invoice
+                </button>
+              </div>
+              <div id="ps-invoice-table"></div>
             </div>
           </div>
         </div>

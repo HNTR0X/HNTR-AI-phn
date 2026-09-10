@@ -520,6 +520,17 @@ async def _ps_call(secret_key: str, path: str, params: dict | None = None) -> di
         resp = await client.get(url, headers=headers, params=params or {})
     return resp.json()
 
+
+async def _ps_post(secret_key: str, path: str, json_body: dict | None = None) -> dict:
+    """Proxy a POST request to the Paystack API with the given secret key. Only
+    the invoice (Payment Request) + Customer endpoints below use this -- every
+    other Paystack endpoint in this file is read-only (GET via _ps_call)."""
+    headers = {"Authorization": f"Bearer {secret_key}"}
+    url = f"{PAYSTACK_API}{path}"
+    async with _httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(url, headers=headers, json=json_body or {})
+    return resp.json()
+
 def _org_check(token: str) -> tuple[dict, str]:
     """Validate token and return (session, org_id). Raises HTTPException on failure.
 
@@ -1839,6 +1850,131 @@ def build_router(load_progress, send_email, send_push, _is_valid_admin_session, 
                 "account_number": s.get("account_number", ""),
             })
         return {"settlements": rows, "total": r.get("meta", {}).get("total", len(rows))}
+
+
+    # ── Invoices (Paystack "Payment Requests") ──────────────────────────
+    # Endpoints/params verified against Paystack's own official Python
+    # client docs (github.com/PaystackOSS/paystack-python), not just
+    # assumed: POST /paymentrequest to create, GET /paymentrequest to list,
+    # POST /paymentrequest/notify/{code} and /archive/{code}. Amounts are in
+    # kobo everywhere else in this file (see _psNgn in js/app.js dividing by
+    # 100 for display) -- naira-in from the client, *100 going out here.
+    @router.get("/api/org/paystack/invoices")
+    async def ps_invoices(token: str = "", page: int = 1, status: str = ""):
+        sess, org_id = _org_admin_check(token)
+        key = _ps_key_for_org(org_id)
+        params: dict = {"perPage": 20, "page": page}
+        if status:
+            params["status"] = status
+        r = await _ps_call(key, "/paymentrequest", params)
+        rows = []
+        for inv in r.get("data", []):
+            cust = inv.get("customer") or {}
+            if not isinstance(cust, dict):
+                cust = {}
+            rows.append({
+                "id":                inv.get("id", ""),
+                "request_code":      inv.get("request_code", ""),
+                "offline_reference": inv.get("offline_reference", ""),
+                "customer_email":    cust.get("email", ""),
+                "customer_name":     (cust.get("first_name", "") + " " + cust.get("last_name", "")).strip(),
+                "amount":            inv.get("amount", 0),
+                "description":       inv.get("description", ""),
+                "status":            inv.get("status", ""),
+                "paid":              bool(inv.get("paid")),
+                "due_date":          inv.get("due_date", ""),
+                "created_at":        (inv.get("created_at") or inv.get("createdAt", ""))[:10],
+            })
+        return {"invoices": rows, "total": r.get("meta", {}).get("total", len(rows))}
+
+
+    @router.post("/api/org/paystack/invoices/create")
+    async def ps_invoice_create(data: dict):
+        token = data.get("token", "")
+        sess, org_id = _org_admin_check(token)
+        key = _ps_key_for_org(org_id)
+
+        email = sanitize_text(str(data.get("customer_email", "")).strip().lower(), 200)
+        if not email or "@" not in email:
+            raise HTTPException(400, "A valid customer email is required.")
+        name = sanitize_text(str(data.get("customer_name", "")).strip(), 100)
+        description = sanitize_text(str(data.get("description", "")).strip(), 300)
+        if not description:
+            raise HTTPException(400, "A description is required.")
+        try:
+            amount_naira = float(data.get("amount", 0))
+        except (TypeError, ValueError):
+            amount_naira = 0
+        if amount_naira <= 0:
+            raise HTTPException(400, "Amount must be greater than zero.")
+        due_date = sanitize_text(str(data.get("due_date", "") or ""), 30)
+
+        # Find-or-create the Paystack customer for this email. Paystack's
+        # fetch-by-code endpoint also accepts an email in place of the code;
+        # if that lookup fails for any reason (not found, or otherwise),
+        # falling straight through to create is still correct -- worst case
+        # is a harmless duplicate customer record on Paystack's side, never
+        # a broken invoice.
+        customer_code = None
+        try:
+            found = await _ps_call(key, f"/customer/{email}")
+            if found.get("status") and found.get("data"):
+                customer_code = found["data"].get("customer_code")
+        except _httpx.HTTPError:
+            pass
+        if not customer_code:
+            parts = name.split(" ", 1)
+            created = await _ps_post(key, "/customer", {
+                "email": email,
+                "first_name": parts[0] if parts else "",
+                "last_name": parts[1] if len(parts) > 1 else "",
+            })
+            if not created.get("status"):
+                raise HTTPException(502, created.get("message") or "Could not create Paystack customer.")
+            customer_code = created["data"]["customer_code"]
+
+        body = {
+            "customer": customer_code,
+            "amount": round(amount_naira * 100),
+            "description": description,
+            "send_notification": True,
+        }
+        if due_date:
+            body["due_date"] = due_date
+
+        r = await _ps_post(key, "/paymentrequest", body)
+        if not r.get("status"):
+            raise HTTPException(502, r.get("message") or "Paystack rejected the invoice.")
+        inv = r.get("data", {})
+        return {"ok": True, "invoice": {
+            "id":                inv.get("id", ""),
+            "request_code":      inv.get("request_code", ""),
+            "offline_reference": inv.get("offline_reference", ""),
+            "amount":            inv.get("amount", 0),
+            "status":            inv.get("status", ""),
+        }}
+
+
+    @router.post("/api/org/paystack/invoices/{code}/notify")
+    async def ps_invoice_notify(code: str, data: dict):
+        token = data.get("token", "")
+        sess, org_id = _org_admin_check(token)
+        key = _ps_key_for_org(org_id)
+        r = await _ps_post(key, f"/paymentrequest/notify/{code}")
+        if not r.get("status"):
+            raise HTTPException(502, r.get("message") or "Could not send the invoice notification.")
+        return {"ok": True}
+
+
+    @router.post("/api/org/paystack/invoices/{code}/archive")
+    async def ps_invoice_archive(code: str, data: dict):
+        token = data.get("token", "")
+        sess, org_id = _org_admin_check(token)
+        key = _ps_key_for_org(org_id)
+        r = await _ps_post(key, f"/paymentrequest/archive/{code}")
+        if not r.get("status"):
+            raise HTTPException(502, r.get("message") or "Could not archive the invoice.")
+        return {"ok": True}
 
 
     @router.get("/api/org/paystack/customers")

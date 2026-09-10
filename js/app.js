@@ -17094,6 +17094,7 @@ const _PS_TABS = [
   "balance",
   "settlements",
   "customers",
+  "invoices",
   "refunds",
   "analytics",
   "connect",
@@ -17138,6 +17139,7 @@ function psGoTab(name, btn) {
   if (name === "balance") psLoadBalance();
   if (name === "settlements") psLoadSettlements();
   if (name === "customers") psLoadCustomers();
+  if (name === "invoices") psLoadInvoices();
   if (name === "refunds") psLoadRefunds();
   if (name === "analytics") psLoadAnalytics();
   if (name === "connect") psCheckConnectStatus();
@@ -17516,6 +17518,127 @@ async function psLoadCustomers() {
       '<div style="padding:20px;color:var(--text4);font-size:.8rem;text-align:center">No customers yet.</div>';
   } catch (e) {
     _psLoading("customers", false);
+  }
+}
+
+async function psLoadInvoices() {
+  if (!_psConnected) return;
+  _psLoading("invoices", true);
+  const token = getToken() || "";
+  try {
+    const r = await fetch(
+      `/api/org/paystack/invoices?token=${encodeURIComponent(token)}`,
+    );
+    const d = await r.json();
+    _psLoading("invoices", false);
+    const ct = $("ps-invoices-content");
+    if (ct) ct.style.display = "block";
+    const el = $("ps-invoice-table");
+    if (!el) return;
+    const rows = d.invoices || [];
+    const headerRow = `<div class="ps-th-row" style="grid-template-columns:1fr 100px 90px 90px 66px">
+        <span>Customer</span><span>Amount</span><span>Due</span><span>Status</span><span></span>
+      </div>`;
+    // Parenthesized explicitly -- the header row above is always a non-empty
+    // string, so `header + rows.map(...).join("") || fallback` would make
+    // the fallback unreachable (the left side of `||` is never falsy). Same
+    // latent bug already present in psLoadSettlements/psLoadCustomers above,
+    // not fixed there (out of scope here), but not repeated in this new code.
+    const bodyRows = rows
+      .map(
+        (inv) => `<div class="ps-tr" style="grid-template-columns:1fr 100px 90px 90px 66px;cursor:default">
+        <div><div class="ps-cust-name">${esc(inv.customer_name || inv.customer_email || "—")}</div><div class="ps-cust-email">${esc(inv.description || "")}</div></div>
+        <span class="ps-amount">${_psNgn(inv.amount || 0)}</span>
+        <span style="color:var(--text4);font-size:.78rem">${_psDate(inv.due_date)}</span>
+        ${_psBadge(inv.paid ? "success" : inv.status)}
+        <span class="ps-row-actions">
+          <button class="ps-row-btn" title="Resend to customer" data-onclick="psInvoiceNotify" data-onclick-arg0="${esc(inv.request_code)}"><i class="ti ti-send"></i></button>
+          <button class="ps-row-btn" title="Archive" data-onclick="psInvoiceArchive" data-onclick-arg0="${esc(inv.request_code)}"><i class="ti ti-archive"></i></button>
+        </span>
+      </div>`,
+      )
+      .join("");
+    el.innerHTML =
+      headerRow +
+      (bodyRows ||
+        '<div style="padding:20px;color:var(--text4);font-size:.8rem;text-align:center">No invoices yet — create one above.</div>');
+  } catch (e) {
+    _psLoading("invoices", false);
+  }
+}
+
+async function psInvoiceCreatePrompt() {
+  const f = await siModal.form(
+    "🧾 New Invoice",
+    [
+      { id: "customer_email", label: "Customer email", type: "email", required: true },
+      { id: "customer_name", label: "Customer name (optional)" },
+      { id: "amount", label: "Amount (₦)", type: "number", required: true },
+      { id: "description", label: "Description", type: "textarea", required: true },
+      { id: "due_date", label: "Due date (optional)", type: "date" },
+    ],
+    { confirmLabel: "Create & send" },
+  );
+  if (!f) return;
+  const token = getToken() || "";
+  try {
+    const r = await fetch("/api/org/paystack/invoices/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        customer_email: f.customer_email,
+        customer_name: f.customer_name,
+        amount: f.amount,
+        description: f.description,
+        due_date: f.due_date,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      toast(d.detail || "Could not create invoice");
+      return;
+    }
+    toast("Invoice created and sent ✓");
+    psLoadInvoices();
+  } catch (e) {
+    toast("Could not reach the server");
+  }
+}
+
+async function psInvoiceNotify(code) {
+  const token = getToken() || "";
+  try {
+    const r = await fetch(`/api/org/paystack/invoices/${encodeURIComponent(code)}/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const d = await r.json();
+    toast(r.ok ? "Reminder sent ✓" : d.detail || "Could not send reminder");
+  } catch (e) {
+    toast("Could not reach the server");
+  }
+}
+
+async function psInvoiceArchive(code) {
+  if (!(await siModal.confirm("Archive this invoice?"))) return;
+  const token = getToken() || "";
+  try {
+    const r = await fetch(`/api/org/paystack/invoices/${encodeURIComponent(code)}/archive`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      toast(d.detail || "Could not archive invoice");
+      return;
+    }
+    toast("Invoice archived");
+    psLoadInvoices();
+  } catch (e) {
+    toast("Could not reach the server");
   }
 }
 

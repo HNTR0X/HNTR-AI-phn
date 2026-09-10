@@ -9177,6 +9177,28 @@ html {
   background: var(--blue2);
   color: var(--blue);
 }
+.ps-row-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.ps-row-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg2);
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+.ps-row-btn:hover {
+  background: var(--bg3);
+  color: var(--text);
+}
 
 .ps-filter-bar {
   display: flex;
