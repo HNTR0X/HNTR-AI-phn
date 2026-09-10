@@ -1398,6 +1398,7 @@ from ai_core import (
     GEMINI_AVAILABLE,
     get_sessions, gemini_once, async_gemini_once, async_embed_text,
     _chat_sessions, _AI_BREAKER, _AI_BREAK_THRESHOLD, _AI_BREAK_COOLDOWN, _ai_breaker_open,
+    forget_sid,
 )
 
 # ── Feature route modules ─────────────────────────────────────────
@@ -3591,7 +3592,7 @@ def _chat_authorize(token: str) -> tuple[str, dict]:
 
 
 from routes.ai_chat import build_router as _build_ai_chat_router
-app.include_router(_build_ai_chat_router(_chat_authorize, load_progress, save_progress, add_history))
+app.include_router(_build_ai_chat_router(_chat_authorize, load_progress, save_progress, add_history, build_memory))
 
 
 def _ai_meter(sid: str) -> None:
@@ -3809,6 +3810,7 @@ async def account_delete(data: dict):
             log.error(f"account_delete cascade failed: {e}")
     for t in [t for t, v in _session_tokens.items() if v.get("sid") == sid]:
         delete_session_token(t)
+    forget_sid(sid)   # evict any live Gemini session too, not just tokens/data
     log.info(f"User self-deleted account {sid[:12]}")
     return {"ok": True}
 
@@ -6172,6 +6174,13 @@ async def billing_entitlements(token: str = ""):
     p = load_progress(sess["sid"])
     caps = _plan_caps(p)
     usage = {"integrations": sum(1 for v in _user_integrations(p).values() if v)}
+    # Same "is this actually today's count" check _chat_authorize/_ai_meter use —
+    # a stale prior-day counter must read as 0, not carry over.
+    today = datetime.date.today().isoformat()
+    _cd = p.get("chat_daily") or {}
+    _ad = p.get("ai_daily") or {}
+    usage["chat_today"] = _cd["count"] if _cd.get("date") == today else 0
+    usage["ai_today"]   = _ad["count"] if _ad.get("date") == today else 0
     org_sub_active = False
     try:
         if db.is_available():

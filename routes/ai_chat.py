@@ -36,7 +36,7 @@ from ai_core import (
     solve_local, is_math, is_uncertain, _is_ai_error,
     get_sessions, async_gemini_ask, async_gemini_once, friendly_gemini_error,
     load_json, lpath, strip_topic, get_cached, set_cached,
-    build_retrieval_context,
+    build_retrieval_context, forget_sid,
 )
 
 RATE_LIMIT_CHAT = int(os.environ.get("RATE_LIMIT_CHAT", 20))      # max chat msgs per window
@@ -66,7 +66,7 @@ class ChatRequest(BaseModel):
         return v
 
 
-def build_router(chat_authorize, load_progress, save_progress, add_history) -> APIRouter:
+def build_router(chat_authorize, load_progress, save_progress, add_history, build_memory) -> APIRouter:
     router = APIRouter()
 
     @router.post("/api/chat")
@@ -243,6 +243,27 @@ def build_router(chat_authorize, load_progress, save_progress, add_history) -> A
         p = load_progress(sid)
         p["chat_history"] = []
         save_progress(sid, p)
+        return {"ok": True}
+
+    @router.post("/api/ai/memory")
+    async def ai_memory(data: dict):
+        """What would actually be fed to Gemini as this user's prior-session
+        context — the real build_memory() output, not a paraphrase."""
+        sid, _ = _resolve_token(data)
+        p = load_progress(sid)
+        return {"memory": build_memory(p) or ""}
+
+    @router.post("/api/ai/forget")
+    async def ai_forget(data: dict):
+        """The real 'forget me': clears the visible history (same effect as
+        /api/chat/clear) AND evicts the live Gemini session so the model
+        itself stops remembering, not just the UI. Per-worker immediate;
+        other workers' copies age out via the existing idle TTL."""
+        sid, _ = _resolve_token(data)
+        p = load_progress(sid)
+        p["chat_history"] = []
+        save_progress(sid, p)
+        forget_sid(sid)
         return {"ok": True}
 
     return router

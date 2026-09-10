@@ -1771,6 +1771,18 @@ body.auth-screen #login-screen {
     pointer-events: auto !important;
     z-index: 299 !important;
   }
+  /* .topbar's own z-index (100) used to be plenty -- nothing needed to be
+     tapped there while the drawer was open. Now the search bar lives there
+     too (swapped in for the tab name, see css/mobile.css), so the topbar
+     must stay above the overlay (299) and the drawer (300) or every tap on
+     it gets eaten by the overlay's own click-outside-closes handler
+     (_overlayClick, js/app.js) instead of reaching the search button. The
+     drawer sits below the topbar vertically (top: var(--topbar-h)), so
+     this doesn't visually overlap it -- only wins the hit-test in the
+     topbar's own strip at the very top of the screen. */
+  body.mobile-sidebar-open .topbar {
+    z-index: 301 !important;
+  }
 }
 
 /* Legacy mobile slide-in drawer + overlay (old shell) — hidden, unused */

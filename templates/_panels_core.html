@@ -756,6 +756,13 @@ content-loss issue found in the prior split.
       </button>
       <button
         class="st-subnav-item"
+        data-sec="ai"
+        data-onclick="stGoSection" data-onclick-arg0="ai" data-onclick-this
+      >
+        <i class="ti ti-sparkles"></i> Sivarr AI
+      </button>
+      <button
+        class="st-subnav-item"
         data-sec="notifications"
         data-onclick="stGoSection" data-onclick-arg0="notifications" data-onclick-this
       >
@@ -1226,6 +1233,105 @@ content-loss issue found in the prior split.
         </div>
       </div>
 
+      <!-- Sivarr AI -->
+      <div class="st-section open" id="st-sec-ai">
+        <div class="st-section-hd">
+          <div class="st-section-icon" style="background: #7b2cad20">✨</div>
+          <div class="st-section-title">Sivarr AI</div>
+        </div>
+        <div class="st-section-body">
+          <div class="st-row">
+            <span class="st-label">Plan</span>
+            <span id="st-ai-plan-name" style="font-size: 0.78rem; font-weight: 700; color: var(--accent)">Free</span>
+          </div>
+          <div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+              "
+            >
+              <span class="st-label">Chat messages today</span>
+              <span
+                id="st-usage-chat"
+                style="font-size: 0.75rem; color: var(--muted)"
+                >0 / 15</span
+              >
+            </div>
+            <div class="st-usage-bar">
+              <div
+                class="st-usage-fill"
+                id="st-usage-chat-bar"
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+          <div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+              "
+            >
+              <span class="st-label">AI actions today</span>
+              <span
+                id="st-usage-ai"
+                style="font-size: 0.75rem; color: var(--muted)"
+                >0 / 40</span
+              >
+            </div>
+            <div class="st-usage-bar">
+              <div
+                class="st-usage-fill"
+                id="st-usage-ai-bar"
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+          <div class="st-field-hint">
+            Covers task extraction, write-assist, study decks &amp; plans,
+            and weekly review. Resets daily.
+          </div>
+
+          <div class="st-divider"></div>
+
+          <div class="st-label" style="margin-bottom: 8px">
+            What Sivarr AI remembers
+          </div>
+          <div
+            id="st-ai-memory"
+            style="
+              font-family: var(--font);
+              font-size: 0.8rem;
+              color: var(--text2);
+              background: var(--bg2, #1a1a1a);
+              border-radius: 8px;
+              padding: 10px;
+              margin-bottom: 10px;
+              white-space: pre-line;
+              max-height: 160px;
+              overflow-y: auto;
+            "
+          >
+            Loading…
+          </div>
+          <button
+            class="st-btn danger"
+            data-onclick="stForgetAI"
+          >
+            <i class="ti ti-eraser" style="margin-right: 6px"></i>Forget this conversation
+          </button>
+          <div class="st-field-hint">
+            Clears your recent chat from what Sivarr AI remembers. Takes
+            effect right away here; other signed-in devices catch up within a
+            few hours. Your study-topic history is separate — reset it from
+            Data &amp; Privacy if you want that too.
+          </div>
+        </div>
+      </div>
+
       <!-- Notifications -->
       <div class="st-section" id="st-sec-notifications">
         <div class="st-section-hd" data-onclick="stToggleSection" data-onclick-arg0="notifications">
@@ -1534,51 +1640,8 @@ content-loss issue found in the prior split.
               ></span>
             </div>
           </div>
-          <div>
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 3px;
-              "
-            >
-              <span class="st-label">AI Messages today</span>
-              <span
-                id="st-usage-chat"
-                style="font-size: 0.75rem; color: var(--muted)"
-                >0 / 20</span
-              >
-            </div>
-            <div class="st-usage-bar">
-              <div
-                class="st-usage-fill"
-                id="st-usage-chat-bar"
-                style="width: 0%"
-              ></div>
-            </div>
-          </div>
-          <div>
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 3px;
-              "
-            >
-              <span class="st-label">Quizzes today</span>
-              <span
-                id="st-usage-quiz"
-                style="font-size: 0.75rem; color: var(--muted)"
-                >0 / 5</span
-              >
-            </div>
-            <div class="st-usage-bar">
-              <div
-                class="st-usage-fill"
-                id="st-usage-quiz-bar"
-                style="width: 0%"
-              ></div>
-            </div>
+          <div class="st-field-hint">
+            AI usage now lives under <strong>Sivarr AI</strong> in the sidebar.
           </div>
           <button
             id="st-plan-cta"

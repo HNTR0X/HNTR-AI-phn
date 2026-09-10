@@ -6183,6 +6183,7 @@ function stInit() {
   stLoadBillingHistory();
   st2faInit();
   stLoadSessions();
+  stLoadAIMemory();
 
   // Org settings (Blueprint Stage 3) — shown only when the user is in an org
   if (typeof orgSettingsInit === "function") orgSettingsInit();
@@ -6196,36 +6197,34 @@ function stInit() {
   _stScrollSpyInit();
 }
 
-function stUpdateUsage() {
-  const today = new Date().toISOString().split("T")[0];
-  const hist = JSON.parse(
-    localStorage.getItem(`sivarr_usage_${today}`) || '{"chat":0,"quiz":0}',
-  );
-  const chatUsed = hist.chat || 0;
-  const quizUsed = hist.quiz || 0;
+function _stRenderUsageBar(prefix, used, limit) {
+  used = used || 0;
+  const label = $(`st-${prefix}`);
+  const bar = $(`st-${prefix}-bar`);
+  if (limit === null || limit === undefined) {
+    if (label) label.textContent = `${used} / Unlimited`;
+    if (bar) {
+      bar.style.width = "100%";
+      bar.style.background = "var(--accent)";
+    }
+    return;
+  }
+  if (label) label.textContent = `${used} / ${limit}`;
+  if (bar) {
+    bar.style.width = Math.min((used / Math.max(limit, 1)) * 100, 100) + "%";
+    bar.style.background = "";
+  }
+}
+async function stUpdateUsage() {
+  if (!_ENTITLEMENTS) await billingLoadStatus();
+  const caps = _ENTITLEMENTS?.caps || {};
+  const usage = _ENTITLEMENTS?.usage || {};
+  _stRenderUsageBar("usage-chat", usage.chat_today, caps.ai_chat_daily);
+  _stRenderUsageBar("usage-ai", usage.ai_today, caps.ai_actions_daily);
+  const planName = $("st-ai-plan-name");
+  if (planName) planName.textContent = _ENTITLEMENTS?.plan || "Free";
+
   const isPaid = _planLevel(_BILLING_STATUS?.name || "free") > 0;
-  const chatMax = isPaid ? 999 : 20;
-  const quizMax = isPaid ? 999 : 5;
-
-  const cu = $("st-usage-chat");
-  if (cu)
-    cu.textContent = isPaid ? `${chatUsed} / ∞` : `${chatUsed} / ${chatMax}`;
-  const cb = $("st-usage-chat-bar");
-  if (cb)
-    cb.style.width = isPaid
-      ? "100%"
-      : Math.min((chatUsed / chatMax) * 100, 100) + "%";
-  if (cb && isPaid) cb.style.background = "var(--accent)";
-  const qu = $("st-usage-quiz");
-  if (qu)
-    qu.textContent = isPaid ? `${quizUsed} / ∞` : `${quizUsed} / ${quizMax}`;
-  const qb = $("st-usage-quiz-bar");
-  if (qb)
-    qb.style.width = isPaid
-      ? "100%"
-      : Math.min((quizUsed / quizMax) * 100, 100) + "%";
-  if (qb && isPaid) qb.style.background = "var(--accent)";
-
   const sub = _BILLING_STATUS || {};
   const plan = sub.name || "Free";
   const status = sub.status || "active";
@@ -7131,6 +7130,51 @@ async function stRevokeSession(ref, btn) {
       stLoadSessions();
     } else {
       toast("Couldn't sign out that session.");
+    }
+  } catch {
+    toast("Network error. Try again.");
+  }
+}
+
+async function stLoadAIMemory() {
+  const box = $("st-ai-memory");
+  if (!box) return;
+  const token = getToken();
+  if (!token) return;
+  try {
+    const r = await fetch("/api/ai/memory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const d = await r.json();
+    const mem = (d && d.memory) || "";
+    box.textContent = mem || "Nothing yet — start a conversation with Sivarr AI.";
+  } catch {
+    box.textContent = "Couldn't load this right now.";
+  }
+}
+async function stForgetAI() {
+  if (
+    !(await siModal.confirm(
+      "This clears what Sivarr AI remembers about your conversations, on this device right away.",
+      { title: "Forget everything", confirmLabel: "Forget", danger: true },
+    ))
+  )
+    return;
+  const token = getToken();
+  if (!token) return;
+  try {
+    const r = await fetch("/api/ai/forget", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    if (r.ok) {
+      toast("Sivarr AI has forgotten this conversation");
+      stLoadAIMemory();
+    } else {
+      toast("Couldn't do that right now.");
     }
   } catch {
     toast("Network error. Try again.");

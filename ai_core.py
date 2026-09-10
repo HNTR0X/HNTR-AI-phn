@@ -147,6 +147,15 @@ def _evict_stale_chat_sessions():
     if stale:
         log.info(f"Evicted {len(stale)} stale AI chat sessions")
 
+def forget_sid(sid: str) -> None:
+    """Evict this sid's live Gemini session (both 'chat' and 'math' sub-sessions)
+    from this worker's cache, so the model genuinely stops remembering the
+    conversation instead of just having its visible history cleared. Same
+    unguarded dict.pop pattern as core.py's delete_session_token — this dict has
+    no lock anywhere else either, and per-worker eviction is the same tradeoff
+    session revocation already accepts (see core.py's own comment there)."""
+    _chat_sessions.pop(sid, None)
+
 def _alert_model_fallback(chosen: str, reason: str) -> None:
     """Every margin figure anywhere in this codebase assumes GEMINI_MODELS[0]
     (flash) is what's actually running. Landing on anything else is silently
